@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Layer21 — Technology Services for Nigerian Businesses</title>
+<link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@400;500;700;800;900&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+<style>
+:root {
+  --dark:    #072145;
+  --dark-2:  #154fa0;
+  --dark-3:  #2a4f8f;
+  --teal:    #2ec5db;
+  --teal-dim:#1e8fa0;
+  --teal-glow: rgba(46,197,219,.14);
+  --silver:  #e8f0f5;
+  --muted:   rgba(232,240,245,.55);
+  --card:    rgba(17,34,64,.7);
+  --border:  rgba(46,197,219,.13);
+  --bl:      rgba(255,255,255,.07);
+  --r:       16px;
+  --gold:    #d4a843;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Instrument Sans',sans-serif;background:var(--dark);color:var(--silver);overflow-x:hidden;line-height:1.65}
+h1,h2,h3,h4,.display{font-family:'Cabinet Grotesk',sans-serif;font-weight:800}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-thumb{background:var(--teal);border-radius:3px}
+
+/* ── UTILITIES ── */
+.wrap{max-width:1200px;margin:0 auto;padding:0 1.75rem}
+.tag{display:inline-flex;align-items:center;gap:6px;padding:4px 14px;border-radius:999px;font-size:.72rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--teal);color:var(--teal);background:rgba(46,197,219,.07);font-family:'Cabinet Grotesk',sans-serif}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:.75rem 1.6rem;border-radius:999px;font-weight:600;font-size:.9rem;cursor:pointer;text-decoration:none;transition:all .25s;font-family:'Instrument Sans',sans-serif;border:none}
+.btn-primary{background:var(--teal);color:#041018}
+.btn-primary:hover{background:#45d4ea;transform:translateY(-2px);box-shadow:0 8px 32px rgba(46,197,219,.3)}
+.btn-outline{background:transparent;color:var(--silver);border:1.5px solid var(--bl)}
+.btn-outline:hover{border-color:var(--teal);color:var(--teal)}
+
+/* ── NOISE + GRID ── */
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");pointer-events:none;z-index:999;opacity:.35}
+.grid-bg{position:fixed;inset:0;background-image:linear-gradient(rgba(46,197,219,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(46,197,219,.02) 1px,transparent 1px);background-size:72px 72px;z-index:0;pointer-events:none}
+
+/* ── TICKER ── */
+.ticker-bar{background:rgba(46,197,219,.06);border-bottom:1px solid var(--border);padding:.55rem 0;overflow:hidden}
+.ticker-inner{display:flex;animation:tick 30s linear infinite;white-space:nowrap;gap:0}
+.t-item{padding:0 2rem;font-size:.73rem;font-weight:600;color:var(--teal);letter-spacing:.05em;display:flex;align-items:center;gap:.5rem}
+.t-item::after{content:'·';margin-left:2rem;opacity:.35}
+@keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* ── NAV ── */
+nav{position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);background:rgba(7,17,31,.85);border-bottom:1px solid var(--bl)}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.75rem;max-width:1200px;margin:0 auto}
+.brand{display:flex;align-items:center;gap:.6rem;text-decoration:none}
+.brand-logo{width:40px;height:40px;border-radius:10px;background:rgba(46,197,219,.1);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:var(--teal)}
+.brand-name{font-family:'Cabinet Grotesk',sans-serif;font-size:1.1rem;font-weight:900;color:#fff;letter-spacing:-.01em}
+.brand-sub{font-size:.6rem;color:var(--teal);font-weight:600;letter-spacing:.12em;text-transform:uppercase;margin-top:-3px}
+.nav-links{display:flex;align-items:center;gap:2rem}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:.88rem;font-weight:500;transition:color .2s}
+.nav-links a:hover{color:var(--teal)}
+.nav-right{display:flex;align-items:center;gap:.75rem}
+.ham{display:none;background:none;border:none;cursor:pointer;color:var(--silver);font-size:1.4rem}
+.mob-menu{display:none;position:fixed;inset:0;top:69px;background:rgba(7,17,31,.98);z-index:99;padding:2rem;flex-direction:column;gap:1.25rem}
+.mob-menu.open{display:flex}
+.mob-menu a{color:var(--silver);text-decoration:none;font-size:1.05rem;font-weight:600;padding:.7rem 0;border-bottom:1px solid var(--bl)}
+@media(max-width:820px){.nav-links{display:none}.ham{display:block}.nav-right .btn-outline{display:none}}
+
+/* ══════════════════════════════════════════
+   HERO
+══════════════════════════════════════════ */
+#hero{position:relative;min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:7rem 0 5rem;z-index:2;overflow:hidden}
+.hero-blob{position:absolute;border-radius:50%;filter:blur(90px);pointer-events:none}
+.hb1{width:600px;height:500px;top:-120px;right:-100px;background:radial-gradient(circle,rgba(46,197,219,.07),transparent 65%)}
+.hb2{width:400px;height:400px;bottom:-100px;left:-120px;background:radial-gradient(circle,rgba(46,197,219,.05),transparent 65%)}
+.hero-kicker{margin-bottom:1.5rem}
+.hero-h1{font-size:clamp(2.6rem,5.5vw,4.4rem);line-height:1.05;letter-spacing:-.02em;margin-bottom:1.4rem;max-width:800px}
+.hero-h1 .accent{color:var(--teal)}
+.hero-sub{color:var(--muted);font-size:1.1rem;max-width:560px;margin-bottom:2.5rem;line-height:1.75}
+.hero-ctas{display:flex;flex-wrap:wrap;gap:.75rem;margin-bottom:3.5rem}
+
+/* Intent buttons */
+.intent-row{display:flex;flex-wrap:wrap;gap:.65rem;margin-bottom:.75rem}
+.intent-label{font-size:.75rem;color:var(--muted);font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:.6rem;font-family:'Cabinet Grotesk',sans-serif}
+.intent-btn{display:inline-flex;align-items:center;gap:.5rem;padding:.55rem 1.1rem;border-radius:999px;font-size:.83rem;font-weight:600;cursor:pointer;text-decoration:none;border:1.5px solid var(--bl);color:var(--muted);background:rgba(255,255,255,.03);transition:all .2s}
+.intent-btn:hover,.intent-btn.active{border-color:var(--teal);color:var(--teal);background:rgba(46,197,219,.08)}
+.intent-btn i{font-size:.9rem}
+
+/* Hero stats */
+.hero-stats{display:flex;gap:2.5rem;flex-wrap:wrap;padding-top:2rem;border-top:1px solid var(--bl)}
+.stat .num{font-family:'Cabinet Grotesk',sans-serif;font-size:2rem;font-weight:900;color:var(--teal);line-height:1}
+.stat .lbl{font-size:.73rem;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;margin-top:.3rem}
+
+/* Hero visual card */
+.hero-visual{position:relative;z-index:2}
+.hero-card-stack{position:relative;display:flex;flex-direction:column;gap:1rem}
+.h-card{border-radius:18px;padding:1.4rem 1.6rem;background:var(--card);border:1px solid var(--border);backdrop-filter:blur(12px);display:flex;align-items:center;gap:1.1rem;transition:transform .3s}
+.h-card:hover{transform:translateX(6px)}
+.h-card-icon{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0}
+.hci-teal{background:rgba(46,197,219,.12);color:var(--teal)}
+.hci-gold{background:rgba(212,168,67,.12);color:var(--gold)}
+.hci-purple{background:rgba(150,80,255,.1);color:#b56eff}
+.hci-green{background:rgba(0,210,120,.1);color:#00d278}
+.hci-blue{background:rgba(60,130,255,.1);color:#6c9fff}
+.h-card-text .name{font-weight:700;font-size:.95rem;color:#fff;font-family:'Cabinet Grotesk',sans-serif}
+.h-card-text .desc{font-size:.78rem;color:var(--muted);margin-top:2px}
+.h-card-status{margin-left:auto;font-size:.7rem;font-weight:700;padding:3px 10px;border-radius:999px;white-space:nowrap}
+.s-live{background:rgba(0,210,120,.1);color:#00d278}
+.s-new{background:rgba(46,197,219,.1);color:var(--teal)}
+.h-glow{position:absolute;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(46,197,219,.12),transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;animation:pulse 4s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:.6}50%{transform:translate(-50%,-50%) scale(1.4);opacity:1}}
+
+.hero-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:5rem;align-items:center}
+@media(max-width:900px){.hero-grid{grid-template-columns:1fr}.hero-visual{display:none}}
+
+/* ══════════════════════════════════════════
+   TRUST BAR
+══════════════════════════════════════════ */
+.trust-bar{padding:2.5rem 0;border-top:1px solid var(--bl);border-bottom:1px solid var(--bl);z-index:2;position:relative}
+.trust-bar-inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1.5rem}
+.trust-label{font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.trust-logos{display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap}
+.trust-chip{padding:.4rem 1.1rem;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid var(--bl);font-size:.8rem;font-weight:700;color:var(--muted);letter-spacing:.04em;font-family:'Cabinet Grotesk',sans-serif}
+.trust-chip.gold{border-color:rgba(212,168,67,.25);color:var(--gold);background:rgba(212,168,67,.06)}
+
+/* ══════════════════════════════════════════
+   WHAT WE DO — big service tabs
+══════════════════════════════════════════ */
+#services{padding:6rem 0;z-index:2;position:relative}
+.section-head{text-align:center;margin-bottom:4rem}
+.section-head h2{font-size:clamp(2rem,4vw,3rem);color:#fff;margin:.75rem 0 1rem;letter-spacing:-.02em}
+.section-head p{color:var(--muted);max-width:540px;margin:0 auto;font-size:.97rem}
+.services-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:1rem}
+@media(max-width:1000px){.services-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:600px){.services-grid{grid-template-columns:1fr 1fr}}
+.svc-tile{border-radius:18px;padding:1.75rem 1.4rem;background:var(--card);border:1px solid var(--bl);cursor:pointer;transition:all .3s;position:relative;overflow:hidden;text-decoration:none;display:flex;flex-direction:column;align-items:flex-start;gap:.9rem}
+.svc-tile::after{content:'';position:absolute;inset:0;opacity:0;background:radial-gradient(circle at 50% 0%,rgba(46,197,219,.09),transparent 70%);transition:opacity .35s;pointer-events:none}
+.svc-tile:hover,
+.svc-tile.active{border-color:var(--teal);transform:translateY(-4px);box-shadow:0 16px 50px rgba(0,0,0,.35)}
+.svc-tile:hover::after,
+.svc-tile.active::after{opacity:1}
+.svc-ico{width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.4rem}
+.st-teal{background:rgba(46,197,219,.12);color:var(--teal)}
+.st-gold{background:rgba(212,168,67,.12);color:var(--gold)}
+.st-purple{background:rgba(150,80,255,.1);color:#b56eff}
+.st-green{background:rgba(0,210,120,.1);color:#00d278}
+.st-blue{background:rgba(60,130,255,.1);color:#6c9fff}
+.svc-tile h3{font-size:.95rem;color:#fff;line-height:1.3;font-family:'Cabinet Grotesk',sans-serif;font-weight:800}
+.svc-tile p{font-size:.78rem;color:var(--muted);line-height:1.55}
+.svc-tile .arrow{margin-top:auto;color:var(--teal);font-size:.85rem;opacity:0;transition:opacity .2s}
+.svc-tile:hover .arrow{opacity:1}
+
+/* ══════════════════════════════════════════
+   FEATURE DEEP-DIVES  (alternating)
+══════════════════════════════════════════ */
+.feature-section{padding:5rem 0;z-index:2;position:relative}
+.feature-section:nth-child(even){background:linear-gradient(180deg,transparent,rgba(12,26,46,.5),transparent)}
+.feat-grid{display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:center}
+.feat-grid.flip{direction:rtl}
+.feat-grid.flip>*{direction:ltr}
+@media(max-width:860px){.feat-grid,.feat-grid.flip{grid-template-columns:1fr;direction:ltr}}
+.feat-copy .tag{margin-bottom:1.1rem}
+.feat-copy h2{font-size:clamp(1.8rem,3.5vw,2.6rem);color:#fff;margin-bottom:1.1rem;letter-spacing:-.02em;line-height:1.15}
+.feat-copy p{color:var(--muted);font-size:.97rem;line-height:1.75;margin-bottom:1.5rem}
+.feat-list{list-style:none;display:flex;flex-direction:column;gap:.75rem;margin-bottom:2rem}
+.feat-list li{display:flex;align-items:flex-start;gap:.75rem;font-size:.9rem;color:var(--silver)}
+.feat-list li i{color:var(--teal);flex-shrink:0;margin-top:3px}
+.feat-actions{display:flex;gap:.75rem;flex-wrap:wrap}
+
+/* Feature visuals */
+.feat-visual{border-radius:22px;overflow:hidden;border:1px solid var(--border);background:var(--dark-3, #112240);box-shadow:0 30px 80px rgba(0,0,0,.5);position:relative}
+.fv-bar{padding:.9rem 1.2rem;background:rgba(255,255,255,.03);border-bottom:1px solid var(--bl);display:flex;align-items:center;gap:.5rem}
+.dot{width:10px;height:10px;border-radius:50%}
+.dr{background:#ff5f57}.dy{background:#ffbd2e}.dg{background:#28c840}
+.fv-title{font-size:.78rem;color:var(--muted);margin-left:.5rem}
+.fv-live{margin-left:auto;font-size:.68rem;font-weight:700;color:#00d278;display:flex;align-items:center;gap:4px}
+.fv-body{padding:1.5rem}
+
+/* Invoice pipeline visual */
+.inv-pipeline{display:flex;flex-direction:column;gap:.6rem}
+.inv-row{display:flex;align-items:center;gap:.75rem;padding:.85rem 1rem;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);font-size:.83rem}
+.inv-row.highlight{border-color:var(--teal);background:rgba(46,197,219,.05)}
+.inv-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+.inv-row-arrow{text-align:center;color:var(--teal);opacity:.4;font-size:.8rem;padding:.1rem 0}
+.sp-ok{color:#00d278;font-weight:700;font-size:.72rem;margin-left:auto;background:rgba(0,210,120,.1);padding:2px 8px;border-radius:999px}
+.sp-go{color:var(--gold);font-weight:700;font-size:.72rem;margin-left:auto;background:rgba(212,168,67,.1);padding:2px 8px;border-radius:999px}
+
+/* ERP grid visual */
+.erp-viz{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem}
+.erp-chip{border-radius:12px;padding:1rem;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;align-items:center;gap:.5rem;font-size:.75rem;color:var(--muted);text-align:center;transition:all .25s;cursor:default}
+.erp-chip:hover{border-color:var(--teal);background:rgba(46,197,219,.05);color:var(--teal)}
+.erp-chip i{font-size:1.3rem;color:var(--teal)}
+.erp-chip.central{border-color:var(--teal);background:rgba(46,197,219,.08);color:var(--teal);grid-column:2}
+.erp-connector{display:flex;align-items:center;justify-content:center;color:var(--teal);opacity:.3;font-size:.7rem}
+
+/* Software dev visual */
+.code-block{border-radius:14px;background:#060f1c;border:1px solid var(--bl);padding:1.25rem;font-family:'Courier New',monospace;font-size:.8rem;line-height:1.7}
+.c-comment{color:#4a7a9b}.c-keyword{color:#c792ea}.c-string{color:#c3e88d}.c-func{color:var(--teal)}.c-num{color:var(--gold)}.c-plain{color:#e0e0e0}
+.code-tabs{display:flex;gap:.5rem;margin-bottom:1rem;border-bottom:1px solid var(--bl);padding-bottom:.75rem}
+.code-tab{font-size:.73rem;padding:3px 10px;border-radius:6px;color:var(--muted);cursor:pointer;font-family:'Instrument Sans',sans-serif}
+.code-tab.active{background:rgba(46,197,219,.12);color:var(--teal)}
+.code-line{display:flex;gap:.75rem}
+.line-num{color:#2a4060;user-select:none;min-width:1.5rem;text-align:right}
+
+/* AI visual */
+.ai-chat{display:flex;flex-direction:column;gap:.75rem}
+.ai-msg{display:flex;gap:.75rem;align-items:flex-start}
+.ai-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0}
+.av-user{background:rgba(255,255,255,.08)}
+.av-ai{background:rgba(46,197,219,.15);color:var(--teal)}
+.ai-bubble{padding:.65rem 1rem;border-radius:14px;font-size:.82rem;line-height:1.6;max-width:90%}
+.ab-user{background:rgba(255,255,255,.06);color:var(--silver)}
+.ab-ai{background:rgba(46,197,219,.09);border:1px solid var(--border);color:var(--silver)}
+.ai-typing{display:flex;gap:4px;align-items:center;padding:.65rem 1rem}
+.ai-typing span{width:6px;height:6px;border-radius:50%;background:var(--teal);animation:typing .9s ease-in-out infinite}
+.ai-typing span:nth-child(2){animation-delay:.15s}
+.ai-typing span:nth-child(3){animation-delay:.3s}
+@keyframes typing{0%,80%,100%{transform:scale(.6);opacity:.4}40%{transform:scale(1);opacity:1}}
+.ai-pill-row{display:flex;flex-wrap:wrap;gap:.5rem;padding-top:.5rem;border-top:1px solid var(--bl)}
+.ai-pill{padding:4px 12px;border-radius:999px;font-size:.72rem;background:rgba(46,197,219,.07);border:1px solid var(--border);color:var(--teal);cursor:pointer;transition:all .2s}
+.ai-pill:hover{background:rgba(46,197,219,.15)}
+
+/* Helpdesk visual */
+.hd-items{display:flex;flex-direction:column;gap:.65rem}
+.hd-ticket{padding:.9rem 1rem;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);display:flex;align-items:flex-start;gap:.75rem;font-size:.82rem}
+.hd-ticket.open-t{border-color:rgba(46,197,219,.3);background:rgba(46,197,219,.04)}
+.hd-prio{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.75rem;flex-shrink:0}
+.hp-crit{background:rgba(255,95,87,.1);color:#ff5f57}
+.hp-high{background:rgba(255,189,46,.1);color:#ffbd2e}
+.hp-low{background:rgba(0,210,120,.1);color:#00d278}
+.hd-info .title{font-weight:600;color:#fff;font-family:'Cabinet Grotesk',sans-serif;font-size:.85rem}
+.hd-info .meta{font-size:.72rem;color:var(--muted);margin-top:2px}
+.hd-badge{margin-left:auto;font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.hb-open{background:rgba(46,197,219,.1);color:var(--teal)}
+.hb-res{background:rgba(0,210,120,.1);color:#00d278}
+.hb-pend{background:rgba(255,189,46,.1);color:#ffbd2e}
+
+/* ══════════════════════════════════════════
+   HOW IT WORKS
+══════════════════════════════════════════ */
+#how{padding:6rem 0;z-index:2;position:relative}
+.how-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.5rem;position:relative}
+@media(max-width:760px){.how-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:450px){.how-grid{grid-template-columns:1fr}}
+.how-grid::before{content:'';position:absolute;top:2.2rem;left:calc(12.5% + .75rem);right:calc(12.5% + .75rem);height:1px;background:linear-gradient(90deg,transparent,var(--teal),transparent);opacity:.2;pointer-events:none}
+.how-step{border-radius:18px;padding:2rem 1.5rem;background:var(--card);border:1px solid var(--bl);text-align:center;transition:all .3s;position:relative}
+.how-step:hover{border-color:var(--teal);transform:translateY(-4px)}
+.how-num{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;font-family:'Cabinet Grotesk',sans-serif;font-weight:900;font-size:1rem;background:rgba(46,197,219,.1);border:1px solid var(--border);color:var(--teal)}
+.how-step h4{font-size:.95rem;color:#fff;margin-bottom:.5rem;font-family:'Cabinet Grotesk',sans-serif}
+.how-step p{font-size:.8rem;color:var(--muted);line-height:1.6}
+
+/* ══════════════════════════════════════════
+   PRICING
+══════════════════════════════════════════ */
+#pricing{padding:6rem 0;z-index:2;position:relative}
+.price-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;max-width:1000px;margin:0 auto}
+@media(max-width:860px){.price-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){.price-grid{grid-template-columns:1fr}}
+.p-card{border-radius:20px;background:var(--card);border:1px solid var(--bl);overflow:hidden;transition:all .3s;display:flex;flex-direction:column}
+.p-card:hover{border-color:var(--teal);transform:translateY(-4px);box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.p-card.featured{border-color:var(--teal);box-shadow:0 0 60px rgba(46,197,219,.1)}
+.p-head{padding:1.75rem;border-bottom:1px solid var(--bl)}
+.p-tag{display:inline-block;padding:3px 10px;border-radius:999px;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:.75rem;font-family:'Cabinet Grotesk',sans-serif}
+.pt-pop{background:rgba(46,197,219,.12);color:var(--teal)}
+.pt-ent{background:rgba(212,168,67,.1);color:var(--gold)}
+.p-head h3{font-size:1.1rem;color:#fff;font-family:'Cabinet Grotesk',sans-serif;margin-bottom:.35rem}
+.p-head .sub{font-size:.78rem;color:var(--muted)}
+.p-price{font-family:'Cabinet Grotesk',sans-serif;font-size:1.8rem;font-weight:900;color:var(--teal);margin-top:.75rem}
+.p-price small{font-size:.75rem;font-weight:400;color:var(--muted)}
+.p-body{padding:1.5rem;flex:1;display:flex;flex-direction:column}
+.p-features{list-style:none;display:flex;flex-direction:column;gap:.65rem;margin-bottom:1.5rem;flex:1}
+.p-features li{display:flex;align-items:flex-start;gap:.6rem;font-size:.84rem;color:var(--silver)}
+.p-features li i{color:var(--teal);flex-shrink:0;margin-top:3px}
+
+/* ══════════════════════════════════════════
+   CTA BANNER
+══════════════════════════════════════════ */
+.cta-banner{margin:3rem auto;max-width:1000px;border-radius:24px;padding:4rem 3rem;background:linear-gradient(135deg,rgba(17,34,64,.95),rgba(12,26,46,.98));border:1px solid var(--border);position:relative;overflow:hidden;z-index:2;text-align:center}
+.cta-banner::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(46,197,219,.08),transparent 65%);pointer-events:none}
+.cta-banner h2{font-size:clamp(1.8rem,4vw,2.8rem);color:#fff;margin-bottom:1rem}
+.cta-banner p{color:var(--muted);max-width:520px;margin:0 auto 2rem;font-size:.97rem}
+.cta-actions{display:flex;justify-content:center;gap:1rem;flex-wrap:wrap}
+
+/* ══════════════════════════════════════════
+   CONTACT
+══════════════════════════════════════════ */
+#contact{padding:6rem 0;z-index:2;position:relative}
+.contact-grid{display:grid;grid-template-columns:1fr 1.3fr;gap:5rem;align-items:start}
+@media(max-width:860px){.contact-grid{grid-template-columns:1fr}}
+.contact-copy .tag{margin-bottom:1rem}
+.contact-copy h2{font-size:clamp(1.8rem,3.5vw,2.5rem);color:#fff;margin-bottom:1rem}
+.contact-copy p{color:var(--muted);font-size:.95rem;line-height:1.75;margin-bottom:2rem}
+.c-items{display:flex;flex-direction:column;gap:.9rem}
+.c-item{display:flex;align-items:center;gap:.75rem;font-size:.9rem;color:var(--silver)}
+.c-item i{color:var(--teal);font-size:1.1rem;width:20px}
+.contact-form{background:var(--card);border:1px solid var(--bl);border-radius:22px;padding:2.5rem;backdrop-filter:blur(12px)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:520px){.form-row{grid-template-columns:1fr}}
+.field{display:flex;flex-direction:column;gap:.4rem;margin-bottom:1rem}
+.field label{font-size:.73rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-family:'Cabinet Grotesk',sans-serif}
+.field input,.field select,.field textarea{background:rgba(255,255,255,.04);border:1.5px solid var(--bl);border-radius:12px;padding:.75rem 1rem;color:var(--silver);font-family:'Instrument Sans',sans-serif;font-size:.9rem;outline:none;transition:border-color .2s;width:100%}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--teal)}
+.field select option{background:#0c1a2e}
+.field textarea{resize:vertical;min-height:100px}
+#fmsg{margin-top:.75rem;font-size:.85rem}
+.fok{color:#00d278}.ferr{color:#ff5f57}
+
+/* ══════════════════════════════════════════
+   FOOTER
+══════════════════════════════════════════ */
+footer{background:var(--dark-2);border-top:1px solid var(--bl);padding:4rem 0 2rem;z-index:2;position:relative}
+.foot-grid{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:2.5rem;margin-bottom:3rem}
+@media(max-width:860px){.foot-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:480px){.foot-grid{grid-template-columns:1fr}}
+.foot-brand p{font-size:.85rem;color:var(--muted);margin:1rem 0;line-height:1.7;max-width:250px}
+.foot-chips{display:flex;gap:.5rem;flex-wrap:wrap}
+.foot-chip{padding:4px 12px;border-radius:8px;font-size:.72rem;font-weight:700;background:rgba(255,255,255,.04);border:1px solid var(--bl);color:var(--muted)}
+.foot-chip.gold{border-color:rgba(212,168,67,.25);color:var(--gold)}
+.foot-col h4{font-size:.73rem;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.1em;margin-bottom:1rem;font-family:'Cabinet Grotesk',sans-serif}
+.foot-col ul{list-style:none;display:flex;flex-direction:column;gap:.6rem}
+.foot-col ul a{font-size:.86rem;color:var(--muted);text-decoration:none;transition:color .2s}
+.foot-col ul a:hover{color:var(--teal)}
+.foot-bottom{border-top:1px solid var(--bl);padding-top:1.75rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem}
+.foot-bottom p{font-size:.8rem;color:var(--muted)}
+.socials{display:flex;gap:.6rem}
+.socials a{width:34px;height:34px;border-radius:9px;border:1px solid var(--bl);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.85rem;text-decoration:none;transition:all .2s}
+.socials a:hover{border-color:var(--teal);color:var(--teal)}
+
+/* ══════════════════════════════════════════
+   MODALS & STICKY
+══════════════════════════════════════════ */
+.modal-ov{position:fixed;inset:0;background:rgba(4,10,20,.85);z-index:500;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);opacity:0;pointer-events:none;transition:opacity .3s}
+.modal-ov.open{opacity:1;pointer-events:all}
+.modal-box{background:var(--dark-3);border:1px solid var(--border);border-radius:22px;width:90%;max-width:500px;padding:2.25rem;position:relative;transform:translateY(30px);transition:transform .35s;max-height:90vh;overflow-y:auto}
+.modal-ov.open .modal-box{transform:translateY(0)}
+.modal-close{position:absolute;top:1rem;right:1rem;background:none;border:none;cursor:pointer;color:var(--muted);font-size:1.5rem}
+.modal-close:hover{color:var(--teal)}
+.sticky-fab{position:fixed;bottom:2rem;right:2rem;z-index:200;display:flex;flex-direction:column;gap:.6rem;align-items:flex-end}
+.fab{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;cursor:pointer;border:none;transition:all .3s;box-shadow:0 6px 25px rgba(0,0,0,.4)}
+.fab-main{background:var(--teal);color:#041018}
+.fab-main:hover{transform:scale(1.1);box-shadow:0 0 35px rgba(46,197,219,.35)}
+.fab-help{background:var(--dark-3);border:1px solid var(--border);color:var(--teal)}
+.fab-help:hover{transform:scale(1.1)}
+.fab-lbl{font-size:.62rem;font-weight:600;color:var(--muted);text-align:right}
+
+/* ══════════════════════════════════════════
+   ANIMATIONS
+══════════════════════════════════════════ */
+.fade-up{opacity:0;transform:translateY(28px);transition:opacity .6s ease,transform .6s ease}
+.fade-up.visible{opacity:1;transform:translateY(0)}
+.cursor{display:inline-block;width:3px;height:1em;background:var(--teal);margin-left:2px;animation:blink .7s steps(1) infinite;vertical-align:middle}
+@keyframes blink{50%{opacity:0}}
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+
+<!-- TICKER -->
+<div class="ticker-bar">
+  <div class="ticker-inner" id="tick">
+    <span class="t-item"><i class="bi bi-shield-check"></i> FIRS Accredited Access Point</span>
+    <span class="t-item"><i class="bi bi-cpu"></i> AI-Powered Software Development</span>
+    <span class="t-item"><i class="bi bi-layers"></i> Odoo · SAP · Oracle · QuickBooks ERP Integration</span>
+    <span class="t-item"><i class="bi bi-patch-check"></i> 99.9% Uptime SLA</span>
+    <span class="t-item"><i class="bi bi-headset"></i> 24/7 HelpDesk Support</span>
+    <span class="t-item"><i class="bi bi-lightning-charge"></i> Sub-2s Invoice Validation</span>
+    <span class="t-item"><i class="bi bi-shield-check"></i> FIRS Accredited Access Point</span>
+    <span class="t-item"><i class="bi bi-cpu"></i> AI-Powered Software Development</span>
+    <span class="t-item"><i class="bi bi-layers"></i> Odoo · SAP · Oracle · QuickBooks ERP Integration</span>
+    <span class="t-item"><i class="bi bi-patch-check"></i> 99.9% Uptime SLA</span>
+    <span class="t-item"><i class="bi bi-headset"></i> 24/7 HelpDesk Support</span>
+    <span class="t-item"><i class="bi bi-lightning-charge"></i> Sub-2s Invoice Validation</span>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <a href="#" class="brand">
+      <div class="brand-logo"><i class="bi bi-router"></i></div>
+      <div>
+        <div class="brand-name">LAYER21</div>
+        <div class="brand-sub">IT Services</div>
+      </div>
+    </a>
+    <div class="nav-links">
+      <a href="#services">Services</a>
+      <a href="#e-invoicing">E-Invoicing</a>
+      <a href="#erp">ERP</a>
+      <a href="#software">Software Dev</a>
+      <a href="#ai">AI</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#contact">Contact</a>
+    </div>
+    <div class="nav-right">
+      <a href="/login" class="btn btn-outline" style="padding:.55rem 1.1rem;font-size:.84rem">Login</a>
+      <a href="#contact" class="btn btn-primary" style="padding:.55rem 1.2rem;font-size:.84rem">Get Started</a>
+    </div>
+    <button class="ham" id="ham"><i class="bi bi-list"></i></button>
+  </div>
+</nav>
+
+<!-- Mobile menu -->
+<div class="mob-menu" id="mobmenu">
+  <a href="#services" onclick="closemob()">Services</a>
+  <a href="#e-invoicing" onclick="closemob()">E-Invoicing</a>
+  <a href="#erp" onclick="closemob()">ERP Integration</a>
+  <a href="#software" onclick="closemob()">Software Development</a>
+  <a href="#ai" onclick="closemob()">AI Integration</a>
+  <a href="#pricing" onclick="closemob()">Pricing</a>
+  <a href="#contact" onclick="closemob()">Contact</a>
+  <a href="/login" onclick="closemob()">Login →</a>
+</div>
+
+<!-- ══ HERO ══ -->
+<section id="hero">
+  <div class="hero-blob hb1"></div>
+  <div class="hero-blob hb2"></div>
+  <div class="wrap">
+    <div class="hero-grid">
+      <div>
+        <div class="hero-kicker">
+          <span class="tag"><i class="bi bi-shield-check"></i> FIRS Accredited · NRS Certified</span>
+        </div>
+        <h1 class="hero-h1">
+          We build the technology<br/>
+          <span class="accent" id="typedText"></span><span class="cursor"></span><br/>
+          your business runs on.
+        </h1>
+        <p class="hero-sub">From government-compliant e-invoicing to custom software, ERP rollouts, and AI tools — Layer21 is the technology partner Nigerian enterprises trust.</p>
+
+        <div class="hero-ctas">
+          <a href="#contact" class="btn btn-primary"><i class="bi bi-arrow-right-circle"></i> Get Started Today</a>
+          <a href="#services" class="btn btn-outline"><i class="bi bi-grid-3x3-gap"></i> See All Services</a>
+        </div>
+
+        <div class="intent-label">I need help with →</div>
+        <div class="intent-row">
+          <a href="#e-invoicing" class="intent-btn"><i class="bi bi-receipt"></i> E-Invoicing / NRS Compliance</a>
+          <a href="#erp" class="intent-btn"><i class="bi bi-layers"></i> ERP Setup</a>
+          <a href="#software" class="intent-btn"><i class="bi bi-code-slash"></i> Custom Software</a>
+          <a href="#ai" class="intent-btn"><i class="bi bi-cpu"></i> AI for my business</a>
+          <a href="#contact" class="intent-btn"><i class="bi bi-headset"></i> IT Support</a>
+        </div>
+
+        <div class="hero-stats">
+          <div class="stat"><div class="num">500+</div><div class="lbl">Invoices / Day</div></div>
+          <div class="stat"><div class="num">99.9%</div><div class="lbl">Uptime SLA</div></div>
+          <div class="stat"><div class="num">6+</div><div class="lbl">ERP Connectors</div></div>
+          <div class="stat"><div class="num">&lt;2s</div><div class="lbl">Validation Time</div></div>
+        </div>
+      </div>
+
+      <!-- Hero visual -->
+      <div class="hero-visual">
+        <div class="h-glow"></div>
+        <div class="hero-card-stack">
+          <div class="h-card">
+            <div class="h-card-icon hci-teal"><i class="bi bi-receipt"></i></div>
+            <div class="h-card-text">
+              <div class="name">INV-8841 → NRS Submitted</div>
+              <div class="desc">Odoo · Validated in 1.2s · FIRS Receipt Issued</div>
+            </div>
+            <span class="h-card-status s-live">✓ Accepted</span>
+          </div>
+          <div class="h-card">
+            <div class="h-card-icon hci-purple"><i class="bi bi-layers"></i></div>
+            <div class="h-card-text">
+              <div class="name">Odoo ERP — Live in Production</div>
+              <div class="desc">Accounting · Inventory · HR · Invoicing connected</div>
+            </div>
+            <span class="h-card-status s-live">● Live</span>
+          </div>
+          <div class="h-card">
+            <div class="h-card-icon hci-green"><i class="bi bi-code-slash"></i></div>
+            <div class="h-card-text">
+              <div class="name">Custom Web App — Deployed</div>
+              <div class="desc">Procurement portal · React + Node.js · CI/CD active</div>
+            </div>
+            <span class="h-card-status s-live">● Running</span>
+          </div>
+          <div class="h-card">
+            <div class="h-card-icon hci-blue"><i class="bi bi-cpu"></i></div>
+            <div class="h-card-text">
+              <div class="name">AI Assistant — Trained on your data</div>
+              <div class="desc">Customer support bot · 94% query resolution rate</div>
+            </div>
+            <span class="h-card-status s-new">✦ New</span>
+          </div>
+          <div class="h-card">
+            <div class="h-card-icon hci-gold"><i class="bi bi-headset"></i></div>
+            <div class="h-card-text">
+              <div class="name">HelpDesk Ticket #1044 — Resolved</div>
+              <div class="desc">Critical issue · Resolved in 12 mins · SLA met</div>
+            </div>
+            <span class="h-card-status s-live">✓ Closed</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TRUST BAR -->
+<div class="trust-bar" style="position:relative;z-index:2">
+  <div class="wrap">
+    <div class="trust-bar-inner">
+      <span class="trust-label">Certified & Trusted</span>
+      <div class="trust-logos">
+        <span class="trust-chip gold"><i class="bi bi-award"></i> FIRS Accredited AP</span>
+        <span class="trust-chip gold">NRS Certified</span>
+        <span class="trust-chip">Odoo Partner</span>
+        <span class="trust-chip">SAP Connector</span>
+        <span class="trust-chip">ISO-Ready Practices</span>
+        <span class="trust-chip">99.9% SLA</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SERVICES OVERVIEW ══ -->
+<section id="services">
+  <div class="wrap">
+    <div class="section-head fade-up">
+      <span class="tag"><i class="bi bi-grid-3x3-gap"></i> What We Do</span>
+      <h2>One partner for all your technology needs</h2>
+      <p>Whether you're sending invoices to the government, running an ERP, or want AI working inside your business — we've got you covered.</p>
+    </div>
+    <div class="services-grid fade-up">
+      <a href="#e-invoicing" class="svc-tile">
+        <div class="svc-ico st-gold"><i class="bi bi-receipt"></i></div>
+        <h3>E-Invoicing & NRS Compliance</h3>
+        <p>Send invoices to the Nigerian Revenue Service automatically. Stay compliant without lifting a finger.</p>
+        <span class="arrow"><i class="bi bi-arrow-right"></i></span>
+      </a>
+      <a href="#erp" class="svc-tile">
+        <div class="svc-ico st-teal"><i class="bi bi-layers"></i></div>
+        <h3>ERP Implementation & Integration</h3>
+        <p>Get Odoo, SAP, Oracle, or QuickBooks set up and connected to everything else in your business.</p>
+        <span class="arrow"><i class="bi bi-arrow-right"></i></span>
+      </a>
+      <a href="#software" class="svc-tile">
+        <div class="svc-ico st-purple"><i class="bi bi-code-slash"></i></div>
+        <h3>Custom Software Development</h3>
+        <p>We build web apps, portals, and internal tools made exactly for how your team works.</p>
+        <span class="arrow"><i class="bi bi-arrow-right"></i></span>
+      </a>
+      <a href="#ai" class="svc-tile">
+        <div class="svc-ico st-blue"><i class="bi bi-cpu"></i></div>
+        <h3>AI Integration & Automation</h3>
+        <p>Add AI to your existing tools — chatbots, smart reports, document processing, and workflow automation.</p>
+        <span class="arrow"><i class="bi bi-arrow-right"></i></span>
+      </a>
+      <a href="#contact" class="svc-tile">
+        <div class="svc-ico st-green"><i class="bi bi-headset"></i></div>
+        <h3>IT Support & HelpDesk</h3>
+        <p>24/7 support tickets, SLA-backed response, and a dedicated team that knows your systems inside out.</p>
+        <span class="arrow"><i class="bi bi-arrow-right"></i></span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ══ E-INVOICING ══ -->
+<section class="feature-section" id="e-invoicing">
+  <div class="wrap">
+    <div class="feat-grid">
+      <!-- Visual -->
+      <div class="feat-visual fade-up">
+        <div class="fv-bar">
+          <div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div>
+          <span class="fv-title">Layer21 · E-Invoicing Gateway</span>
+          <span class="fv-live"><i class="bi bi-circle-fill" style="font-size:.45rem"></i> LIVE</span>
+        </div>
+        <div class="fv-body">
+          <div class="inv-pipeline">
+            <div class="inv-row" style="font-size:.73rem;color:var(--muted);padding:.4rem .5rem;background:none;border:none">YOUR ERP</div>
+            <div class="inv-row">
+              <div class="inv-icon" style="background:rgba(46,197,219,.1);color:var(--teal)"><i class="bi bi-layers"></i></div>
+              <div>
+                <div style="font-weight:700;color:#fff;font-size:.84rem">Odoo / SAP / Oracle / QuickBooks</div>
+                <div style="font-size:.72rem;color:var(--muted)">Invoice generated and ready to send</div>
+              </div>
+              <span class="sp-ok">Connected</span>
+            </div>
+            <div class="inv-row-arrow"><i class="bi bi-arrow-down"></i> Secure API</div>
+            <div class="inv-row" style="font-size:.73rem;color:var(--muted);padding:.4rem .5rem;background:none;border:none">LAYER21 ACCESS POINT</div>
+            <div class="inv-row highlight">
+              <div class="inv-icon" style="background:rgba(46,197,219,.15);color:var(--teal)"><i class="bi bi-router"></i></div>
+              <div>
+                <div style="font-weight:700;color:#fff;font-size:.84rem">Layer21 Certified Access Point</div>
+                <div style="font-size:.72rem;color:var(--muted)">Validation · Encryption · Retry · Archive</div>
+              </div>
+              <span style="margin-left:auto;font-size:.68rem;font-weight:700;color:var(--teal);background:rgba(46,197,219,.1);padding:2px 8px;border-radius:999px">FIRS Certified</span>
+            </div>
+            <div class="inv-row-arrow"><i class="bi bi-arrow-down"></i> Encrypted submission</div>
+            <div class="inv-row" style="font-size:.73rem;color:var(--muted);padding:.4rem .5rem;background:none;border:none">NIGERIAN REVENUE SERVICE</div>
+            <div class="inv-row">
+              <div class="inv-icon" style="background:rgba(212,168,67,.1);color:var(--gold)"><i class="bi bi-bank"></i></div>
+              <div>
+                <div style="font-weight:700;color:#fff;font-size:.84rem">NRS / FIRS Government Portal</div>
+                <div style="font-size:.72rem;color:var(--muted)">INV-8841 · Accepted · Receipt issued</div>
+              </div>
+              <span class="sp-ok">✓ Done</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Copy -->
+      <div class="feat-copy fade-up">
+        <span class="tag"><i class="bi bi-receipt"></i> E-Invoicing</span>
+        <h2>Submit invoices to the government — automatically.</h2>
+        <p>Nigeria now requires businesses to send invoices directly to the Federal Inland Revenue Service (FIRS). Layer21 is an officially accredited Access Point Provider — meaning we're the secure bridge between your accounting system and the government.</p>
+        <p>You don't need to change how you work. We plug into what you already use and handle everything else.</p>
+        <ul class="feat-list">
+          <li><i class="bi bi-check2-circle"></i> Works with Odoo, SAP, Oracle, QuickBooks, Sage, and more</li>
+          <li><i class="bi bi-check2-circle"></i> Invoice validated and acknowledged in under 2 seconds</li>
+          <li><i class="bi bi-check2-circle"></i> If there's a network issue, we automatically retry — no failed submissions</li>
+          <li><i class="bi bi-check2-circle"></i> Full audit records and government receipts stored for 7 years</li>
+          <li><i class="bi bi-check2-circle"></i> Test environment available before going live</li>
+        </ul>
+        <div class="feat-actions">
+          <a href="#contact" class="btn btn-primary"><i class="bi bi-arrow-right-circle"></i> Get Set Up</a>
+          <a href="/documentation" class="btn btn-outline"><i class="bi bi-file-code"></i> API Docs</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ ERP ══ -->
+<section class="feature-section" id="erp">
+  <div class="wrap">
+    <div class="feat-grid flip">
+      <!-- Copy -->
+      <div class="feat-copy fade-up">
+        <span class="tag"><i class="bi bi-layers"></i> ERP Integration</span>
+        <h2>Your business, running on one system.</h2>
+        <p>An ERP (Enterprise Resource Planning) system connects your accounting, inventory, sales, HR, and operations into one place. Instead of spreadsheets and separate apps, everything talks to each other.</p>
+        <p>We implement Odoo (our specialty), SAP, Oracle, QuickBooks, Sage, and Microsoft Dynamics — and connect them to any other system you use, including our e-invoicing gateway.</p>
+        <ul class="feat-list">
+          <li><i class="bi bi-check2-circle"></i> Full Odoo setup: Accounting, Inventory, HR, POS, CRM, and more</li>
+          <li><i class="bi bi-check2-circle"></i> We move your existing data from spreadsheets or old systems</li>
+          <li><i class="bi bi-check2-circle"></i> Custom modules built to match your exact workflows</li>
+          <li><i class="bi bi-check2-circle"></i> E-invoicing built in from day one — no double work</li>
+          <li><i class="bi bi-check2-circle"></i> Staff training and ongoing support included</li>
+        </ul>
+        <div class="feat-actions">
+          <a href="#contact" class="btn btn-primary"><i class="bi bi-arrow-right-circle"></i> Discuss Your ERP</a>
+        </div>
+      </div>
+
+      <!-- Visual -->
+      <div class="feat-visual fade-up">
+        <div class="fv-bar">
+          <div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div>
+          <span class="fv-title">ERP Connector Hub</span>
+        </div>
+        <div class="fv-body">
+          <div style="text-align:center;margin-bottom:1rem">
+            <div style="display:inline-flex;align-items:center;gap:.6rem;padding:.65rem 1.25rem;border-radius:14px;background:rgba(46,197,219,.08);border:1px solid var(--border)">
+              <i class="bi bi-router" style="color:var(--teal);font-size:1.2rem"></i>
+              <span style="font-weight:700;color:#fff;font-family:'Cabinet Grotesk',sans-serif">Layer21 Integration Hub</span>
+            </div>
+          </div>
+          <div class="erp-viz">
+            <div class="erp-chip"><i class="bi bi-layers"></i>Odoo</div>
+            <div class="erp-chip" style="border-color:var(--teal);background:rgba(46,197,219,.08);color:var(--teal)">
+              <i class="bi bi-arrows-expand"></i>Connected
+            </div>
+            <div class="erp-chip"><i class="bi bi-building"></i>SAP</div>
+            <div class="erp-chip"><i class="bi bi-database"></i>Oracle</div>
+            <div class="erp-chip" style="border-color:var(--teal);background:rgba(46,197,219,.08);color:var(--teal)">
+              <i class="bi bi-bank"></i>NRS/FIRS
+            </div>
+            <div class="erp-chip"><i class="bi bi-calculator"></i>QuickBooks</div>
+            <div class="erp-chip"><i class="bi bi-bar-chart"></i>Sage</div>
+            <div class="erp-chip" style="border-color:var(--teal);background:rgba(46,197,219,.08);color:var(--teal)">
+              <i class="bi bi-plug"></i>Your App
+            </div>
+            <div class="erp-chip"><i class="bi bi-microsoft"></i>Dynamics</div>
+          </div>
+          <div style="margin-top:1rem;padding:.85rem;border-radius:12px;background:rgba(0,210,120,.06);border:1px solid rgba(0,210,120,.2);font-size:.8rem;color:#00d278;display:flex;align-items:center;gap:.6rem">
+            <i class="bi bi-check-circle-fill"></i>
+            All systems synced · Last update 4 seconds ago
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ SOFTWARE DEV ══ -->
+<section class="feature-section" id="software">
+  <div class="wrap">
+    <div class="feat-grid">
+      <!-- Visual -->
+      <div class="feat-visual fade-up">
+        <div class="fv-bar">
+          <div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div>
+          <span class="fv-title">Procurement Portal · layer21.client.ng</span>
+        </div>
+        <div class="fv-body">
+          <div class="code-tabs">
+            <span class="code-tab active">app.js</span>
+            <span class="code-tab">api.py</span>
+            <span class="code-tab">schema.sql</span>
+          </div>
+          <div class="code-block">
+            <div class="code-line"><span class="line-num">1</span><span class="c-comment">// Procurement approval workflow</span></div>
+            <div class="code-line"><span class="line-num">2</span><span class="c-keyword">async function</span> <span class="c-func">submitOrder</span>(order) {</div>
+            <div class="code-line"><span class="line-num">3</span><span style="padding-left:1.2rem"><span class="c-keyword">const</span> validated = <span class="c-keyword">await</span> <span class="c-func">validate</span>(order);</span></div>
+            <div class="code-line"><span class="line-num">4</span><span style="padding-left:1.2rem"><span class="c-keyword">if</span> (order.amount &gt; <span class="c-num">500000</span>) {</span></div>
+            <div class="code-line"><span class="line-num">5</span><span style="padding-left:2.4rem"><span class="c-keyword">await</span> <span class="c-func">notifyApprovers</span>(order);</span></div>
+            <div class="code-line"><span class="line-num">6</span><span style="padding-left:2.4rem"><span class="c-keyword">return</span> <span class="c-string">'pending_approval'</span>;</span></div>
+            <div class="code-line"><span class="line-num">7</span><span style="padding-left:1.2rem">}</span></div>
+            <div class="code-line"><span class="line-num">8</span><span style="padding-left:1.2rem"><span class="c-keyword">await</span> <span class="c-func">syncToOdoo</span>(validated);</span></div>
+            <div class="code-line"><span class="line-num">9</span><span style="padding-left:1.2rem"><span class="c-keyword">return</span> <span class="c-func">submitToNRS</span>(validated);</span></div>
+            <div class="code-line"><span class="line-num">10</span>}</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-top:1rem">
+            <div style="padding:.85rem;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid var(--bl);font-size:.78rem">
+              <div style="color:var(--muted);margin-bottom:.3rem">Stack</div>
+              <div style="color:#fff;font-weight:600">React · Node.js · PostgreSQL</div>
+            </div>
+            <div style="padding:.85rem;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid var(--bl);font-size:.78rem">
+              <div style="color:var(--muted);margin-bottom:.3rem">Deployment</div>
+              <div style="color:#fff;font-weight:600">AWS · Docker · CI/CD</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Copy -->
+      <div class="feat-copy fade-up">
+        <span class="tag"><i class="bi bi-code-slash"></i> Software Development</span>
+        <h2>Software built exactly for how you work.</h2>
+        <p>Sometimes off-the-shelf software doesn't fit your business. Maybe you need a custom procurement portal, a client-facing dashboard, an internal tool, or a mobile app tailored to your exact processes.</p>
+        <p>We design, build, and maintain software from scratch — web apps, mobile apps, internal systems, and APIs — using modern technologies that scale as you grow.</p>
+        <ul class="feat-list">
+          <li><i class="bi bi-check2-circle"></i> Web applications, admin dashboards, and customer portals</li>
+          <li><i class="bi bi-check2-circle"></i> Mobile apps for iOS and Android</li>
+          <li><i class="bi bi-check2-circle"></i> REST APIs and backend systems that connect to your ERP</li>
+          <li><i class="bi bi-check2-circle"></i> Automated workflows that replace manual, repetitive tasks</li>
+          <li><i class="bi bi-check2-circle"></i> Ongoing maintenance, updates, and hosting support</li>
+        </ul>
+        <div class="feat-actions">
+          <a href="#contact" class="btn btn-primary"><i class="bi bi-arrow-right-circle"></i> Tell Us What You Need</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ AI ══ -->
+<section class="feature-section" id="ai">
+  <div class="wrap">
+    <div class="feat-grid flip">
+      <!-- Copy -->
+      <div class="feat-copy fade-up">
+        <span class="tag"><i class="bi bi-cpu"></i> AI Integration</span>
+        <h2>Make your business smarter with AI.</h2>
+        <p>AI isn't just for big tech companies. We help Nigerian businesses put AI to work in practical ways — answering customer questions, reading documents, generating reports, and automating decisions that used to take hours.</p>
+        <p>We connect AI to the software you already use, so your team gets the benefits without changing how they work.</p>
+        <ul class="feat-list">
+          <li><i class="bi bi-check2-circle"></i> AI chatbots trained on your products, policies, and FAQs</li>
+          <li><i class="bi bi-check2-circle"></i> Automated document reading — invoices, contracts, forms</li>
+          <li><i class="bi bi-check2-circle"></i> Smart reports and summaries from your business data</li>
+          <li><i class="bi bi-check2-circle"></i> Workflow automation that learns from patterns</li>
+          <li><i class="bi bi-check2-circle"></i> Integrated into your ERP, website, or custom app</li>
+        </ul>
+        <div class="feat-actions">
+          <a href="#contact" class="btn btn-primary"><i class="bi bi-arrow-right-circle"></i> Explore AI for Your Business</a>
+        </div>
+      </div>
+
+      <!-- Visual -->
+      <div class="feat-visual fade-up">
+        <div class="fv-bar">
+          <div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div>
+          <span class="fv-title">AI Assistant · Your Business</span>
+          <span class="fv-live"><i class="bi bi-cpu" style="font-size:.7rem"></i> AI Active</span>
+        </div>
+        <div class="fv-body">
+          <div class="ai-chat">
+            <div class="ai-msg">
+              <div class="ai-avatar av-user"><i class="bi bi-person" style="font-size:.9rem;color:var(--muted)"></i></div>
+              <div class="ai-bubble ab-user">What were our top 3 selling products last month?</div>
+            </div>
+            <div class="ai-msg">
+              <div class="ai-avatar av-ai"><i class="bi bi-cpu"></i></div>
+              <div class="ai-bubble ab-ai">Based on your Odoo data for March 2025:<br/><br/>
+                <strong style="color:#fff">1. Industrial Generator 45KVA</strong> — ₦12.4M (84 units)<br/>
+                <strong style="color:#fff">2. APC UPS 3000VA</strong> — ₦8.1M (203 units)<br/>
+                <strong style="color:#fff">3. Solar Inverter 5KVA</strong> — ₦6.9M (117 units)<br/><br/>
+                <span style="color:var(--teal);font-size:.78rem">↑ 23% increase vs February overall</span>
+              </div>
+            </div>
+            <div class="ai-msg">
+              <div class="ai-avatar av-user"><i class="bi bi-person" style="font-size:.9rem;color:var(--muted)"></i></div>
+              <div class="ai-bubble ab-user">Generate the monthly compliance report and send to finance@company.ng</div>
+            </div>
+            <div class="ai-msg">
+              <div class="ai-avatar av-ai"><i class="bi bi-cpu"></i></div>
+              <div class="ai-typing"><span></span><span></span><span></span></div>
+            </div>
+          </div>
+          <div class="ai-pill-row" style="margin-top:.85rem">
+            <span class="ai-pill">Summarise invoices</span>
+            <span class="ai-pill">Flag anomalies</span>
+            <span class="ai-pill">Draft reply</span>
+            <span class="ai-pill">Read contract</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ HOW IT WORKS ══ -->
+<section id="how">
+  <div class="wrap">
+    <div class="section-head fade-up">
+      <span class="tag"><i class="bi bi-map"></i> How It Works</span>
+      <h2>You're up and running in 4 steps</h2>
+      <p>We make onboarding easy — no long procurement cycles, no months of back-and-forth.</p>
+    </div>
+    <div class="how-grid fade-up">
+      <div class="how-step">
+        <div class="how-num">1</div>
+        <h4>Tell us what you need</h4>
+        <p>Fill out our contact form or call us. We'll understand your business, your current systems, and your goals.</p>
+      </div>
+      <div class="how-step">
+        <div class="how-num">2</div>
+        <h4>We scope & propose</h4>
+        <p>Within one business day, you'll get a clear proposal with timeline, scope, and transparent pricing — no surprises.</p>
+      </div>
+      <div class="how-step">
+        <div class="how-num">3</div>
+        <h4>We build & integrate</h4>
+        <p>Our team does the heavy lifting — connecting systems, building software, and testing everything before go-live.</p>
+      </div>
+      <div class="how-step">
+        <div class="how-num">4</div>
+        <h4>You go live with support</h4>
+        <p>Launch with confidence. Your team gets training, and our HelpDesk is there whenever you need us.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ PRICING ══ -->
+<section id="pricing">
+  <div class="wrap">
+    <div class="section-head fade-up">
+      <span class="tag"><i class="bi bi-tag"></i> Pricing</span>
+      <h2>Flexible pricing for every business</h2>
+      <p>We scope every project to your needs. Request a quote and we'll get back within one business day.</p>
+    </div>
+    <div class="price-grid fade-up">
+      <div class="p-card">
+        <div class="p-head">
+          <h3>E-Invoicing Access Point</h3>
+          <div class="sub">FIRS-certified NRS submission for any ERP</div>
+          <div class="p-price">On Request <small>/ quote</small></div>
+        </div>
+        <div class="p-body">
+          <ul class="p-features">
+            <li><i class="bi bi-check2"></i> FIRS-accredited real-time invoice validation</li>
+            <li><i class="bi bi-check2"></i> All major ERP connectors included</li>
+            <li><i class="bi bi-check2"></i> Encrypted submission + auto retry</li>
+            <li><i class="bi bi-check2"></i> 7-year audit archive</li>
+            <li><i class="bi bi-check2"></i> Dashboard & compliance reports</li>
+            <li><i class="bi bi-check2"></i> Sandbox + onboarding support</li>
+          </ul>
+          <a href="#contact" class="btn btn-primary" style="width:100%;justify-content:center">Request Quote</a>
+        </div>
+      </div>
+
+      <div class="p-card featured">
+        <div class="p-head">
+          <div class="p-tag pt-pop">Most Popular</div>
+          <h3>Odoo ERP + E-Invoicing</h3>
+          <div class="sub">Full ERP rollout with compliance built in</div>
+          <div class="p-price">On Request <small>/ quote</small></div>
+        </div>
+        <div class="p-body">
+          <ul class="p-features">
+            <li><i class="bi bi-check2"></i> Full Odoo setup across all your departments</li>
+            <li><i class="bi bi-check2"></i> Data migration from your current system</li>
+            <li><i class="bi bi-check2"></i> Custom modules for your unique workflows</li>
+            <li><i class="bi bi-check2"></i> E-invoicing to NRS built in from day one</li>
+            <li><i class="bi bi-check2"></i> Staff training & change management</li>
+            <li><i class="bi bi-check2"></i> Ongoing managed support</li>
+          </ul>
+          <a href="#contact" class="btn btn-primary" style="width:100%;justify-content:center">Request Quote</a>
+        </div>
+      </div>
+
+      <div class="p-card">
+        <div class="p-head">
+          <div class="p-tag pt-ent">Enterprise</div>
+          <h3>Custom Software & AI</h3>
+          <div class="sub">Bespoke development and AI integration</div>
+          <div class="p-price">On Request <small>/ project</small></div>
+        </div>
+        <div class="p-body">
+          <ul class="p-features">
+            <li><i class="bi bi-check2"></i> Custom web or mobile applications</li>
+            <li><i class="bi bi-check2"></i> AI chatbots, automation & document processing</li>
+            <li><i class="bi bi-check2"></i> API design & system integration</li>
+            <li><i class="bi bi-check2"></i> ERP + AI combined workflows</li>
+            <li><i class="bi bi-check2"></i> Hosting, maintenance & DevOps</li>
+            <li><i class="bi bi-check2"></i> Dedicated project manager</li>
+          </ul>
+          <a href="#contact" class="btn btn-primary" style="width:100%;justify-content:center">Request Quote</a>
+        </div>
+      </div>
+    </div>
+    <p style="text-align:center;margin-top:1.75rem;font-size:.87rem;color:var(--muted)">Not sure which plan fits? <a href="#contact" style="color:var(--teal);font-weight:600">Talk to us</a> — we'll scope it for you at no cost.</p>
+  </div>
+</section>
+
+<!-- ══ CTA BANNER ══ -->
+<div class="wrap">
+  <div class="cta-banner fade-up">
+    <span class="tag" style="margin-bottom:1.25rem"><i class="bi bi-lightning-charge"></i> Ready to start?</span>
+    <h2>Stop managing technology.<br/>Start using it.</h2>
+    <p>Whether it's e-invoicing compliance, a new ERP, custom software, or AI — we handle the tech so you can focus on your business.</p>
+    <div class="cta-actions">
+      <a href="#contact" class="btn btn-primary" style="font-size:.95rem;padding:.85rem 2rem"><i class="bi bi-arrow-right-circle"></i> Get Started Today</a>
+      <a href="#services" class="btn btn-outline" style="font-size:.95rem;padding:.85rem 2rem"><i class="bi bi-grid-3x3-gap"></i> Explore Services</a>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CONTACT ══ -->
+<section id="contact">
+  <div class="wrap">
+    <div class="contact-grid">
+      <div class="fade-up">
+        <span class="tag"><i class="bi bi-envelope"></i> Contact</span>
+        <h2 style="margin:.75rem 0 1rem;font-size:clamp(1.8rem,3.5vw,2.5rem);color:#fff;letter-spacing:-.02em">Let's talk about your project</h2>
+        <p style="color:var(--muted);font-size:.95rem;line-height:1.75;margin-bottom:2rem">Tell us what you're trying to solve. We'll review your situation and get back with a clear plan within one business day — no sales pressure, just honest advice.</p>
+        <div class="c-items">
+          <div class="c-item"><i class="bi bi-envelope"></i> sales@layer21.com</div>
+          <div class="c-item"><i class="bi bi-telephone"></i> +234 811 192 2822</div>
+          <div class="c-item"><i class="bi bi-geo-alt"></i> Lagos, Nigeria</div>
+          <div class="c-item"><i class="bi bi-clock"></i> Mon–Fri, 8am–6pm WAT</div>
+        </div>
+        <div style="margin-top:2rem;padding:1.25rem;border-radius:14px;background:rgba(46,197,219,.04);border:1px solid var(--border)">
+          <div style="font-size:.75rem;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.5rem;font-family:'Cabinet Grotesk',sans-serif"><i class="bi bi-headset"></i> Already a customer?</div>
+          <p style="font-size:.84rem;color:var(--muted);margin:0 0 .75rem">Open a support ticket for technical issues, billing, or changes.</p>
+          <button class="btn btn-outline" style="font-size:.82rem;padding:.5rem 1rem" onclick="document.getElementById('hdModal').classList.add('open')"><i class="bi bi-ticket"></i> Open HelpDesk Ticket</button>
+        </div>
+      </div>
+
+      <div class="contact-form fade-up">
+        <form id="cform" novalidate>
+          <div class="form-row">
+            <div class="field"><label>Business Name *</label><input type="text" name="biz" placeholder="Acme Corp" required/></div>
+            <div class="field"><label>Your Name *</label><input type="text" name="name" placeholder="Full name" required/></div>
+          </div>
+          <div class="form-row">
+            <div class="field"><label>Email *</label><input type="email" name="email" placeholder="you@company.com" required/></div>
+            <div class="field"><label>Phone *</label><input type="tel" name="phone" placeholder="+234 800 000 0000" required/></div>
+          </div>
+          <div class="field">
+            <label>I need help with *</label>
+            <select name="service" required>
+              <option value="">— Choose a service —</option>
+              <option>E-Invoicing / NRS Compliance (Access Point)</option>
+              <option>ERP Implementation (Odoo, SAP, Oracle etc.)</option>
+              <option>Custom Software Development</option>
+              <option>AI Integration & Automation</option>
+              <option>System Integration</option>
+              <option>IT Support & HelpDesk</option>
+              <option>Not sure — I need advice</option>
+            </select>
+          </div>
+          <div class="field"><label>Tell us more</label><textarea name="msg" placeholder="Describe your situation, current systems, and what you want to achieve…"></textarea></div>
+          <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off"/>
+          <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;font-size:.95rem;padding:.85rem" id="cfsub">
+            <i class="bi bi-send"></i> Send Enquiry
+          </button>
+          <div id="fmsg"></div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ FOOTER ══ -->
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <div style="display:flex;align-items:center;gap:.6rem">
+          <div class="brand-logo"><i class="bi bi-router"></i></div>
+          <div>
+            <div class="brand-name">LAYER21</div>
+            <div class="brand-sub">IT Services</div>
+          </div>
+        </div>
+        <p>Certified Access Point Provider, ERP Integrator, and Software & AI development partner for Nigerian enterprises.</p>
+        <div class="foot-chips">
+          <span class="foot-chip gold">FIRS Certified</span>
+          <span class="foot-chip gold">NRS Accredited</span>
+          <span class="foot-chip">Odoo Partner</span>
+        </div>
+      </div>
+      <div class="foot-col">
+        <h4>Services</h4>
+        <ul>
+          <li><a href="#e-invoicing">E-Invoicing & NRS</a></li>
+          <li><a href="#erp">ERP Integration</a></li>
+          <li><a href="#software">Software Development</a></li>
+          <li><a href="#ai">AI Integration</a></li>
+          <li><a href="#contact">IT Support</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4>Platform</h4>
+        <ul>
+          <li><a href="#e-invoicing">Invoice Dashboard</a></li>
+          <li><a href="#e-invoicing">Compliance Reports</a></li>
+          <li><a href="/documentation">API Docs</a></li>
+          <li><a href="#contact">HelpDesk</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="#contact">Contact Sales</a></li>
+          <li><a href="/login">Client Login</a></li>
+          <li><a href="#" onclick="document.getElementById('hdModal').classList.add('open');return false">Support Ticket</a></li>
+          <li><a href="/documentation">Documentation</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <p>© <span id="yr"></span> Layer21 IT Services. All rights reserved.</p>
+      <div class="socials">
+        <a href="#"><i class="bi bi-twitter-x"></i></a>
+        <a href="#"><i class="bi bi-linkedin"></i></a>
+        <a href="#"><i class="bi bi-facebook"></i></a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- HELPDESK MODAL -->
+<div class="modal-ov" id="hdModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="document.getElementById('hdModal').classList.remove('open')">&times;</button>
+    <span class="tag" style="margin-bottom:1rem"><i class="bi bi-headset"></i> HelpDesk</span>
+    <h2 style="color:#fff;font-size:1.4rem;margin:.7rem 0 .5rem">Open a Support Ticket</h2>
+    <p style="color:var(--muted);font-size:.84rem;margin-bottom:1.5rem">We respond within 15 minutes for critical issues.</p>
+    <form id="hdform" novalidate>
+      <div class="field"><label>Subject *</label><input type="text" name="subj" placeholder="Brief summary of the issue" required/></div>
+      <div class="field">
+        <label>Priority *</label>
+        <select name="prio" required>
+          <option value="">— Select priority —</option>
+          <option value="low">Low — General question</option>
+          <option value="med">Medium — Affecting my work</option>
+          <option value="high">High — Disrupting operations</option>
+          <option value="crit">Critical — System is down</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Category *</label>
+        <select name="cat" required>
+          <option value="">— Select category —</option>
+          <option>Invoice Submission Failure</option>
+          <option>ERP Connector Issue</option>
+          <option>NRS Acknowledgement Missing</option>
+          <option>Dashboard / Platform Access</option>
+          <option>Billing</option>
+          <option>AI / Software Issue</option>
+          <option>API / Integration</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="field"><label>Description *</label><textarea name="desc" placeholder="Describe the issue, including any error messages, invoice IDs, or steps to reproduce…" required></textarea></div>
+      <div class="field"><label>Your Email *</label><input type="email" name="email" placeholder="you@company.com" required/></div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center" id="hdsub"><i class="bi bi-ticket"></i> Submit Ticket</button>
+      <div id="hdmsg" style="margin-top:.75rem;font-size:.85rem"></div>
+    </form>
+  </div>
+</div>
+
+<!-- STICKY FAB -->
+<div class="sticky-fab">
+  <div style="text-align:right">
+    <div class="fab-lbl">HelpDesk</div>
+    <button class="fab fab-help" onclick="document.getElementById('hdModal').classList.add('open')"><i class="bi bi-headset"></i></button>
+  </div>
+  <div style="text-align:right">
+    <div class="fab-lbl">Contact Sales</div>
+    <a href="#contact"><button class="fab fab-main"><i class="bi bi-chat-dots"></i></button></a>
+  </div>
+</div>
+
+<script>
+// Mobile menu
+const ham = document.getElementById('ham');
+const mob = document.getElementById('mobmenu');
+ham.addEventListener('click', () => {
+  mob.classList.toggle('open');
+  ham.querySelector('i').className = mob.classList.contains('open') ? 'bi bi-x-lg' : 'bi bi-list';
+});
+function closemob(){ mob.classList.remove('open'); ham.querySelector('i').className='bi bi-list'; }
+
+// Typed text
+const words = ['that pays tax correctly.', 'that actually saves time.', 'that uses AI smartly.', 'that grows with you.'];
+let wi=0,ci=0,del=false;
+const tel = document.getElementById('typedText');
+function type(){
+  const w = words[wi];
+  if(!del){ tel.textContent=w.substring(0,ci+1); ci++; if(ci===w.length){del=true;setTimeout(type,2000);return;} }
+  else { tel.textContent=w.substring(0,ci-1); ci--; if(ci===0){del=false;wi=(wi+1)%words.length;} }
+  setTimeout(type, del?55:85);
+}
+type();
+
+// Fade up observer
+const obs = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('visible'); });
+},{threshold:.1});
+document.querySelectorAll('.fade-up').forEach(el=>obs.observe(el));
+
+// Contact form
+document.getElementById('cform').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const form=e.target, msg=document.getElementById('fmsg'), btn=document.getElementById('cfsub');
+  const d={};new FormData(form).forEach((v,k)=>d[k]=v);
+  if(!d.biz||!d.name||!d.email||!d.phone||!d.service){
+    msg.textContent='Please fill in all required fields.';msg.className='ferr';return;
+  }
+  if(d.website&&d.website.trim()){msg.textContent='Thank you!';return;}
+  btn.disabled=true;btn.innerHTML='<i class="bi bi-hourglass-split"></i> Sending…';
+  try{
+    const res=await fetch('/contact_sales',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d),credentials:'same-origin'});
+    if(res.ok){msg.textContent="✓ Enquiry received! We'll be in touch within one business day.";msg.className='fok';form.reset();}
+    else{const r=await res.json().catch(()=>({}));msg.textContent=r.error||'Error — please try again.';msg.className='ferr';}
+  }catch{msg.textContent='Network error — please try again.';msg.className='ferr';}
+  finally{btn.disabled=false;btn.innerHTML='<i class="bi bi-send"></i> Send Enquiry';}
+});
+
+// Helpdesk form
+document.getElementById('hdform').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const form=e.target, msg=document.getElementById('hdmsg'), btn=document.getElementById('hdsub');
+  const d={};new FormData(form).forEach((v,k)=>d[k]=v);
+  if(!d.subj||!d.prio||!d.cat||!d.desc||!d.email){
+    msg.textContent='Please fill all required fields.';msg.style.color='#ff5f57';return;
+  }
+  btn.disabled=true;
+  await new Promise(r=>setTimeout(r,900));
+  msg.textContent='✓ Ticket submitted! Check your email for your ticket ID.';msg.style.color='#00d278';
+  form.reset();btn.disabled=false;
+});
+
+// Close modal on backdrop
+document.getElementById('hdModal').addEventListener('click',e=>{
+  if(e.target===document.getElementById('hdModal')) e.target.classList.remove('open');
+});
+
+// Year
+document.getElementById('yr').textContent = new Date().getFullYear();
+</script>
+</body>
+</html>

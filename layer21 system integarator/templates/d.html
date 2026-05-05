@@ -1,0 +1,867 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Layer21 — Sign in</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="{{ url_for('static', filename='stylesheets/index.css') }}" rel="stylesheet">
+
+  <style>
+    /* small local overrides for the login page only */
+    .auth-bg {
+      background: linear-gradient(180deg, rgba(11,18,32,0.94) 0%, rgba(6,12,20,0.84) 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 1rem;
+    }
+
+    .auth-card {
+      width: 100%;
+      max-width: 980px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      align-items: stretch;
+    }
+
+    @media(min-width: 900px){
+      .auth-card { grid-template-columns: 1fr 420px; }
+    }
+
+    .auth-side {
+      background: linear-gradient(180deg, rgba(46,197,219,0.06), rgba(54,185,209,0.03));
+      border-radius: 14px;
+      padding: 2.25rem;
+      color: rgba(255,255,255,0.95);
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      gap:1rem;
+    }
+
+    .auth-form {
+      background: white;
+      border-radius: 14px;
+      padding: 2rem;
+      box-shadow: 0 18px 60px rgba(2,12,20,0.45);
+    }
+
+    .field {
+      display:block;
+      width:100%;
+      margin-bottom: .75rem;
+    }
+
+    .field label { display:block; margin-bottom:.35rem; font-weight:600; color:var(--brand-dark); font-size:.95rem; }
+    .field input, .field select {
+      width:100%;
+      padding:.7rem .9rem;
+      border-radius:10px;
+      border:1px solid rgba(6,12,20,0.06);
+      font-size: 0.98rem;
+      outline:none;
+    }
+
+    .muted { color: rgba(6,12,20,0.6); }
+
+    .small-link { font-size:.9rem; color:var(--brand-teal); text-decoration:none; }
+    .small-link:hover { text-decoration:underline; }
+
+    .visually-hidden { position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden; }
+
+    /* spinner */
+    .spinner { display:inline-block; width:18px; height:18px; border-radius:50%; border:2px solid rgba(0,0,0,0.08); border-top-color: rgba(2,12,20,0.6); animation: spin .9s linear infinite; vertical-align:middle; margin-right:.5rem; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .popwrap { position: relative; display: inline-block; }
+  .popmenu {
+    position: absolute;
+    right: 0;
+    top: 110%;
+    width: 360px;
+    max-width: calc(100vw - 40px);
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    padding: 14px;
+    z-index: 2000;
+  }
+  .popmenu.hidden { display: none; }
+  .popmenu h3 { margin: 0 0 10px; font-size: 16px; }
+  .popmenu .row { margin-bottom: 10px; }
+  .popmenu label { display:block; font-size: 13px; margin-bottom:4px; color:#333; }
+  .popmenu input[type="date"], .popmenu textarea {
+    width: 100%; padding: 8px 10px; border:1px solid #ccc; border-radius:6px; box-sizing: border-box;
+  }
+  .popmenu textarea { min-height: 80px; resize:vertical; }
+  .popmenu .actions { display:flex; gap:8px; justify-content:flex-end; margin-top:8px; }
+  .btn { padding: 8px 12px; border-radius:6px; border:1px solid transparent; cursor:pointer; }
+  .btn-primary { background:#0b74de; color:#fff; border-color:#0b74de; }
+  .btn-ghost { background:transparent; color:#333; border:1px solid #e6e6e6; }
+  .pop-error { color: #9b1c1c; font-size: 13px; margin-top:6px; }
+  /* Custom scrolling animation */
+  @keyframes scroll-left {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        
+        .scroll-container {
+            animation: scroll-left 30s linear infinite;
+        }
+        
+        .scroll-container.paused {
+            animation-play-state: paused;
+        }
+        
+        /* Hide scrollbar but keep functionality */
+        .ticker-scroll::-webkit-scrollbar {
+            display: none;
+        }
+        .ticker-scroll {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+
+  </style>
+</head>
+<body>
+
+  <header id="siteHeader" class="site-nav bg-white border-b sticky top-0 z-50">
+    <div class="container max-w-7xl mx-auto px-5 md:px-8 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <img src="/static/img/layer21logo.jpg" alt="Layer21" class="logo-badge" />
+        <div>
+          <div class="text-lg font-bold text-[var(--brand-dark)]">LAYER21</div>
+          <div class="text-xs text-[var(--brand-teal)] font-semibold -mt-1">IT Services</div>
+        </div>
+      </div>
+  
+      <!-- Desktop nav -->
+      <nav class="hidden md:flex items-center gap-6">
+        <a href="/logout" class="nav-link text-sm font-medium">Logout</a>
+  
+        <!-- Submit Complaint button -->
+        <a href="/complaints"
+           class="inline-flex items-center text-sm font-semibold px-4 py-2 rounded-lg shadow-sm
+                  bg-[var(--brand-teal)] text-white hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--brand-teal)]">
+          <!-- Optional icon (SVG) -->
+          <svg class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6M7 8h10M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+          Complaints
+        </a>
+      </nav>
+  
+      <!-- Mobile controls -->
+      <div class="md:hidden flex items-center gap-3">
+        <a href="/complaints"
+           class="inline-flex items-center text-sm font-semibold px-3 py-2 rounded-md bg-[var(--brand-teal)] text-white">
+          Submit
+        </a>
+  
+        <button id="mobile-nav-toggle" aria-controls="mobile-nav" aria-expanded="false"
+                class="p-2 rounded-md border ml-2 focus:outline-none focus:ring-2">
+          <span class="sr-only">Open menu</span>
+          <!-- hamburger -->
+          <svg id="hamburger" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  
+    <!-- Mobile nav (hidden by default) -->
+    <nav id="mobile-nav" class="md:hidden hidden border-t bg-white">
+      <div class="px-5 py-3 flex flex-col gap-2">
+        <a href="/logout" class="text-sm font-medium py-2">Logout</a>
+        <a href="/complaints" class="text-sm font-semibold py-2 rounded-md bg-[var(--brand-teal)] text-white text-center">Submit Complaint</a>
+      </div>
+    </nav>
+  
+    <script>
+      // Simple mobile toggle (no frameworks)
+      (function(){
+        const toggle = document.getElementById('mobile-nav-toggle');
+        const mobileNav = document.getElementById('mobile-nav');
+  
+        if (!toggle || !mobileNav) return;
+  
+        toggle.addEventListener('click', () => {
+          const expanded = toggle.getAttribute('aria-expanded') === 'true';
+          toggle.setAttribute('aria-expanded', String(!expanded));
+          mobileNav.classList.toggle('hidden');
+        });
+      })();
+    </script>
+  </header>
+  <div id="flash-container"></div>
+
+  <!-- AUTH AREA -->
+  <main class="auth-bg">
+<!-- submission ticker (fixed above everything) -->
+<div id="submissionTicker" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-3xl px-4">
+  <div class="bg-white/95 border border-gray-200 rounded-2xl shadow-lg p-2 flex items-center gap-3">
+      <div class="flex-1 overflow-hidden ticker-scroll">
+          <ul id="submissionTickerList" class="flex gap-3 items-center whitespace-nowrap text-sm text-gray-800 scroll-container"></ul>
+      </div>
+      <div class="flex items-center gap-2">
+          <button id="tickerToggle" class="px-3 py-1 rounded-lg text-xs border hover:bg-gray-50">Pause</button>
+          <button id="openLogsPanel" class="px-3 py-1 rounded-lg text-xs bg-teal-600 text-white hover:bg-teal-700">Open Logs</button>
+      </div>
+  </div>
+</div>
+
+
+<!-- Log Details Modal -->
+<div id="logModal" class="fixed inset-0 z-60 hidden items-center justify-center" aria-hidden="true">
+  <div class="fixed inset-0 bg-black/50" data-dismiss="modal"></div>
+  <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6 z-10">
+    <header class="flex items-start justify-between gap-4 mb-4">
+      <h3 id="logModalTitle" class="text-lg font-semibold">Submission Log</h3>
+      <button id="closeLogModal" class="text-gray-500 hover:text-gray-700" aria-label="Close">&times;</button>
+    </header>
+    <div id="logModalBody" class="text-sm text-gray-800 whitespace-pre-wrap"></div>
+    <footer class="mt-4 text-xs text-gray-500" id="logModalFooter"></footer>
+  </div>
+</div>
+
+<section class="container mx-auto px-5 py-8">
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-white">Invoices</h1>
+      <p class="text-sm text-gray-500 mt-1">Manage and review invoice records</p>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <div class="relative">
+        <input id="invoiceSearch" type="search" placeholder="Search IRN, customer, note..."
+               class="w-64 px-3 py-2 rounded-lg border bg-white text-sm focus:ring-2 focus:ring-teal-300"
+               value="{{ request.args.get('q','') }}">
+        <button id="clearSearch" class="absolute right-1 top-1/2 -translate-y-1/2 px-2 py-1 text-xs text-gray-600 hidden">✕</button>
+      </div>
+
+      <div class="hidden sm:block">
+        <select id="statusFilter" class="px-3 py-2 rounded-lg border bg-white text-sm">
+          <option value="">All statuses</option>
+          <option value="pending" {% if request.args.get('status')=='pending' %}selected{% endif %}>Pending</option>
+          <option value="paid" {% if request.args.get('status')=='paid' %}selected{% endif %}>Paid</option>
+          <option value="overdue" {% if request.args.get('status')=='overdue' %}selected{% endif %}>Overdue</option>
+        </select>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button id="toggleView" type="button" class="px-3 py-2 rounded-lg border bg-white text-sm" title="Toggle view">
+          <svg id="iconTable" class="w-5 h-5 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 10h18M3 6h18M3 14h18M3 18h18" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bulk actions -->
+  <div id="bulkActions" class="hidden items-center gap-3 mb-4">
+    <span class="text-sm text-gray-600">Bulk actions:</span>
+    <button id="bulkExport" class="px-3 py-1 rounded bg-gray-100 text-sm">Export CSV</button>
+    <button id="bulkMarkPaid" class="px-3 py-1 rounded bg-green-100 text-sm">Mark Paid</button>
+    <button id="bulkDelete" class="px-3 py-1 rounded bg-red-100 text-sm">Delete</button>
+  </div>
+
+  <!-- Table view -->
+  <div id="listTable" class="w-full overflow-x-auto rounded-lg shadow-sm bg-white">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-4 py-3">
+            <input id="selectAll" type="checkbox" class="h-4 w-4">
+          </th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IRN</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Issue • Due</th>
+          <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Delivery</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">FIRS API logs</th>
+          <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-100">
+        {% for invoice in invoices %}
+        <tr class="hover:bg-gray-50">
+          <td class="px-4 py-3">
+            <input type="checkbox" class="rowCheckbox h-4 w-4" data-id="{{ invoice.id }}">
+          </td>
+          <td class="px-4 py-3 align-middle">
+            <div class="text-sm font-semibold text-gray-900">{{ invoice.irn|default('—') }}</div>
+            <div class="text-xs text-gray-500">{{ invoice.note|default('', true)|truncate(40) }}
+            </div>
+          </td>
+          <td class="px-4 py-3">
+            <div class="text-sm text-gray-800">{{ invoice.accounting_customer_party.party_name|default(invoice.buyer_reference|default('—')) }}</div>
+            <div class="text-xs text-gray-500">{{ invoice.accounting_customer_party.email|default('') }}</div>
+          </td>
+          <td class="px-4 py-3">
+            <div class="text-sm text-gray-800">{{ invoice.issue_date.isoformat() if invoice.issue_date else '—' }}</div>
+            <div class="text-xs text-gray-500">Due {{ invoice.due_date.isoformat() if invoice.due_date else '—' }}</div>
+          </td>
+          <td class="px-4 py-3 text-right">
+            <div class="text-sm font-semibold text-gray-900">{{ invoice.legal_monetary_total.payable_amount | default(0) }}</div>
+            <div class="text-xs text-gray-500">{{ invoice.document_currency_code|default('NGN') }}</div>
+          </td>
+          <td class="px-4 py-3">
+            {% if invoice.delivery_start_date or invoice.delivery_end_date %}
+              <div class="text-sm text-gray-800">
+                {{ invoice.delivery_start_date.isoformat() if invoice.delivery_start_date else '—' }}
+                —
+                {{ invoice.delivery_end_date.isoformat() if invoice.delivery_end_date else '—' }}
+              </div>
+            {% else %}
+              <div class="text-sm text-gray-400">—</div>
+            {% endif %}
+          </td>
+          <td class="px-4 py-3">
+            {% set status = (invoice.payment_status or 'pending') %}
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                         {% if status == 'paid' %}bg-green-100 text-green-800
+                         {% elif status == 'overdue' %}bg-red-100 text-red-800
+                         {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+              {{ status|capitalize }}
+            </span>
+          </td>
+          <td class="px-4 py-3 align-top">
+            {% if invoice.submissions %}
+              <div class="overflow-x-auto">
+                <table class="min-w-full text-xs border border-gray-200 rounded">
+                  <thead class="bg-gray-50">
+                    <tr>
+                      <th class="px-2 py-1 text-left font-medium text-gray-500">#</th>
+                      <th class="px-2 py-1 text-left font-medium text-gray-500">Status</th>
+                      <th class="px-2 py-1 text-left font-medium text-gray-500">Logs</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for submission in invoice.submissions %}
+                    <tr class="border-t hover:bg-gray-50">
+                      <td class="px-2 py-1">#{{ submission.id }}</td>
+                      <td class="px-2 py-1">
+                        <span class="px-2 py-0.5 rounded text-xs font-medium
+                                     {% if submission.status == 'transmitted' %} bg-green-100 text-green-800
+                                     {% elif submission.status == 'failed' %} bg-red-100 text-red-800
+                                     {% elif submission.status == 'validated' %} bg-blue-100 text-blue-800
+                                     {% else %} bg-gray-100 text-gray-800 {% endif %}">
+                          {{ submission.status }}
+                        </span>
+                      </td>
+                      <td class="px-2 py-1">
+                        <a href="{{ url_for('view_submission_logs', submission_id=submission.id) }}"
+                           class="text-blue-600 hover:underline">
+                          View Logs
+                        </a>
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% else %}
+              <span class="text-gray-400">No submissions</span>
+            {% endif %}
+          </td>
+          <td class="px-4 py-3 text-right">
+            <div class="flex items-center justify-end gap-2">
+              <a href="{{ url_for('invoice_detail', invoice_id=invoice.id) }}" target="_blank" rel="noopener" class="text-teal-600 hover:underline">Open invoice</a>
+              <a href="{{ url_for('invoice_pdf', invoice_id=invoice.id) }}" class="text-sm text-gray-600">PDF</a>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="8" class="px-4 py-8 text-center text-gray-500">No invoices found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Card view (mobile) -->
+<div id="listCards" class="grid grid-cols-1 gap-4 mt-6 md:hidden">
+  {% for invoice in invoices %}
+  <article class="bg-white rounded-lg shadow p-4 flex flex-col">
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <div class="text-sm font-semibold text-gray-900">{{ invoice.irn|default('—') }}</div>
+        <div class="text-xs text-gray-500">{{ invoice.accounting_customer_party.party_name|default(invoice.buyer_reference|default('—')) }}</div>
+        <div class="text-xs text-gray-400 mt-1">{{ invoice.note|default('', true)|truncate(80) }}</div>
+      </div>
+      <div class="text-right">
+        <div class="text-sm font-semibold">{{ invoice.legal_monetary_total.payable_amount | default(0) }}</div>
+        <div class="text-xs text-gray-500">{{ invoice.due_date.isoformat() if invoice.due_date else '—' }}</div>
+      </div>
+    </div>
+
+    <!-- Submissions Collapsible -->
+    {% if invoice.submissions %}
+    <div class="mt-3">
+      <button class="toggle-submissions w-full text-left text-teal-600 font-medium text-sm flex justify-between items-center">
+        Submissions ({{ invoice.submissions|length }})
+        <span class="ml-2 transform transition-transform duration-200">&#9654;</span>
+      </button>
+      <div class="submission-logs hidden mt-2 border-t border-gray-200 pt-2">
+        <ul class="space-y-2 text-gray-700 text-sm">
+          {% for submission in invoice.submissions %}
+          <li>
+            <div class="flex justify-between items-center">
+              <span>Submission #{{ submission.id }} ({{ submission.status }})</span>
+              <a href="{{ url_for('view_submission_logs', submission_id=submission.id) }}" class="text-blue-600 hover:underline text-xs">View Logs</a>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+    {% endif %}
+  </article>
+  {% endfor %}
+</div>
+
+  <!-- Pagination -->
+  <div class="mt-6 flex items-center justify-between">
+    <div class="text-sm text-gray-600">
+      Showing <strong>{{ (page-1)*per_page + 1 }}</strong> — <strong>{{ (page-1)*per_page + invoices|length }}</strong> of <strong>{{ total_count }}</strong>
+    </div>
+
+    <nav class="inline-flex items-center gap-2">
+      <a href="{{ url_for('dashboard', page=1, q=request.args.get('q')) }}" class="px-3 py-1 rounded {{ 'bg-gray-100' if page==1 else '' }}">First</a>
+      <a href="{{ url_for('dashboard', page=page-1 if page>1 else 1, q=request.args.get('q')) }}" class="px-3 py-1 rounded {{ 'bg-gray-100' if page==1 else '' }}">Prev</a>
+      <span class="px-3 py-1 rounded bg-white border">{{ page }}</span>
+      <a href="{{ url_for('dashboard', page=page+1 if page<total_pages else total_pages, q=request.args.get('q')) }}" class="px-3 py-1 rounded {{ 'bg-gray-100' if page==total_pages else '' }}">Next</a>
+      <a href="{{ url_for('dashboard', page=total_pages, q=request.args.get('q')) }}" class="px-3 py-1 rounded {{ 'bg-gray-100' if page==total_pages else '' }}">Last</a>
+    </nav>
+  </div>
+</section>
+  </main>
+
+  <!-- small footer (consistent with site) -->
+  <footer class="py-6 bg-white border-t">
+    <div class="container max-w-7xl mx-auto px-5 text-sm muted text-center">
+      © <span id="yearLogin"></span> Layer21 — All rights reserved.
+    </div>
+  </footer>
+  <script>
+    (function () {
+      const modal = document.getElementById('invoiceModal');
+      const openBtn = document.getElementById('openInvoiceModal');
+      const closeBtn = document.getElementById('closeInvoiceModal');
+      const cancelBtn = document.getElementById('cancelInvoice');
+      const form = document.getElementById('invoiceForm');
+      const errorBox = document.getElementById('formError');
+      const submitBtn = document.getElementById('submitInvoice');
+      const submitSpinner = document.getElementById('submitSpinner');
+      const submitLabel = document.getElementById('submitLabel');
+    
+      function openModal() {
+        modal.classList.remove('hidden');
+        modal.querySelector('input, textarea, button').focus();
+        document.addEventListener('keydown', onKeydown);
+      }
+      function closeModal() {
+        modal.classList.add('hidden');
+        errorBox.classList.add('hidden');
+        errorBox.textContent = '';
+        document.removeEventListener('keydown', onKeydown);
+      }
+      function onKeydown(e) {
+        if (e.key === 'Escape') closeModal();
+      }
+    
+      openBtn.addEventListener('click', openModal);
+      closeBtn.addEventListener('click', closeModal);
+      cancelBtn.addEventListener('click', closeModal);
+    
+      // basic client validation
+      function validateForm(vals) {
+        if (!vals.due_date) return "Due date is required.";
+        if (vals.delivery_start_date && vals.delivery_end_date) {
+          const s = new Date(vals.delivery_start_date);
+          const e = new Date(vals.delivery_end_date);
+          if (e < s) return "Delivery end date must be the same or after the start date.";
+        }
+        if (vals.note && vals.note.length > 500) return "Note is too long (max 500 chars).";
+        return null;
+      }
+    
+      // try AJAX submit; fallback to normal submit if fetch not supported or server returns non-JSON redirect
+      form.addEventListener('submit', async function (evt) {
+        // extract form values
+        const vals = {
+          due_date: form.due_date.value,
+          delivery_start_date: form.delivery_start_date.value,
+          delivery_end_date: form.delivery_end_date.value,
+          note: form.note.value,
+        };
+    
+        const validationError = validateForm(vals);
+        if (validationError) {
+          evt.preventDefault();
+          errorBox.textContent = validationError;
+          errorBox.classList.remove('hidden');
+          return;
+        }
+    
+        // start UI
+        submitSpinner.classList.remove('hidden');
+        submitLabel.textContent = 'Creating...';
+        submitBtn.disabled = true;
+        form.querySelectorAll('input, textarea').forEach(i => i.readOnly = true);
+    
+        // prepare payload
+        const payload = Object.assign({}, vals);
+    
+        // prefer fetch for a smooth UX; if fetch fails fall back to normal submission
+        if (window.fetch) {
+          evt.preventDefault();
+          try {
+            const resp = await fetch(form.action, {
+              method: 'POST',
+              headers,
+              body: JSON.stringify(payload),
+              credentials: 'same-origin'
+            });
+    
+            // if server returns JSON (AJAX path)
+            const ct = resp.headers.get('content-type') || '';
+            if (ct.includes('application/json')) {
+              const data = await resp.json();
+              if (resp.ok && data.ok) {
+                // success — optionally redirect or show created invoice
+                if (data.invoice_id) {
+                  window.location = data.redirect || `/invoice/${data.invoice_id}`;
+                } else {
+                  closeModal();
+                  location.reload();
+                }
+                return;
+              } else {
+                // server validation error
+                errorBox.textContent = data.error || 'Failed to create invoice';
+                errorBox.classList.remove('hidden');
+                submitBtn.disabled = false;
+                submitSpinner.classList.add('hidden');
+                submitLabel.textContent = 'Create & generate';
+                form.querySelectorAll('input, textarea').forEach(i => i.readOnly = false);
+                return;
+              }
+            } else {
+              // Non-JSON response — let browser follow it (redirect to login or page)
+              window.location.href = resp.url;
+            }
+          } catch (fetchErr) {
+            // network failure: fall back to native form submit
+            console.warn('AJAX submit failed, falling back to regular submit', fetchErr);
+            submitBtn.disabled = false;
+            submitSpinner.classList.add('hidden');
+            submitLabel.textContent = 'Create & generate';
+            form.querySelectorAll('input, textarea').forEach(i => i.readOnly = false);
+            // allow form to submit normally — remove readOnly so values post
+            form.querySelectorAll('input, textarea').forEach(i => i.readOnly = false);
+            // don't preventDefault -> browser will submit
+            return;
+          }
+        } else {
+          // no fetch — let the browser handle full form submit
+          // (but ensure form fields are not disabled; we only set readOnly above)
+        }
+      });
+    })();
+    </script> 
+    <script>
+      (function(){
+        const toggleBtn = document.getElementById('toggleView');
+        const table = document.getElementById('listTable');
+        const cards = document.getElementById('listCards');
+        const selectAll = document.getElementById('selectAll');
+        const rowCheckboxes = () => Array.from(document.querySelectorAll('.rowCheckbox'));
+        const bulkActions = document.getElementById('bulkActions');
+    
+        // view toggle
+        let isTable = true;
+        toggleBtn.addEventListener('click', () => {
+          isTable = !isTable;
+          table.classList.toggle('hidden', !isTable);
+          cards.classList.toggle('hidden', isTable);
+        });
+    
+        // select all
+        selectAll && selectAll.addEventListener('change', (e) => {
+          rowCheckboxes().forEach(cb => cb.checked = e.target.checked);
+          bulkActions.style.display = e.target.checked ? 'flex' : 'none';
+        });
+    
+        // individual checkboxes show bulk actions if any checked
+        document.addEventListener('change', (e) => {
+          if (e.target && e.target.classList.contains('rowCheckbox')) {
+            const any = rowCheckboxes().some(c => c.checked);
+            bulkActions.style.display = any ? 'flex' : 'none';
+          }
+        });
+    
+        // quick send button handler (example)
+        document.querySelectorAll('.send-btn').forEach(btn=>{
+          btn.addEventListener('click', ()=> {
+            const id = btn.getAttribute('data-id');
+            // open mail modal or call fetch to send invoice id
+            alert('Send invoice ' + id);
+          });
+        });
+      })();
+    </script> 
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const messages = [];
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              messages.push({
+                type: "{{ category }}",
+                text: {{ message|tojson }}
+              });
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+    
+        const container = document.getElementById("flash-container");
+        messages.forEach(msg => {
+          const div = document.createElement("div");
+          div.className = `flash-message flash-${msg.type}`;
+          div.innerHTML = `
+            <span>${msg.text}</span>
+            <button class="flash-close">&times;</button>
+          `;
+          container.appendChild(div);
+    
+          setTimeout(() => div.remove(), 5000);
+          div.querySelector(".flash-close").addEventListener("click", () => div.remove());
+        });
+      });
+    </script> 
+    <script>
+      const SSE_STREAM_URL = {{ url_for('firs.api_submission_logs_stream') | tojson }};
+      const GET_LOG_URL_TEMPLATE = {{ url_for('firs.api_submission_log_get', log_id=0) | tojson }};
+      const GET_LOG_URL = (id) => GET_LOG_URL_TEMPLATE.replace('/0', '/' + id);
+    
+      (function(){
+        const list = document.getElementById('submissionTickerList');
+        const tickerToggle = document.getElementById('tickerToggle');
+        const logModal = document.getElementById('logModal');
+        const closeLogModal = document.getElementById('closeLogModal');
+        const logModalBody = document.getElementById('logModalBody');
+        let lastId = 0, paused = false, pollTimer = null, pollInterval = 4000;
+    
+        function dbg(...a){ console.debug('[ticker]', ...a); }
+        function escapeHtml(s){ return (s||'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
+        
+        function getLevelStyles(level) {
+          const normalizedLevel = level.toLowerCase();
+          switch(normalizedLevel) {
+            case 'success':
+            case 'info':
+              return 'bg-green-100 text-green-800 border-green-200';
+            case 'error':
+            case 'critical':
+            case 'fail':
+            case 'failed':
+              return 'bg-red-100 text-red-800 border-red-200';
+            case 'warning':
+            case 'warn':
+              return 'bg-amber-100 text-amber-800 border-amber-200';
+            default:
+              return 'bg-gray-100 text-gray-800 border-gray-200';
+          }
+        }
+
+        function getLevelIndicator(level) {
+          const normalizedLevel = level.toLowerCase();
+          switch(normalizedLevel) {
+            case 'success':
+            case 'info':
+              return '●'; // green dot
+            case 'error':
+            case 'critical':
+            case 'fail':
+            case 'failed':
+              return '●'; // red dot
+            case 'warning':
+            case 'warn':
+              return '●'; // amber dot
+            default:
+              return '●'; // gray dot
+          }
+        }
+    
+        function addTickerItem(log){
+          if (!log || !log.id) return;
+          if (document.querySelector(`#ticker-item-${log.id}`)) return;
+          
+          const li = document.createElement('li');
+          li.id = `ticker-item-${log.id}`;
+          
+          const levelStyles = getLevelStyles(log.level);
+          const levelIndicator = getLevelIndicator(log.level);
+          
+          li.className = `flex items-center gap-3 px-3 py-2 rounded-lg border text-xs shadow-sm ${levelStyles}`;
+          
+          const short = log.message.length > 80 ? log.message.substring(0,80) + "…" : log.message;
+          li.innerHTML = `
+            <span class="font-bold text-sm">${levelIndicator}</span>
+            <span class="font-semibold text-xs uppercase">${escapeHtml(log.level)}</span>
+            <span class="max-w-xs truncate flex-1">${escapeHtml(short)}</span>
+            <button class="view-log-btn ml-2 text-current hover:underline font-medium" data-id="${log.id}">View</button>
+          `;
+          
+          list.prepend(li);
+
+          // Keep only 5 items instead of 14
+          while(list.children.length > 50) {
+            list.removeChild(list.lastChild);
+          }
+          
+          li.querySelector('.view-log-btn').addEventListener('click', () => openLogModal(li.querySelector('.view-log-btn').dataset.id));
+          lastId = Math.max(lastId||0, log.id||0);
+        }
+    
+        async function openLogModal(id) {
+          try {
+            const res = await fetch(GET_LOG_URL(id), { credentials: 'same-origin' });
+            if (!res.ok) { logModalBody.textContent = 'Failed to load log'; }
+            else {
+              const j = await res.json();
+              if (j.ok) {
+                logModalBody.textContent = j.message;
+                // Enhanced footer with level and timestamp
+                const footer = document.getElementById('logModalFooter');
+                if (footer) {
+                  footer.textContent = `Level: ${j.level} | Created: ${j.created_at || 'Unknown'}`;
+                }
+              } else {
+                logModalBody.textContent = j.error || JSON.stringify(j);
+              }
+            }
+          } catch(e){ logModalBody.textContent = 'Network error'; }
+          logModal.classList.remove('hidden'); logModal.classList.add('flex');
+        }
+    
+        // AJAX polling fallback
+        async function fetchRecentPoll(){
+          if (paused) return;
+          try {
+            const res = await fetch(`{{ url_for('firs.api_submission_logs_recent_simple') }}?last_id=${lastId}&limit=30`, { credentials: 'same-origin' });
+            if (res.status === 401) { dbg('not authenticated'); stopPolling(); return; }
+            if (!res.ok) return;
+            const j = await res.json();
+            if (!j || !j.ok) return;
+            for (const item of j.logs) addTickerItem(item);
+          } catch(e){ console.error('poll error', e); }
+        }
+        function startPolling(){ if (pollTimer) clearInterval(pollTimer); fetchRecentPoll(); pollTimer = setInterval(fetchRecentPoll, pollInterval); dbg('polling started'); }
+        function stopPolling(){ if (pollTimer) clearInterval(pollTimer); pollTimer = null; dbg('polling stopped'); }
+    
+        // Try SSE first
+        function startSSE(){
+          if (typeof EventSource === 'undefined') { dbg('EventSource not supported'); startPolling(); return; }
+          let url = SSE_STREAM_URL;
+          if (lastId) url += `?last_id=${lastId}`;
+          const es = new EventSource(url, { withCredentials: true });
+          let connected = false;
+          es.addEventListener('open', () => { connected = true; dbg('SSE open'); });
+          es.addEventListener('error', (e) => {
+            dbg('SSE error', e);
+            if (!connected) {
+              dbg('SSE failed to connect; falling back to polling');
+              es.close();
+              startPolling();
+            } else {
+              // server disconnected after being connected - try reconnecting automatically
+              dbg('SSE disconnected; will auto-reconnect (browser does this)'); 
+            }
+          });
+          es.addEventListener('submission_log', (ev) => {
+            try {
+              const log = JSON.parse(ev.data);
+              if (!paused) addTickerItem(log);
+            } catch(e){ console.error('sse parse error', e); }
+          });
+          // optional heartbeat handling if you want to detect server death
+          es.addEventListener('message', (ev) => {
+            // default messages (if any)
+          });
+          // When user leaves page close connection
+          window.addEventListener('beforeunload', () => { try { es.close(); } catch(e){} });
+        }
+    
+        // boot: try SSE and fallback to polling
+        window.addEventListener('load', () => {
+          try { startSSE(); }
+          catch(e){ dbg('SSE init failed', e); startPolling(); }
+        });
+    
+        // toggle UI
+        tickerToggle && tickerToggle.addEventListener('click', () => {
+          paused = !paused; tickerToggle.textContent = paused ? 'Resume' : 'Pause';
+          if (!paused && !pollTimer) startPolling();
+          if (paused && pollTimer) stopPolling();
+        });
+    
+        closeLogModal && closeLogModal.addEventListener('click', () => logModal.classList.add('hidden'));
+      })();
+    </script>
+    <script>
+      (function () {
+        const header = document.getElementById('siteHeader') || document.querySelector('.site-nav');
+        const ticker = document.getElementById('submissionTicker');
+        if (!header || !ticker) return;
+      
+        function updateTickerOffset() {
+          // compute header outer height (includes margins if any)
+          const rect = header.getBoundingClientRect();
+          // Use header height + some gap
+          const gap = 8; // px gap between header and ticker
+          const topPx = Math.ceil(rect.height + gap);
+          // apply styles
+          ticker.style.top = topPx + 'px';
+          // ensure ticker sits above header
+          ticker.style.zIndex = 70;
+          // ensure header sits below (if not already)
+          header.style.zIndex = 50;
+          // make header opaque to prevent visual bleed
+          header.style.background = header.style.background || 'rgba(255,255,255,1)';
+        }
+      
+        // update on load + resize + when content changes size
+        window.addEventListener('load', updateTickerOffset);
+        window.addEventListener('resize', updateTickerOffset);
+      
+        // also observe header size changes (e.g. responsive)
+        if ('ResizeObserver' in window) {
+          const ro = new ResizeObserver(updateTickerOffset);
+          ro.observe(header);
+        } else {
+          // fallback: periodically check for changes (very small interval)
+          let lastH = header.getBoundingClientRect().height;
+          setInterval(() => {
+            const h = header.getBoundingClientRect().height;
+            if (h !== lastH) { lastH = h; updateTickerOffset(); }
+          }, 500);
+        }
+      
+        // ensure ticker doesn't cover focusable header elements on keyboard nav:
+        // If you need clickable header UI and ticker links overlapping on tiny screens,
+        // consider hiding ticker on small screens: 
+        // if (window.innerWidth < 640) ticker.style.display = 'none';
+      })();
+      </script>
+    
+</body>
+</html>

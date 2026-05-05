@@ -1,0 +1,145 @@
+/* LAYER21 Flash / Toast styles
+   Place in global CSS (import in base layout) and tweak colors as needed.
+*/
+
+/* container for page-level toasts (top-right) */
+.l21-flash-container {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+    z-index: 9999;
+    pointer-events: none; /* allow clicks through empty space */
+  }
+  
+  /* single flash/toast */
+  .l21-flash {
+    pointer-events: auto; /* enable interactions for the toast */
+    min-width: 280px;
+    max-width: 420px;
+    display: flex;
+    gap: .75rem;
+    align-items: flex-start;
+    padding: .6rem .9rem;
+    border-radius: 10px;
+    box-shadow: 0 6px 20px rgba(6,12,20,0.12);
+    border-left: 4px solid transparent;
+    background: #fff;
+    color: #122;
+    font-size: 14px;
+    line-height: 1.25;
+    transform-origin: top right;
+    transform: translateY(-6px) scale(.995);
+    opacity: 0;
+    animation: l21-slide-in .26s cubic-bezier(.2,.9,.2,1) forwards;
+    transition: opacity .18s ease, transform .18s ease;
+    box-sizing: border-box;
+  }
+  
+  /* icons column */
+  .l21-flash__icon {
+    flex: 0 0 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    border-radius: 8px;
+    background: rgba(0,0,0,0.04);
+  }
+  
+  /* content column */
+  .l21-flash__content {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  
+  /* title and message */
+  .l21-flash__title {
+    font-weight: 700;
+    font-size: 13px;
+    color: inherit;
+    margin-bottom: 2px;
+  }
+  .l21-flash__msg {
+    font-size: 13px;
+    color: rgba(2,12,20,0.8);
+  }
+  
+  /* actions (close button etc) */
+  .l21-flash__actions {
+    margin-left: .5rem;
+    display:flex;
+    gap:.35rem;
+    align-items:start;
+  }
+  .l21-flash__close {
+    background: transparent;
+    border: 0;
+    color: rgba(2,12,20,0.5);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+  }
+  .l21-flash__close:focus {
+    outline: 2px solid rgba(11,128,170,0.18);
+  }
+  
+  /* progress bar */
+  .l21-flash__progress {
+    height: 4px;
+    background: rgba(0,0,0,0.06);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: .5rem;
+  }
+  .l21-flash__progress > i {
+    display: block;
+    height: 100%;
+    width: 100%;
+    transform-origin: left center;
+    transform: scaleX(1);
+    transition: transform linear;
+    background: linear-gradient(90deg, rgba(0,0,0,0.18), rgba(0,0,0,0.06));
+  }
+  
+  /* variants */
+  .l21-flash--success { border-left-color: #1f8a5f; background: #f6fff7; }
+  .l21-flash--success .l21-flash__icon { background: rgba(31,138,95,0.12); color: #126341; }
+  
+  .l21-flash--danger { border-left-color: #b43a3a; background: #fff6f6; }
+  .l21-flash--danger .l21-flash__icon { background: rgba(180,58,58,0.10); color: #8a1f1f; }
+  
+  .l21-flash--warning { border-left-color: #bf7a00; background: #fffaf6; }
+  .l21-flash--warning .l21-flash__icon { background: rgba(191,122,0,0.08); color: #7a4d00; }
+  
+  .l21-flash--info { border-left-color: #0b74de; background: #f3fbff; }
+  .l21-flash--info .l21-flash__icon { background: rgba(11,116,222,0.08); color: #035fae; }
+  
+  /* animation out */
+  .l21-flash--hide { animation: l21-fade-out .18s ease forwards; transform: translateY(-8px) scale(.99); opacity: 0; }
+  
+  /* small inline banner (for pages that prefer content flow) */
+  .l21-flash-inline {
+    display:flex;
+    gap:.6rem;
+    align-items:center;
+    padding:.65rem .9rem;
+    border-radius:8px;
+    margin-bottom: .75rem;
+    border-left: 4px solid transparent;
+  }
+  
+  /* utility */
+  .hidden { display:none !important; }
+  
+  /* animation keyframes */
+  @keyframes l21-slide-in {
+    from { transform: translateY(-8px) scale(.98); opacity: 0; }
+    to   { transform: translateY(0) scale(1); opacity: 1; }
+  }
+  @keyframes l21-fade-out {
+    from { opacity: 1; }
+    to   { opacity: 0; transform: translateY(-8px) scale(.98); height: 0; margin: 0; padding: 0; }
+  }
+  

@@ -1,0 +1,664 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Complaints — Layer21</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="{{ url_for('static', filename='stylesheets/portal.css') }}" rel="stylesheet">
+  <style>* {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    scroll-behavior: smooth;
+  }
+  
+  /* CSS Variables */
+  :root {
+    --brand-primary: #0ea5e9;
+    --brand-dark: #0f172a;
+    --brand-teal: #14b8a6;
+    --brand-accent: #06b6d4;
+    --surface: #ffffff;
+    --surface-hover: #f8fafc;
+    --border: #e2e8f0;
+    --text-primary: #0f172a;
+    --text-secondary: #64748b;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Body */
+  body {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    min-height: 100vh;
+    color: var(--text-primary);
+  }
+  
+  /* ========================================
+     Animations
+     ======================================== */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+  
+  @keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  
+  .fade-in { 
+    animation: fadeIn 0.4s ease-out; 
+  }
+  
+  .slide-down { 
+    animation: slideDown 0.3s ease-out; 
+  }
+  
+  /* ========================================
+     Header & Navigation
+     ======================================== */
+  .site-nav {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .logo-badge {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    object-fit: cover;
+    box-shadow: var(--shadow-md);
+  }
+  
+  /* ========================================
+     Submission Ticker
+     ======================================== */
+  .submission-ticker {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.98));
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    animation: slideDown 0.4s ease-out;
+  }
+  
+  /* ========================================
+     Status Badges
+     ======================================== */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.025em;
+    transition: all 0.2s;
+  }
+  
+  .status-badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  
+  /* Status Badge Variants */
+  .status-paid {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    color: #065f46;
+  }
+  
+  .status-paid::before {
+    background: #10b981;
+  }
+  
+  .status-pending {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    color: #92400e;
+  }
+  
+  .status-pending::before {
+    background: #f59e0b;
+  }
+  
+  .status-overdue {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    color: #991b1b;
+  }
+  
+  .status-overdue::before {
+    background: #ef4444;
+  }
+  
+  .status-active {
+    background: #dcfce7;
+    color: #15803d;
+    border: 1px solid #86efac;
+  }
+  
+  .status-active::before {
+    background: #22c55e;
+  }
+  
+  .status-disabled {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fca5a5;
+  }
+  
+  /* ========================================
+     Tables
+     ======================================== */
+  .modern-table {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 10px 40px rgba(0, 0, 0, 0.03);
+    border: 1px solid #f1f5f9;
+  }
+  
+  .modern-table table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .modern-table thead {
+    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+    border-bottom: 2px solid var(--border);
+  }
+  
+  .modern-table th {
+    padding: 16px 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+  }
+  
+  .modern-table td {
+    padding: 16px 20px;
+    font-size: 0.875rem;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  
+  .modern-table tbody tr {
+    transition: all 0.2s;
+  }
+  
+  .modern-table tbody tr:hover {
+    background: var(--surface-hover);
+    transform: scale(1.001);
+  }
+  
+  .table-row {
+    transition: all 0.2s ease;
+  }
+  
+  .table-row:hover {
+    background: linear-gradient(to right, #f8fafc, #f1f5f9);
+    transform: translateX(2px);
+  }
+  
+  /* ========================================
+     Buttons
+     ======================================== */
+  .btn-primary {
+    padding: 10px 20px;
+    background: linear-gradient(135deg, var(--brand-teal) 0%, var(--brand-accent) 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 12px rgba(20, 184, 166, 0.3);
+  }
+  
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(20, 184, 166, 0.4);
+  }
+  
+  .btn-secondary {
+    padding: 8px 16px;
+    background: white;
+    color: #475569;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-weight: 500;
+    font-size: 0.8125rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .btn-secondary:hover {
+    background: var(--surface-hover);
+    border-color: #cbd5e1;
+  }
+  
+  /* ========================================
+     Search Input
+     ======================================== */
+  .search-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  
+  .search-icon {
+    position: absolute;
+    left: 14px;
+    color: #94a3b8;
+    pointer-events: none;
+  }
+  
+  .search-input {
+    padding: 10px 14px 10px 42px;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    background: white;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+    min-width: 280px;
+  }
+  
+  .search-input:focus {
+    outline: none;
+    border-color: var(--brand-teal);
+    box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
+  }
+  
+  /* ========================================
+     Stats Cards
+     ======================================== */
+  .stat-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border);
+    transition: all 0.3s;
+  }
+  
+  .stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+  }
+  
+  .stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--brand-teal), var(--brand-primary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  /* ========================================
+     Modals
+     ======================================== */
+  .modal-overlay {
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(4px);
+  }
+  
+  .modal-content {
+    background: white;
+    border-radius: 20px;
+    box-shadow: var(--shadow-xl);
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  
+  /* ========================================
+     Forms
+     ======================================== */
+  .dropdown-form {
+    min-width: 480px;
+    max-width: 520px;
+  }
+  
+  /* ========================================
+     Flash Messages
+     ======================================== */
+  .flash-message {
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: slideDown 0.3s ease-out;
+  }
+  
+  .flash-success {
+    background: #dcfce7;
+    color: #15803d;
+    border: 1px solid #86efac;
+  }
+  
+  .flash-error {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fca5a5;
+  }
+  
+  .flash-warning {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fcd34d;
+  }
+  
+  /* ========================================
+     Logs
+     ======================================== */
+  .log-item {
+    padding: 12px 16px;
+    border-radius: 10px;
+    background: var(--surface-hover);
+    border-left: 3px solid transparent;
+    transition: all 0.2s;
+  }
+  
+  .log-item:hover {
+    background: white;
+    border-left-color: var(--brand-teal);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .log-success {
+    border-left-color: #10b981;
+  }
+  
+  .log-error {
+    border-left-color: #ef4444;
+  }
+  
+  .log-warning {
+    border-left-color: #f59e0b;
+  }
+  
+  /* ========================================
+     Pagination
+     ======================================== */
+  .pagination-btn {
+    padding: 8px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #475569;
+    background: white;
+    transition: all 0.2s;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  
+  .pagination-btn:hover:not(.active) {
+    background: var(--surface-hover);
+    border-color: var(--brand-teal);
+  }
+  
+  .pagination-btn.active {
+    background: linear-gradient(135deg, var(--brand-teal), var(--brand-accent));
+    color: white;
+    border-color: transparent;
+  }
+  
+  /* ========================================
+     Avatars
+     ======================================== */
+  .user-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    object-fit: cover;
+    border: 2px solid #f1f5f9;
+  }
+  
+  /* ========================================
+     Loading States
+     ======================================== */
+  .skeleton {
+    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s ease-in-out infinite;
+  }
+  
+  /* ========================================
+     Scrollbar
+     ======================================== */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: #f1f5f9;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 5px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+  
+  /* ========================================
+     Responsive Styles
+     ======================================== */
+  @media (max-width: 768px) {
+    .stat-value {
+      font-size: 1.5rem;
+    }
+  
+    .modern-table th,
+    .modern-table td {
+      padding: 12px 16px;
+    }
+  
+    .dropdown-form {
+      min-width: 100%;
+      max-width: 100%;
+    }
+  
+    .search-input {
+      min-width: 200px;
+    }
+  }</style>
+  <style>
+    iframe {
+            width: 100%;
+            height: 100vh;
+            border: none;
+        }
+  </style>
+</head>
+<body class="bg-gray-50">
+
+  <!-- Modern Header -->
+  <header class="site-nav sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-5 md:px-8 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <img src="/static/img/layer21logo.jpg" alt="Layer21" class="logo-badge" />
+        <div>
+          <div class="text-xl font-bold text-[var(--brand-dark)]">LAYER21</div>
+          <div class="text-xs text-[var(--brand-teal)] font-semibold -mt-1">IT Services</div>
+        </div>
+      </div>
+
+      <!-- desktop links -->
+      <nav class="hidden md:flex items-center gap-8">
+        <a class="nav-link text-sm font-medium" href="/">Home</a>
+        <a class="inline-block text-sm" href="/login">
+          <button class="btn btn-primary">Login</button>
+        </a>
+      </nav>
+
+      <!-- mobile toggle -->
+      <button id="menuToggle" class="md:hidden p-2 focus:outline-none">
+        <!-- Icon (Hamburger) -->
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+      
+    </div>
+
+    <!-- mobile menu -->
+    <div id="mobileMenu" class="md:hidden hidden px-5 pb-6 space-y-3 border-t" 
+   style="border-color: rgba(15,23,36,0.05);">
+<a class="block py-2" href="/">Home</a>
+<a class="block py-2" href="/login">
+  <span class="inline-block w-full text-center rounded-lg btn btn-primary">Login</span>
+</a>
+</div>
+
+  </header>
+
+
+  <main class="container mx-auto px-5 py-8">
+    <div class="overflow-x-auto bg-white rounded-lg p-4 shadow">
+        <iframe src="{{ pdf_url }}"></iframe>
+      </div>
+
+  </main>
+  <!-- Footer -->
+  <footer class="mt-16 py-8 bg-white/50 backdrop-blur-sm border-t border-gray-200">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 bg-gradient-to-br from-brand-teal to-brand-accent rounded-lg flex items-center justify-center">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <p class="text-sm text-gray-600">
+            © <span id="yearLogin"></span> <span class="font-semibold text-gray-900">Layer21</span> — All rights reserved.
+          </p>
+        </div>
+        <div class="flex items-center gap-4 text-sm text-gray-500">
+          <a href="#" class="hover:text-brand-teal transition">Privacy</a>
+          <span>•</span>
+          <a href="#" class="hover:text-brand-teal transition">Terms</a>
+          <span>•</span>
+          <a href="#" class="hover:text-brand-teal transition">Support</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function(){
+      // popmenu open/close
+      const openBtn = document.getElementById('openCreate');
+      const pop = document.getElementById('createPop');
+      const cancel = document.getElementById('cancelCreate');
+      const form = document.getElementById('createForm');
+      const createError = document.getElementById('createError');
+      const search = document.getElementById('search');
+      const toggleViewBtn = document.getElementById('toggleView');
+      const tableView = document.getElementById('tableView');
+      const cardView = document.getElementById('cardView');
+    
+      openBtn && openBtn.addEventListener('click', () => {
+        pop.classList.toggle('hidden');
+        pop.setAttribute('aria-hidden', pop.classList.contains('hidden') ? 'true' : 'false');
+        if (!pop.classList.contains('hidden')) pop.querySelector('input[name="title"]').focus();
+      });
+    
+      cancel && cancel.addEventListener('click', () => {
+        pop.classList.add('hidden');
+      });
+    
+      // Submit via AJAX if possible (falls back to normal submit)
+      form && form.addEventListener('submit', async function(evt){
+        // If browser supports fetch attempt AJAX post
+        if (!window.fetch) return;
+    
+        evt.preventDefault();
+        createError.classList.add('hidden');
+        const formData = new FormData(form);
+        const payload = {
+          title: formData.get('title'),
+          description: formData.get('description'),
+          priority: formData.get('priority')
+        };
+    
+        try {
+          const resp = await fetch(form.action, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify(payload)
+          });
+    
+          const j = await resp.json();
+          if (resp.ok && j.ok) {
+            // on success either navigate to the new complaint or refresh list
+            if (j.complaint_id) window.location = `/complaints/${j.complaint_id}`;
+            else location.reload();
+          } else {
+            createError.textContent = j.error || 'Failed to create complaint';
+            createError.classList.remove('hidden');
+          }
+        } catch (err) {
+          // network failure -> fallback to full form submit
+          console.warn('AJAX create failed, falling back to normal submit', err);
+          form.submit();
+        }
+      });
+    
+      // quick search (press Enter)
+      search && search.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          const q = encodeURIComponent(search.value.trim());
+          window.location = `?q=${q}`;
+        }
+      });
+    
+      // view toggle
+      toggleViewBtn && toggleViewBtn.addEventListener('click', () => {
+        tableView.classList.toggle('hidden');
+        cardView.classList.toggle('hidden');
+      });
+    
+      // close menu when clicking outside
+      document.addEventListener('click', (e) => {
+        const wrap = document.getElementById('createWrap');
+        if (!wrap) return;
+        if (!wrap.contains(e.target)) {
+          pop.classList.add('hidden');
+        }
+      });
+    })();
+    </script>
+    </body>
+    </html>
+    

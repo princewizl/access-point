@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Layer21 — Sign in</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="{{ url_for('static', filename='stylesheets/index.css') }}" rel="stylesheet">
+
+  <style>
+    /* small local overrides for the login page only */
+    .auth-bg {
+      background: linear-gradient(180deg, rgba(11,18,32,0.94) 0%, rgba(6,12,20,0.84) 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 1rem;
+    }
+
+    .auth-card {
+      width: 100%;
+      max-width: 980px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      align-items: stretch;
+    }
+
+    @media(min-width: 900px){
+      .auth-card { grid-template-columns: 1fr 420px; }
+    }
+
+    .auth-side {
+      background: linear-gradient(180deg, rgba(46,197,219,0.06), rgba(54,185,209,0.03));
+      border-radius: 14px;
+      padding: 2.25rem;
+      color: rgba(255,255,255,0.95);
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      gap:1rem;
+    }
+
+    .auth-form {
+      background: white;
+      border-radius: 14px;
+      padding: 2rem;
+      box-shadow: 0 18px 60px rgba(2,12,20,0.45);
+    }
+
+    .field {
+      display:block;
+      width:100%;
+      margin-bottom: .75rem;
+    }
+
+    .field label { display:block; margin-bottom:.35rem; font-weight:600; color:var(--brand-dark); font-size:.95rem; }
+    .field input, .field select {
+      width:100%;
+      padding:.7rem .9rem;
+      border-radius:10px;
+      border:1px solid rgba(6,12,20,0.06);
+      font-size: 0.98rem;
+      outline:none;
+    }
+
+    .muted { color: rgba(6,12,20,0.6); }
+
+    .small-link { font-size:.9rem; color:var(--brand-teal); text-decoration:none; }
+    .small-link:hover { text-decoration:underline; }
+
+    .visually-hidden { position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden; }
+
+    /* spinner */
+    .spinner { display:inline-block; width:18px; height:18px; border-radius:50%; border:2px solid rgba(0,0,0,0.08); border-top-color: rgba(2,12,20,0.6); animation: spin .9s linear infinite; vertical-align:middle; margin-right:.5rem; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+  </style>
+</head>
+<body>
+
+  <header class="site-nav bg-white border-b">
+    <div class="container max-w-7xl mx-auto px-5 md:px-8 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <img src="/static/img/layer21logo.jpg" alt="Layer21" class="logo-badge" />
+        <div>
+          <div class="text-lg font-bold text-[var(--brand-dark)]">LAYER21</div>
+          <div class="text-xs text-[var(--brand-teal)] font-semibold -mt-1">IT Services</div>
+        </div>
+      </div>
+
+      <nav class="hidden md:flex items-center gap-6">
+        <a href="/" class="nav-link text-sm font-medium">Back to home</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- AUTH AREA -->
+  <main class="auth-bg">
+    <div class="auth-card container">
+
+      <!-- Left / info side -->
+      <aside class="auth-side">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-extrabold" style="color:var(--brand-dark)">Sign in to your Portal</h1>
+          <p class="muted mt-2">Create and post invoices, manage clients, and track payments. Secure access for your team.</p>
+        </div>
+
+        <div class="mt-4">
+          <h4 class="text-md font-semibold" style="color:var(--brand-dark)">Why use the Portal?</h4>
+          <ul class="mt-3 space-y-2 text-sm muted">
+            <li>• Generate professional invoices in seconds</li>
+            <li>• Send invoices and track status</li>
+            <li>• Maintain client and billing records</li>
+          </ul>
+        </div>
+
+        <div class="mt-auto text-sm muted">
+          <div>Need help? <a href="/" class="small-link">Contact Sales</a></div>
+          <div class="mt-2">Forgot your password? <a href="#forgot" class="small-link">Reset it here</a></div>
+        </div>
+      </aside>
+
+      <!-- Right / login form -->
+      <section class="auth-form" aria-labelledby="signinTitle">
+        <h2 id="signinTitle" class="text-xl font-bold mb-2">Sign in</h2>
+        <p class="muted mb-4">Use your company email or username to access the invoice portal.</p>
+
+        <form id="loginForm" method="POST" action="{{ url_for('login') }}">
+            <div class="mt-3 text-sm">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for cat, msg in messages %}
+                    <div class="alert 
+                        {% if cat == 'danger' %}alert-danger
+                        {% elif cat == 'success' %}alert-success
+                        {% else %}alert-info{% endif %}">
+                        {{ msg }}
+                    </div>
+                    {% endfor %}
+                {% endif %}
+                {% endwith %}
+            </div>
+        
+            <div class="field">
+                <label for="username">Username</label>
+                <input type="text" name="username" id="username" required>
+            </div>
+        
+            <div class="field" style="position:relative;">
+                <label for="password">Password</label>
+                <input id="password" name="password" type="password" 
+                       autocomplete="current-password" required 
+                       placeholder="Enter your password" />
+                <button type="button" id="pwToggle" aria-label="Show password" title="Show password"
+                        style="position:absolute; right:10px; top:37px; background:transparent; border:none; cursor:pointer;">
+                    <svg id="eyeOpen" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7
+                                 -1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    <svg id="eyeClosed" xmlns="http://www.w3.org/2000/svg" 
+                         class="h-5 w-5 text-gray-500 hidden" fill="none" 
+                         viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7
+                                 a9.97 9.97 0 012.223-3.328M6.22 6.22L18.78 18.78M9.88 9.88
+                                 A3 3 0 0114.12 14.12" />
+                    </svg>
+                </button>
+            </div>
+        
+            <div class="flex items-center justify-between mt-2">
+                <label class="flex items-center text-sm muted">
+                    <input id="remember" name="remember" type="checkbox" class="mr-2" />
+                    Remember me
+                </label>
+                <a href="#forgot" class="small-link">Forgot password?</a>
+            </div>
+        
+            <div class="mt-6 flex items-center gap-3">
+                <button type="submit" id="signinBtn" class="btn btn-primary">
+                    <span class="spinner hidden" id="signinSpinner" aria-hidden="true"></span>
+                    <span id="signinLabel">Sign in</span>
+                </button>
+                <button type="button" id="contactSalesBtn" class="btn" 
+                        style="border:1px solid rgba(6,12,20,0.06);">
+                    Contact Sales
+                </button>
+            </div>
+        
+            <div id="loginMessage" class="mt-3" role="status" aria-live="polite"></div>
+        </form>
+        
+      </section>
+
+    </div>
+  </main>
+
+  <!-- small footer (consistent with site) -->
+  <footer class="py-6 bg-white border-t">
+    <div class="container max-w-7xl mx-auto px-5 text-sm muted text-center">
+      © <span id="yearLogin"></span> Layer21 — All rights reserved.
+    </div>
+  </footer>
+
+  <!-- Scripts: small interactive behavior -->
+  <script>
+form.addEventListener('submit', function(){
+  spinner.classList.remove('hidden');
+  label.textContent = 'Signing in...';
+
+  // Disable only the submit button, not the inputs
+  const submitBtn = form.querySelector('button[type="submit"]');
+  if (submitBtn) submitBtn.disabled = true;
+
+  // Optional: make inputs readonly so values still submit
+  form.querySelectorAll('input').forEach(el => el.readOnly = true);
+}); 
+  </script>
+  
+</body>
+</html>

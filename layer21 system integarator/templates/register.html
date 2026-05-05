@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Layer21 — Register</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="{{ url_for('static', filename='stylesheets/index.css') }}" rel="stylesheet">
+  <style>
+    /* small page-specific overrides if needed */
+  </style>
+</head>
+<body>
+  <!-- header: reuse your header markup or include via template inheritance -->
+  <header class="site-nav bg-white border-b">
+    <div class="container max-w-7xl mx-auto px-5 md:px-8 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <img src="/static/img/layer21logo.jpg" alt="Layer21" class="logo-badge" />
+        <div>
+          <div class="text-lg font-bold text-[var(--brand-dark)]">LAYER21</div>
+          <div class="text-xs text-[var(--brand-teal)] font-semibold -mt-1">IT Services</div>
+        </div>
+      </div>
+
+      <nav class="hidden md:flex items-center gap-6">
+        <a href="/" class="nav-link text-sm font-medium">Back to home</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="auth-bg">
+    <div class="auth-card container max-w-6xl mx-auto">
+      <!-- left info -->
+      <aside class="auth-side auth-side-darker">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-extrabold">Create your account</h1>
+          <p class="muted mt-2">Sign up to create and post invoices, manage clients, and track payments.</p>
+        </div>
+      
+        <div class="mt-4">
+          <h4 class="text-md font-semibold">Account type</h4>
+          <p class="muted text-sm mt-2">Select the primary role you will use the portal for.</p>
+        </div>
+      
+        <div class="mt-auto text-sm muted">
+          <div>Already have an account? <a href="{{ url_for('login') }}" class="small-link">Sign in</a></div>
+          <div class="mt-2">Need help? <a href="#contact" class="small-link">Contact Sales</a></div>
+        </div>
+      </aside>
+      
+
+      <!-- form -->
+      <section class="auth-form" aria-labelledby="registerTitle">
+        <h2 id="registerTitle" class="text-xl font-bold mb-2">Register</h2>
+        <p class="muted mb-4">Create credentials to access the Layer21 invoice portal.</p>
+
+        <form method="post" id="registerForm" novalidate>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div class="field">
+              <label for="first_name">First name</label>
+              <input id="first_name" name="first_name" type="text" value="{{ form.first_name|default('') }}" />
+            </div>
+            <div class="field">
+              <label for="last_name">Last name</label>
+              <input id="last_name" name="last_name" type="text" value="{{ form.last_name|default('') }}" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="company_name">Company name</label>
+            <input id="company_name" name="company_name" type="text" value="{{ form.company_name|default('') }}" />
+          </div>
+
+          <div class="field">
+            <label for="email">Business email <span style="color:crimson">*</span></label>
+            <input id="email" name="email" type="email" required value="{{ form.email|default('') }}" />
+          </div>
+
+          <div class="field">
+            <label for="username">Username <span style="color:crimson">*</span></label>
+            <input id="username" name="username" type="text" required value="{{ form.username|default('') }}" />
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div class="field" style="position:relative;">
+              <label for="password">Password <span style="color:crimson">*</span></label>
+              <input id="password" name="password" type="password" required />
+            </div>
+
+            <div class="field" style="position:relative;">
+              <label for="confirm_password">Confirm password <span style="color:crimson">*</span></label>
+              <input id="confirm_password" name="confirm_password" type="password" required />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="user_type">Service</label>
+            <select id="user_type" name="user_type">
+              <option value="">— Select service —</option>
+              <option value="System Integrator">System Integrator</option>
+              <option value="Access Point Provider">Access Point Provider</option>
+            </select>
+          </div>
+
+          <div class="mt-4">
+            <button type="submit" class="btn btn-primary">
+              <span class="spinner hidden" id="regSpinner" aria-hidden="true"></span>
+              <span id="regLabel">Create account</span>
+            </button>
+            <a href="{{ url_for('login') }}" class="btn" style="border:1px solid rgba(6,12,20,0.06); margin-left:.6rem;">Sign in</a>
+          </div>
+
+          <div class="mt-3 text-sm">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for cat, msg in messages %}
+            <div class="alert {% if cat == 'danger' %}alert-danger{% elif cat == 'success' %}alert-success{% else %}alert-info{% endif %}">
+                {{ msg }}</div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+          </div>
+        </form>
+      </section>
+    </div>
+  </main>
+
+  <footer class="py-6 bg-white border-t">
+    <div class="container max-w-7xl mx-auto px-5 text-sm muted text-center">
+        © {{ current_year }} Layer21 — All rights reserved.
+    </div>
+  </footer>
+
+  <!-- small client-side validation + password toggle -->
+  <script>
+    (function(){
+      const form = document.getElementById('registerForm');
+      const spinner = document.getElementById('regSpinner');
+      const label = document.getElementById('regLabel');
+
+      form.addEventListener('submit', function (e) {
+        // simple client-side checks (server-side still authoritative)
+        const email = form.email.value.trim();
+        const username = form.username.value.trim();
+        const pwd = form.password.value;
+        const confirm = form.confirm_password.value;
+
+        if (!email || !username || !pwd || !confirm) {
+          e.preventDefault();
+          alert('Please fill the required fields.');
+          return;
+        }
+        if (pwd !== confirm) {
+          e.preventDefault();
+          alert('Passwords do not match.');
+          return;
+        }
+        if (pwd.length < 10) {
+          e.preventDefault();
+          alert('Password must be at least 10 characters long.');
+          return;
+        }
+
+        // show spinner while posting
+        spinner.classList.remove('hidden');
+        label.textContent = 'Creating...';
+      });
+    })();
+  </script>
+</body>
+</html>

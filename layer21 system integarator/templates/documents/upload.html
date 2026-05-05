@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Complaints — Layer21</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="{{ url_for('static', filename='stylesheets/portal.css') }}" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
+
+  <!-- Modern Header -->
+  <header class="site-nav sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-5 md:px-8 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <img src="/static/img/layer21logo.jpg" alt="Layer21" class="logo-badge" />
+        <div>
+          <div class="text-xl font-bold text-[var(--brand-dark)]">LAYER21</div>
+          <div class="text-xs text-[var(--brand-teal)] font-semibold -mt-1">IT Services</div>
+        </div>
+      </div>
+
+      <!-- desktop links -->
+      <nav class="hidden md:flex items-center gap-8">
+        <a class="nav-link text-sm font-medium" href="#">Home</a>
+        <a class="nav-link text-sm font-medium" href="#pricing">Pricing</a>
+        <a class="nav-link text-sm font-medium" href="#services">Services</a>
+        <a class="nav-link text-sm font-medium" href="#contact">Contact</a>
+        <a class="inline-block text-sm" href="/login">
+          <button class="btn btn-primary">Login</button>
+        </a>
+      </nav>
+
+      <!-- mobile toggle -->
+      <button id="menuToggle" class="md:hidden p-2 focus:outline-none">
+        <!-- Icon (Hamburger) -->
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+      
+    </div>
+
+    <!-- mobile menu -->
+    <div id="mobileMenu" class="md:hidden hidden px-5 pb-6 space-y-3 border-t" 
+   style="border-color: rgba(15,23,36,0.05);">
+<a class="block py-2" href="#">Home</a>
+<a class="block py-2" href="#pricing">Pricing</a>
+<a class="block py-2" href="#services">Services</a>
+<a class="block py-2" href="#contact">Contact</a>
+<a class="block py-2" href="#login">
+  <span class="inline-block w-full text-center rounded-lg btn btn-primary">Login</span>
+</a>
+</div>
+
+  </header>
+
+
+  <main class="container mx-auto px-5 py-8">
+<div class="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow">
+  <h2 class="text-2xl font-bold mb-4">Upload document</h2>
+
+  <form action="{{ url_for('documentation.upload_document') }}" method="post" enctype="multipart/form-data" class="space-y-4">
+    <div>
+      <label class="block text-sm font-medium text-gray-700">Choose file</label>
+      <input type="file" name="file" required class="mt-1" />
+    </div>
+
+    {% if current_user.is_admin %}
+    <div>
+      <label class="inline-flex items-center">
+        <input type="checkbox" name="is_public" value="1" class="mr-2" />
+        <span>Make document public (anyone can view)</span>
+      </label>
+    </div>
+    {% endif %}
+
+    <div class="flex justify-end gap-2">
+      <a href="{{ url_for('documentation.list_documents') }}" class="btn-secondary px-4 py-2">Cancel</a>
+      <button type="submit" class="btn-primary px-4 py-2">Upload</button>
+    </div>
+  </form>
+</div>
+
+
+  </main>
+  <!-- Footer -->
+  <footer class="mt-16 py-8 bg-white/50 backdrop-blur-sm border-t border-gray-200">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 bg-gradient-to-br from-brand-teal to-brand-accent rounded-lg flex items-center justify-center">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <p class="text-sm text-gray-600">
+            © <span id="yearLogin"></span> <span class="font-semibold text-gray-900">Layer21</span> — All rights reserved.
+          </p>
+        </div>
+        <div class="flex items-center gap-4 text-sm text-gray-500">
+          <a href="#" class="hover:text-brand-teal transition">Privacy</a>
+          <span>•</span>
+          <a href="#" class="hover:text-brand-teal transition">Terms</a>
+          <span>•</span>
+          <a href="#" class="hover:text-brand-teal transition">Support</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function(){
+      // popmenu open/close
+      const openBtn = document.getElementById('openCreate');
+      const pop = document.getElementById('createPop');
+      const cancel = document.getElementById('cancelCreate');
+      const form = document.getElementById('createForm');
+      const createError = document.getElementById('createError');
+      const search = document.getElementById('search');
+      const toggleViewBtn = document.getElementById('toggleView');
+      const tableView = document.getElementById('tableView');
+      const cardView = document.getElementById('cardView');
+    
+      openBtn && openBtn.addEventListener('click', () => {
+        pop.classList.toggle('hidden');
+        pop.setAttribute('aria-hidden', pop.classList.contains('hidden') ? 'true' : 'false');
+        if (!pop.classList.contains('hidden')) pop.querySelector('input[name="title"]').focus();
+      });
+    
+      cancel && cancel.addEventListener('click', () => {
+        pop.classList.add('hidden');
+      });
+    
+      // Submit via AJAX if possible (falls back to normal submit)
+      form && form.addEventListener('submit', async function(evt){
+        // If browser supports fetch attempt AJAX post
+        if (!window.fetch) return;
+    
+        evt.preventDefault();
+        createError.classList.add('hidden');
+        const formData = new FormData(form);
+        const payload = {
+          title: formData.get('title'),
+          description: formData.get('description'),
+          priority: formData.get('priority')
+        };
+    
+        try {
+          const resp = await fetch(form.action, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify(payload)
+          });
+    
+          const j = await resp.json();
+          if (resp.ok && j.ok) {
+            // on success either navigate to the new complaint or refresh list
+            if (j.complaint_id) window.location = `/complaints/${j.complaint_id}`;
+            else location.reload();
+          } else {
+            createError.textContent = j.error || 'Failed to create complaint';
+            createError.classList.remove('hidden');
+          }
+        } catch (err) {
+          // network failure -> fallback to full form submit
+          console.warn('AJAX create failed, falling back to normal submit', err);
+          form.submit();
+        }
+      });
+    
+      // quick search (press Enter)
+      search && search.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          const q = encodeURIComponent(search.value.trim());
+          window.location = `?q=${q}`;
+        }
+      });
+    
+      // view toggle
+      toggleViewBtn && toggleViewBtn.addEventListener('click', () => {
+        tableView.classList.toggle('hidden');
+        cardView.classList.toggle('hidden');
+      });
+    
+      // close menu when clicking outside
+      document.addEventListener('click', (e) => {
+        const wrap = document.getElementById('createWrap');
+        if (!wrap) return;
+        if (!wrap.contains(e.target)) {
+          pop.classList.add('hidden');
+        }
+      });
+    })();
+    </script>
+    </body>
+    </html>
+    

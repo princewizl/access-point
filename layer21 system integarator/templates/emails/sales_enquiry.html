@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+  <title>Sales Enquiry — Layer21</title>
+  <!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]-->
+  <style>
+    /* ── Reset ── */
+    body,table,td,a{-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%}
+    table,td{mso-table-lspace:0;mso-table-rspace:0}
+    img{-ms-interpolation-mode:bicubic;border:0;height:auto;line-height:100%;outline:none;text-decoration:none}
+    body{margin:0!important;padding:0!important;background:#0b1220;width:100%!important}
+    /* ── Responsive ── */
+    @media only screen and (max-width:600px){
+      .email-container{width:100%!important;margin:0 auto!important}
+      .fluid{max-width:100%!important;height:auto!important;margin-left:auto!important;margin-right:auto!important}
+      .stack-col,.stack-col-right{display:block!important;width:100%!important;max-width:100%!important;direction:ltr!important}
+      .center-on-narrow{text-align:center!important;display:block!important;margin:0 auto!important}
+      .row-padding{padding:0 20px!important}
+      .field-table{width:100%!important}
+    }
+  </style>
+</head>
+<body style="margin:0;padding:0;background:#0b1220;font-family:'Segoe UI',Arial,sans-serif">
+  <!-- ── Preheader ── -->
+  <div style="display:none;font-size:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all">
+    New sales enquiry from {{ business }} regarding {{ service }} — Layer21
+  </div>
+
+  <!-- ── Email Wrapper ── -->
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background:#0b1220">
+    <tr>
+      <td align="center" style="padding:32px 16px">
+        <table role="presentation" class="email-container" cellspacing="0" cellpadding="0" border="0" width="600" style="max-width:600px;width:100%">
+
+          <!-- ════════════════ HEADER ════════════════ -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#0f1a2e,#152236);border-radius:16px 16px 0 0;border:1px solid rgba(46,197,219,.15);border-bottom:none;padding:32px 40px 28px">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                <tr>
+                  <td>
+                    <!-- Logo mark -->
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                      <tr>
+                        <td style="background:linear-gradient(135deg,#2ec5db,#36b9d1);border-radius:10px;width:42px;height:42px;text-align:center;vertical-align:middle">
+                          <span style="font-family:'Segoe UI',Arial,sans-serif;font-size:13px;font-weight:800;color:#041018;letter-spacing:-.5px">L21</span>
+                        </td>
+                        <td style="padding-left:12px;vertical-align:middle">
+                          <div style="font-size:16px;font-weight:800;color:#e6eef2;letter-spacing:.5px;line-height:1.1">LAYER21</div>
+                          <div style="font-size:9px;font-weight:700;color:#2ec5db;letter-spacing:.15em;text-transform:uppercase">IT Services</div>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                  <td align="right" style="vertical-align:middle">
+                    <div style="display:inline-block;background:rgba(46,197,219,.1);border:1px solid rgba(46,197,219,.25);border-radius:20px;padding:5px 14px;font-size:11px;font-weight:700;color:#2ec5db;text-transform:uppercase;letter-spacing:.08em">
+                      New Enquiry
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ════════════════ HERO BAND ════════════════ -->
+          <tr>
+            <td style="background:linear-gradient(135deg,rgba(46,197,219,.12),rgba(46,197,219,.04));border-left:1px solid rgba(46,197,219,.15);border-right:1px solid rgba(46,197,219,.15);padding:28px 40px 24px">
+              <div style="font-size:10px;font-weight:700;color:#2ec5db;text-transform:uppercase;letter-spacing:.12em;margin-bottom:8px">Sales Enquiry</div>
+              <div style="font-size:22px;font-weight:800;color:#ffffff;line-height:1.25;margin-bottom:6px">{{ business }}</div>
+              <div style="font-size:13px;color:rgba(230,238,242,.6)">Interested in: <strong style="color:#e6eef2">{{ service }}</strong></div>
+            </td>
+          </tr>
+
+          <!-- ════════════════ BODY ════════════════ -->
+          <tr>
+            <td style="background:#0f1a2e;border:1px solid rgba(46,197,219,.12);border-top:none;border-radius:0 0 16px 16px;padding:32px 40px 36px">
+
+              <!-- Contact details grid -->
+              <div style="margin-bottom:28px">
+                <div style="font-size:10px;font-weight:700;color:#2ec5db;text-transform:uppercase;letter-spacing:.12em;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.06)">Contact Information</div>
+
+                <!-- Row 1: Name + Email -->
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="field-table" style="margin-bottom:12px">
+                  <tr>
+                    <td class="stack-col" style="width:50%;padding-right:8px;vertical-align:top">
+                      <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:14px 16px">
+                        <div style="font-size:9px;font-weight:700;color:rgba(230,238,242,.45);text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px">Contact Person</div>
+                        <div style="font-size:14px;font-weight:600;color:#e6eef2">{{ contact_person }}</div>
+                      </div>
+                    </td>
+                    <td class="stack-col" style="width:50%;padding-left:8px;vertical-align:top">
+                      <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:14px 16px">
+                        <div style="font-size:9px;font-weight:700;color:rgba(230,238,242,.45);text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px">Email</div>
+                        <div style="font-size:14px;font-weight:600;color:#2ec5db">
+                          <a href="mailto:{{ email }}" style="color:#2ec5db;text-decoration:none">{{ email }}</a>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- Row 2: Phone + Service -->
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="field-table" style="margin-bottom:12px">
+                  <tr>
+                    <td class="stack-col" style="width:50%;padding-right:8px;vertical-align:top">
+                      <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:14px 16px">
+                        <div style="font-size:9px;font-weight:700;color:rgba(230,238,242,.45);text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px">Phone</div>
+                        <div style="font-size:14px;font-weight:600;color:#e6eef2">{{ phone }}</div>
+                      </div>
+                    </td>
+                    <td class="stack-col" style="width:50%;padding-left:8px;vertical-align:top">
+                      <div style="background:rgba(46,197,219,.06);border:1px solid rgba(46,197,219,.2);border-radius:10px;padding:14px 16px">
+                        <div style="font-size:9px;font-weight:700;color:#2ec5db;text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px">Service Requested</div>
+                        <div style="font-size:14px;font-weight:700;color:#e6eef2">{{ service }}</div>
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+              </div>
+
+              <!-- Message block (conditional) -->
+              {% if message %}
+              <div style="margin-bottom:28px">
+                <div style="font-size:10px;font-weight:700;color:#2ec5db;text-transform:uppercase;letter-spacing:.12em;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.06)">Message</div>
+                <div style="background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);border-left:3px solid rgba(46,197,219,.4);border-radius:0 10px 10px 0;padding:16px 18px;font-size:14px;color:rgba(230,238,242,.85);line-height:1.65;white-space:pre-wrap">{{ message }}</div>
+              </div>
+              {% endif %}
+
+              <!-- CTA: Reply button -->
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom:28px">
+                <tr>
+                  <td align="center">
+                    <a href="mailto:{{ email }}?subject=Re: Enquiry from {{ business }}&body=Hi {{ contact_person }},%0A%0AThank you for reaching out to Layer21.%0A%0A"
+                       style="display:inline-block;background:linear-gradient(135deg,#2ec5db,#36b9d1);color:#041018;font-size:13px;font-weight:800;text-decoration:none;padding:12px 32px;border-radius:10px;letter-spacing:.04em;box-shadow:0 4px 16px rgba(46,197,219,.25)">
+                      Reply to {{ contact_person }}
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Divider -->
+              <div style="border-top:1px solid rgba(255,255,255,.06);margin-bottom:20px"></div>
+
+              <!-- Meta footer -->
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                <tr>
+                  <td style="vertical-align:middle">
+                    <div style="font-size:11px;color:rgba(230,238,242,.35);line-height:1.5">
+                      This email was sent by the Layer21 contact form.<br/>
+                      Submitted: <span style="color:rgba(230,238,242,.55)">{{ submitted_at }}</span>
+                    </div>
+                  </td>
+                  <td align="right" style="vertical-align:middle">
+                    <div style="font-size:10px;font-weight:700;color:rgba(46,197,219,.5);text-transform:uppercase;letter-spacing:.08em">layer21.com</div>
+                  </td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+
+          <!-- ════════════════ FOOTER ════════════════ -->
+          <tr>
+            <td style="padding:20px 40px;text-align:center">
+              <div style="font-size:11px;color:rgba(230,238,242,.25);line-height:1.6">
+                Layer21 IT Services &nbsp;·&nbsp; FIRS-Accredited Access Point Provider<br/>
+                <a href="https://layer21.com" style="color:rgba(46,197,219,.4);text-decoration:none">layer21.com</a>
+                &nbsp;·&nbsp;
+                <a href="mailto:info@layer21.com" style="color:rgba(46,197,219,.4);text-decoration:none">info@layer21.com</a>
+              </div>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Layer21 — Access Point Provider & ERP Integration</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+  <style>
+    :root {
+      --dark: #0b1220;
+      --dark-2: #0f1a2e;
+      --dark-3: #152236;
+      --teal: #2ec5db;
+      --teal-2: #36b9d1;
+      --teal-glow: rgba(46,197,219,0.18);
+      --silver: #e6eef2;
+      --muted: rgba(230,238,242,0.55);
+      --card-bg: rgba(21,34,54,0.75);
+      --border: rgba(46,197,219,0.12);
+      --border-light: rgba(255,255,255,0.06);
+      --r: 14px;
+    }
+    /* ── LIGHT MODE ── */
+body.light {
+  --dark: #f7fafc;
+  --dark-2: #ffffff;
+  --dark-3: #eef3f7;
+
+  --silver: #0b1220;
+  --muted: rgba(11,18,32,0.6);
+
+  --card-bg: rgba(255,255,255,0.8);
+
+  --border: rgba(46,197,219,0.18);
+  --border-light: rgba(0,0,0,0.08);
+
+  background: var(--dark);
+  color: var(--silver);
+}
+    *{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{font-family:'Space Grotesk',sans-serif;background:var(--dark);color:var(--silver);overflow-x:hidden;line-height:1.65}
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar{width:4px}
+    ::-webkit-scrollbar-track{background:var(--dark)}
+    ::-webkit-scrollbar-thumb{background:var(--teal);border-radius:4px}
+
+    /* ── NOISE OVERLAY ── */
+    body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:999;opacity:.45}
+
+    /* ── GRID BG ── */
+    .grid-bg{position:fixed;inset:0;background-image:linear-gradient(rgba(46,197,219,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(46,197,219,0.025) 1px,transparent 1px);background-size:60px 60px;pointer-events:none;z-index:0}
+
+    /* ── TYPOGRAPHY ── */
+    .display{font-family:'Syne',sans-serif;font-weight:800;line-height:1.0}
+    h2{font-family:'Syne',sans-serif;font-weight:700}
+
+    /* ── PILL TAG ── */
+    .pill{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:999px;font-size:.75rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--teal);color:var(--teal);background:rgba(46,197,219,.07)}
+
+    /* ── BUTTONS ── */
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:.7rem 1.5rem;border-radius:9999px;font-weight:600;font-size:.9rem;cursor:pointer;text-decoration:none;transition:all .3s}
+    .btn-primary{background:linear-gradient(135deg,var(--teal),var(--teal-2));color:#041018;border:none;box-shadow:0 0 30px rgba(46,197,219,.22)}
+    .btn-primary:hover{transform:translateY(-2px);box-shadow:0 0 45px rgba(46,197,219,.4)}
+    .btn-ghost{background:transparent;color:var(--silver);border:1px solid var(--border-light)}
+    .btn-ghost:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-glow)}
+
+    /* ── NAVBAR ── */
+    nav.main-nav{position:sticky;top:0;z-index:100;padding:.9rem 0;border-bottom:1px solid var(--border-light);background: var(--card-bg);backdrop-filter:blur(18px)}
+    .nav-inner{max-width:1240px;margin:0 auto;padding:0 2rem;display:flex;align-items:center;justify-content:space-between}
+    .nav-brand{display:flex;align-items:center;gap:.75rem;text-decoration:none}
+    .nav-logo{width:46px;height:46px;border-radius:10px;object-fit:contain;background:rgba(46,197,219,.07);border:1px solid var(--border);padding:5px}
+    .brand-text .name{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;color:var(--silver)}
+    .brand-text .sub{font-size:.65rem;color:var(--teal);font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin-top:-2px}
+    .nav-links{display:flex;align-items:center;gap:2rem}
+    .nav-links a{color:var(--muted);text-decoration:none;font-size:.88rem;font-weight:500;transition:color .2s}
+    .nav-links a:hover{color:var(--teal)}
+    .nav-actions{display:flex;align-items:center;gap:.75rem}
+    .ham{display:none;background:none;border:none;cursor:pointer;color:var(--silver);font-size:1.4rem}
+    .mobile-menu{display:none;position:fixed;inset:0;top:73px;background:rgba(11,18,32,.97);z-index:99;padding:2rem;flex-direction:column;gap:1.5rem}
+    .mobile-menu.open{display:flex}
+    .mobile-menu a{color:var(--silver);text-decoration:none;font-size:1.1rem;font-weight:600;padding:.75rem 0;border-bottom:1px solid var(--border-light)}
+
+    @media(max-width:768px){.nav-links,.nav-actions .btn-ghost{display:none}.ham{display:block}.nav-actions .btn-primary{padding:.55rem 1rem;font-size:.8rem}}
+
+    /* ── HERO ── */
+    #hero{position:relative;min-height:100vh;display:flex;align-items:center;overflow:hidden;padding:6rem 0 4rem}
+    .hero-inner{max-width:1240px;margin:0 auto;padding:0 2rem;position:relative;z-index:2}
+    .hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center}
+    @media(max-width:900px){.hero-grid{grid-template-columns:1fr}}
+    .hero-pre{margin-bottom:1.25rem}
+    .hero-heading{font-size:clamp(2.4rem,5vw,4rem);margin-bottom:1.25rem;color:#fff}
+    .hero-heading em{font-style:normal;color:var(--teal)}
+    .hero-sub{color:var(--muted);font-size:1.05rem;max-width:520px;margin-bottom:2rem}
+    .hero-actions{display:flex;flex-wrap:wrap;gap:.75rem;margin-bottom:2.5rem}
+    .hero-stats{display:flex;gap:2rem;flex-wrap:wrap}
+    .stat-item .num{font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;color:var(--teal)}
+    .stat-item .label{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+
+    /* Hero visual — AP hub diagram */
+    .ap-hub{position:relative;width:100%;aspect-ratio:1;max-width:480px;margin:0 auto}
+    .hub-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:110px;height:110px;border-radius:50%;background:linear-gradient(135deg,var(--dark-3),var(--dark-2));border:2px solid var(--teal);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:5;box-shadow:0 0 50px rgba(46,197,219,.3),inset 0 0 30px rgba(46,197,219,.06)}
+    .hub-center .icon{font-size:2rem;color:var(--teal)}
+    .hub-center .label{font-size:.55rem;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.08em;margin-top:2px}
+    .orbit-ring{position:absolute;top:50%;left:50%;border-radius:50%;border:1px dashed var(--border);transform:translate(-50%,-50%)}
+    .ring1{width:200px;height:200px;animation:spin 25s linear infinite}
+    .ring2{width:320px;height:320px;animation:spin 40s linear infinite reverse}
+    .ring3{width:430px;height:430px;animation:spin 60s linear infinite}
+    @keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+    .orbit-node{position:absolute;transform:translate(-50%,-50%);width:64px;height:64px;border-radius:12px;background:var(--card-bg);border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;backdrop-filter:blur(8px);transition:box-shadow .3s}
+    .orbit-node:hover{box-shadow:0 0 25px rgba(46,197,219,.25)}
+    .orbit-node .ni{font-size:1.2rem;color:var(--teal)}
+    .orbit-node .nl{font-size:.5rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;text-align:center;line-height:1.2}
+    /* Connector lines drawn with SVG */
+    .hub-svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+    .pulse-line{stroke:var(--teal);stroke-width:1;fill:none;opacity:.3;stroke-dasharray:6 4;animation:dashFlow 3s linear infinite}
+    @keyframes dashFlow{to{stroke-dashoffset:-20}}
+
+    /* Floating glow blobs */
+    .blob{position:absolute;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:0}
+    .blob-1{width:500px;height:400px;top:-100px;right:-100px;background:radial-gradient(circle,rgba(46,197,219,.09),transparent 65%)}
+    .blob-2{width:400px;height:400px;bottom:-150px;left:-150px;background:radial-gradient(circle,rgba(46,197,219,.06),transparent 65%)}
+
+    /* ── SECTION BASE ── */
+    section{position:relative;z-index:2}
+    .section-inner{max-width:1240px;margin:0 auto;padding:0 2rem}
+    .section-header{text-align:center;margin-bottom:3.5rem}
+    .section-header h2{font-size:clamp(1.8rem,3.5vw,2.8rem);color:var(--silver);margin:.75rem 0 1rem}
+    .section-header p{color:var(--muted);max-width:580px;margin:0 auto;font-size:.98rem}
+
+    /* ── FEATURE STRIP ── */
+    #access-point{padding:5rem 0;background:linear-gradient(180deg,var(--dark) 0%,var(--dark-2) 100%)}
+    .ap-feature-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:4rem;align-items:center}
+    @media(max-width:900px){.ap-feature-grid{grid-template-columns:1fr}}
+
+    /* Pipeline diagram */
+    .pipeline{display:flex;flex-direction:column;gap:.75rem}
+    .pipe-step{display:flex;align-items:center;gap:1rem;padding:1rem 1.25rem;border-radius:12px;background:var(--card-bg);border:1px solid var(--border-light);backdrop-filter:blur(8px);transition:all .3s;cursor:default}
+    .pipe-step:hover{border-color:var(--teal);transform:translateX(6px);box-shadow:0 0 30px rgba(46,197,219,.12)}
+    .pipe-step.highlight{border-color:var(--teal);background:rgba(46,197,219,.06)}
+    .pipe-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+    .pi-erp{background:rgba(46,197,219,.1);color:var(--teal)}
+    .pi-ap{background:linear-gradient(135deg,var(--teal),var(--teal-2));color:#041018}
+    .pi-nrs{background:rgba(212,175,55,.12);color:#d4af37}
+    .pipe-info .name{font-weight:600;font-size:.9rem;color:#fff}
+    .pipe-info .desc{font-size:.78rem;color:var(--muted);margin-top:2px}
+    .pipe-arrow{margin:0 auto;color:var(--teal);opacity:.4;font-size:.85rem;text-align:center}
+    .erp-badges{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1rem}
+    .erp-badge{padding:4px 12px;border-radius:6px;font-size:.72rem;font-weight:700;background:rgba(46,197,219,.07);border:1px solid var(--border);color:var(--teal);letter-spacing:.04em}
+
+    .feature-copy h2{font-size:clamp(1.7rem,3vw,2.5rem);color:var(--silver);margin:.75rem 0 1.25rem;line-height:1.2}
+    .feature-copy p{color:var(--muted);font-size:.97rem;margin-bottom:1.25rem;line-height:1.7}
+    .feature-list{list-style:none;display:flex;flex-direction:column;gap:.75rem;margin-bottom:1.75rem}
+    .feature-list li{display:flex;align-items:flex-start;gap:.75rem;font-size:.9rem;color:var(--silver)}
+    .feature-list li i{color:var(--teal);font-size:1rem;flex-shrink:0;margin-top:2px}
+
+    /* ── PLATFORM FEATURES (Dashboard, Helpdesk etc.) ── */
+    #platform{padding:5rem 0;background:var(--dark-2)}
+    .platform-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem}
+    @media(max-width:900px){.platform-grid{grid-template-columns:1fr 1fr}}
+    @media(max-width:580px){.platform-grid{grid-template-columns:1fr}}
+    .p-card{border-radius:16px;padding:1.75rem;background:var(--card-bg);border:1px solid var(--border-light);backdrop-filter:blur(10px);transition:all .35s;cursor:default;position:relative;overflow:hidden}
+    .p-card::after{content:'';position:absolute;inset:0;opacity:0;background:radial-gradient(circle at 50% 0%,rgba(46,197,219,.07),transparent 65%);transition:opacity .35s;pointer-events:none}
+    .p-card:hover{border-color:var(--teal);transform:translateY(-5px);box-shadow:0 20px 60px rgba(0,0,0,.3)}
+    .p-card:hover::after{opacity:1}
+    .p-card.featured{border-color:var(--teal);background:rgba(46,197,219,.04)}
+    .card-icon-wrap{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin-bottom:1.25rem}
+    .ci-teal{background:rgba(46,197,219,.12);color:var(--teal)}
+    .ci-gold{background:rgba(212,175,55,.12);color:#d4af37}
+    .ci-green{background:rgba(0,210,120,.1);color:#00d278}
+    .ci-blue{background:rgba(60,130,255,.1);color:#5c8fff}
+    .ci-purple{background:rgba(150,80,255,.1);color:#b56eff}
+    .ci-orange{background:rgba(255,140,0,.1);color:#ff9b2e}
+    .p-card h3{font-size:1.05rem;font-weight:700;color:var(--silver);margin-bottom:.6rem}
+    .p-card p{font-size:.85rem;color:var(--muted);line-height:1.6}
+    .card-badge{position:absolute;top:1rem;right:1rem;padding:3px 10px;border-radius:999px;font-size:.65rem;font-weight:700;background:linear-gradient(135deg,var(--teal),var(--teal-2));color:#041018;text-transform:uppercase;letter-spacing:.07em}
+
+    /* ── DASHBOARD PREVIEW ── */
+    #dashboard-preview{padding:5rem 0}
+    .dash-window{border-radius:20px;overflow:hidden;border:1px solid var(--border);background:var(--dark-3);box-shadow:0 40px 100px rgba(0,0,0,.5)}
+    .dash-bar{padding:1rem 1.5rem;background:rgba(255,255,255,.03);border-bottom:1px solid var(--border-light);display:flex;align-items:center;gap:.6rem}
+    .dot{width:12px;height:12px;border-radius:50%}
+    .dot-r{background:#ff5f57}
+    .dot-y{background:#ffbd2e}
+    .dot-g{background:#28c840}
+    .dash-body{padding:2rem}
+    .dash-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.75rem}
+    @media(max-width:700px){.dash-kpis{grid-template-columns:repeat(2,1fr)}}
+    .kpi{padding:1.1rem;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid var(--border-light)}
+    .kpi .k-label{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.4rem}
+    .kpi .k-val{font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:#fff}
+    .kpi .k-delta{font-size:.72rem;margin-top:.25rem;display:flex;align-items:center;gap:4px}
+    .delta-up{color:#00d278}
+    .delta-down{color:#ff5f57}
+    .dash-panels{display:grid;grid-template-columns:1.6fr 1fr;gap:1rem}
+    @media(max-width:700px){.dash-panels{grid-template-columns:1fr}}
+    .d-panel{border-radius:12px;background:rgba(255,255,255,.03);border:1px solid var(--border-light);padding:1.25rem;overflow:hidden}
+    .d-panel h4{font-size:.8rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:1rem}
+    /* mini bar chart */
+    .chart-bars{display:flex;align-items:flex-end;gap:6px;height:80px}
+    .bar{flex:1;border-radius:4px 4px 0 0;background:rgba(46,197,219,.2);transition:background .3s;cursor:pointer;position:relative}
+    .bar:hover{background:var(--teal)}
+    .bar.active{background:var(--teal)}
+    .bar-label{font-size:.62rem;color:var(--muted);text-align:center;margin-top:4px}
+    /* invoice table */
+    .inv-table{width:100%;border-collapse:collapse}
+    .inv-table th{font-size:.7rem;color:var(--muted);font-weight:600;text-align:left;padding:.4rem .5rem;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border-light)}
+    .inv-table td{font-size:.8rem;padding:.55rem .5rem;border-bottom:1px solid rgba(255,255,255,.03)}
+    .inv-table tr:last-child td{border-bottom:none}
+    .status-pill{padding:2px 8px;border-radius:999px;font-size:.65rem;font-weight:700}
+    .s-ok{background:rgba(0,210,120,.12);color:#00d278}
+    .s-pend{background:rgba(255,189,46,.1);color:#ffbd2e}
+    .s-fail{background:rgba(255,95,87,.1);color:#ff5f57}
+
+    /* ── INTEGRATIONS ── */
+    #integrations{padding:5rem 0;background:var(--dark-2)}
+    .int-scroll{display:flex;gap:1.5rem;flex-wrap:wrap;justify-content:center;margin-top:2.5rem}
+    .int-card{display:flex;align-items:center;gap:.75rem;padding:.85rem 1.4rem;border-radius:12px;background:var(--card-bg);border:1px solid var(--border-light);backdrop-filter:blur(8px);transition:all .3s;cursor:default;min-width:170px}
+    .int-card:hover{border-color:var(--teal);transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,.25)}
+    .int-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;background:rgba(46,197,219,.1);color:var(--teal)}
+    .int-name{font-size:.85rem;font-weight:600;color:#fff}
+    .int-type{font-size:.7rem;color:var(--muted)}
+
+    /* ── SERVICES ── */
+    #services{padding:5rem 0}
+    .svc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem}
+    @media(max-width:900px){.svc-grid{grid-template-columns:1fr 1fr}}
+    @media(max-width:580px){.svc-grid{grid-template-columns:1fr}}
+    .svc-card{border-radius:16px;padding:2rem;background:var(--card-bg);border:1px solid var(--border-light);transition:all .35s;position:relative;overflow:hidden}
+    .svc-card:hover{border-color:var(--teal);transform:translateY(-5px);box-shadow:0 20px 60px rgba(0,0,0,.3)}
+    .svc-num{font-family:'Syne',sans-serif;font-size:3.5rem;font-weight:800;color:rgba(46,197,219,.06);position:absolute;top:.5rem;right:1.2rem;line-height:1}
+    .svc-card h3{font-size:1.1rem;font-weight:700;color:var(--silver);margin:.75rem 0 .65rem}
+    .svc-card p{font-size:.84rem;color:var(--muted);margin-bottom:1.2rem;line-height:1.65}
+    .svc-link{font-size:.82rem;font-weight:600;color:var(--teal);text-decoration:none;display:flex;align-items:center;gap:4px}
+    .svc-link:hover{text-decoration:underline}
+
+    /* ── PRICING ── */
+    #pricing{padding:5rem 0;background:var(--dark-2)}
+    .price-grid{display:grid;grid-template-columns:1fr 1fr;gap:2rem;max-width:900px;margin:0 auto}
+    @media(max-width:680px){.price-grid{grid-template-columns:1fr}}
+    .price-card{border-radius:20px;overflow:hidden;border:1px solid var(--border-light);background:var(--card-bg);backdrop-filter:blur(10px);transition:all .3s}
+    .price-card:hover{border-color:var(--teal);transform:translateY(-4px);box-shadow:0 30px 80px rgba(0,0,0,.35)}
+    .price-card.top{border-color:var(--teal)}
+    .price-head{padding:2rem;border-bottom:1px solid var(--border-light)}
+    .price-head h3{font-size:1.3rem;color:var(--silver);font-weight:700;margin-bottom:.4rem}
+    .price-head .sub{font-size:.8rem;color:var(--muted);margin-bottom:1.25rem}
+    .price-val{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;color:var(--teal)}
+    .price-val small{font-size:.8rem;font-weight:400;color:var(--muted)}
+    .price-body{padding:1.75rem 2rem}
+    .price-features{list-style:none;display:flex;flex-direction:column;gap:.65rem;margin-bottom:1.5rem}
+    .price-features li{display:flex;align-items:flex-start;gap:.6rem;font-size:.85rem;color:var(--silver)}
+    .price-features li i{color:var(--teal);flex-shrink:0;margin-top:2px}
+    .pop-badge{display:inline-block;padding:4px 12px;border-radius:999px;font-size:.65rem;font-weight:700;background:linear-gradient(135deg,var(--teal),var(--teal-2));color:#041018;text-transform:uppercase;letter-spacing:.07em;margin-bottom:.75rem}
+
+    /* ── CERT BANNER ── */
+    .cert-banner{max-width:900px;margin:0 auto 3rem;border-radius:20px;padding:2.5rem;background:linear-gradient(135deg,rgba(21,34,54,.9),rgba(15,26,46,.95));border:1px solid rgba(212,175,55,.25);position:relative;overflow:hidden}
+    .cert-banner::before{content:'';position:absolute;top:-40%;right:-10%;width:300px;height:300px;background:radial-gradient(circle,rgba(212,175,55,.08),transparent 65%);pointer-events:none}
+    .cert-banner .cert-top{display:flex;align-items:flex-start;justify-content:space-between;gap:1.5rem;flex-wrap:wrap}
+    .cert-banner h3{font-size:1.5rem;color:var(--silver);margin:.5rem 0 .75rem}
+    .cert-banner p{color:var(--muted);font-size:.9rem;max-width:580px;line-height:1.7}
+    .gold-badge{display:inline-flex;align-items:center;gap:.5rem;padding:6px 16px;border-radius:999px;font-size:.75rem;font-weight:700;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.3);color:#d4af37;white-space:nowrap}
+
+    /* ── CONTACT ── */
+    #contact{padding:5rem 0}
+    .contact-grid{display:grid;grid-template-columns:1fr 1.2fr;gap:4rem;align-items:start}
+    @media(max-width:900px){.contact-grid{grid-template-columns:1fr}}
+    .contact-copy h2{font-size:clamp(1.6rem,3vw,2.4rem);color:var(--silver);margin:.75rem 0 1rem}
+    .contact-copy p{color:var(--muted);font-size:.95rem;margin-bottom:2rem;line-height:1.7}
+    .contact-items{display:flex;flex-direction:column;gap:1rem}
+    .c-item{display:flex;align-items:center;gap:.85rem;font-size:.9rem;color:var(--silver)}
+    .c-item i{font-size:1.2rem;color:var(--teal)}
+    .contact-form{background:var(--card-bg);border:1px solid var(--border-light);border-radius:20px;padding:2.5rem;backdrop-filter:blur(10px)}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+    @media(max-width:580px){.form-row{grid-template-columns:1fr}}
+    .field{display:flex;flex-direction:column;gap:.4rem;margin-bottom:1rem}
+    .field label{font-size:.78rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+    .field input,.field select,.field textarea{background:rgba(255,255,255,.04);border:1px solid var(--border-light);border-radius:10px;padding:.75rem 1rem;color:var(--silver);font-family:inherit;font-size:.9rem;outline:none;transition:border-color .2s;width:100%}
+    .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--teal)}
+    .field select option{background:var(--dark-3);color:var(--silver)}
+    .field textarea{resize:vertical;min-height:110px}
+    #formMsg{margin-top:.75rem;font-size:.85rem;min-height:1.2rem}
+    .msg-ok{color:#00d278}
+    .msg-err{color:#ff5f57}
+
+    /* ── HELPDESK MODAL ── */
+    .modal-overlay{position:fixed;inset:0;background:rgba(5,10,20,.8);z-index:200;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity .3s}
+    .modal-overlay.open{opacity:1;pointer-events:all}
+    .modal-box{background:var(--dark-3);border:1px solid var(--border);border-radius:20px;width:90%;max-width:520px;padding:2rem;position:relative;transform:translateY(30px);transition:transform .35s;max-height:90vh;overflow-y:auto}
+    .modal-overlay.open .modal-box{transform:translateY(0)}
+    .modal-close{position:absolute;top:1rem;right:1rem;background:none;border:none;cursor:pointer;color:var(--muted);font-size:1.5rem;transition:color .2s}
+    .modal-close:hover{color:var(--teal)}
+
+    /* ── FOOTER ── */
+    footer{background: var(--dark-2);border-top:1px solid var(--border-light);padding:4rem 0 2rem}
+    .footer-inner{max-width:1240px;margin:0 auto;padding:0 2rem}
+    .footer-grid{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:2.5rem;margin-bottom:3rem}
+    @media(max-width:900px){.footer-grid{grid-template-columns:1fr 1fr}}
+    @media(max-width:500px){.footer-grid{grid-template-columns:1fr}}
+    .footer-brand p{font-size:.85rem;color:var(--muted);margin:1rem 0;line-height:1.7;max-width:260px}
+    .footer-col h4{font-size:.8rem;font-weight:700;color:var(--silver);text-transform:uppercase;letter-spacing:.08em;margin-bottom:1rem}
+    .footer-col ul{list-style:none;display:flex;flex-direction:column;gap:.6rem}
+    .footer-col ul li a{font-size:.87rem;color:var(--muted);text-decoration:none;transition:color .2s}
+    .footer-col ul li a:hover{color:var(--teal)}
+    .footer-bottom{border-top:1px solid var(--border-light);padding-top:1.75rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem}
+    .footer-bottom p{font-size:.8rem;color:var(--muted)}
+    .socials{display:flex;gap:.75rem}
+    .socials a{width:36px;height:36px;border-radius:9px;border:1px solid var(--border-light);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.9rem;text-decoration:none;transition:all .2s}
+    .socials a:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-glow)}
+    .partners-row{display:flex;gap:1rem;align-items:center;flex-wrap:wrap;margin-top:.75rem}
+    .partner-chip{padding:5px 14px;border-radius:8px;font-size:.72rem;font-weight:700;background:rgba(255,255,255,.04);border:1px solid var(--border-light);color:var(--muted)}
+
+    /* ── ANIMATIONS ── */
+    .fade-up{opacity:0;transform:translateY(30px);transition:opacity .65s ease,transform .65s ease}
+    .fade-up.visible{opacity:1;transform:translateY(0)}
+
+    /* Typing cursor */
+    .cursor{display:inline-block;width:3px;height:1em;background:var(--teal);margin-left:2px;animation:blink .75s steps(1) infinite;vertical-align:middle}
+    @keyframes blink{50%{opacity:0}}
+
+    /* Scrolling ticker */
+    .ticker-wrap{overflow:hidden;background:rgba(46,197,219,.04);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:.6rem 0}
+    .ticker{display:flex;animation:ticker 30s linear infinite;white-space:nowrap}
+    .ticker-item{padding:0 2.5rem;font-size:.78rem;font-weight:600;color:var(--teal);letter-spacing:.05em;display:flex;align-items:center;gap.5rem}
+    .ticker-item::after{content:'·';margin-left:2.5rem;color:rgba(46,197,219,.3)}
+    @keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+    /* ── STICKY CTA ── */
+    .sticky-cta{position:fixed;bottom:2rem;right:2rem;z-index:150;display:flex;flex-direction:column;gap:.6rem;align-items:flex-end}
+    .scta-btn{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.3rem;cursor:pointer;border:none;transition:all .3s;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+    .scta-main{background:linear-gradient(135deg,var(--teal),var(--teal-2));color:#041018}
+    .scta-main:hover{transform:scale(1.1);box-shadow:0 0 40px rgba(46,197,219,.4)}
+    .scta-help{background:var(--dark-3);border:1px solid var(--border);color:var(--teal)}
+    .scta-help:hover{transform:scale(1.1);border-color:var(--teal)}
+    .scta-label{font-size:.65rem;font-weight:600;color:var(--muted);text-align:right;pointer-events:none}
+    body.light .blob {
+  display: none;
+}
+
+body.light body::before {
+  opacity: 0.02;
+}
+  </style>
+</head>
+<body>
+
+<!-- Grid background -->
+<div class="grid-bg"></div>
+
+<!-- Blobs -->
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+
+<!-- ── TICKER ── -->
+<div class="ticker-wrap">
+  <div class="ticker" id="tickerTrack">
+    <span class="ticker-item">FIRS Accredited Access Point Provider</span>
+    <span class="ticker-item">Real-Time Invoice Validation to NRS</span>
+    <span class="ticker-item">Odoo · SAP · Oracle · QuickBooks · Sage Integration</span>
+    <span class="ticker-item">99.9% Uptime SLA</span>
+    <span class="ticker-item">End-to-End E-Invoicing Compliance</span>
+    <span class="ticker-item">24/7 HelpDesk & Support</span>
+    <span class="ticker-item">FIRS Accredited Access Point Provider</span>
+    <span class="ticker-item">Real-Time Invoice Validation to NRS</span>
+    <span class="ticker-item">Odoo · SAP · Oracle · QuickBooks · Sage Integration</span>
+    <span class="ticker-item">99.9% Uptime SLA</span>
+    <span class="ticker-item">End-to-End E-Invoicing Compliance</span>
+    <span class="ticker-item">24/7 HelpDesk & Support</span>
+  </div>
+</div>
+
+<!-- ── NAVBAR ── -->
+<nav class="main-nav">
+  <div class="nav-inner">
+    <a href="#" class="nav-brand">
+      <img src="/static/img/layer21logo.jpg" alt="Layer21" class="nav-logo" onerror="this.style.display='none'"/>
+      <div class="brand-text">
+        <div class="name">LAYER21</div>
+        <div class="sub">IT Services</div>
+      </div>
+    </a>
+    <div class="nav-links">
+      <a href="#access-point">Access Point</a>
+      <a href="#platform">Platform</a>
+      <a href="#services">Services</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#contact">Contact</a>
+      <a href="/documentation">Docs</a>
+    </div>
+    <div class="nav-actions">
+      <a href="/login" class="btn btn-ghost" style="padding:.55rem 1.1rem;font-size:.85rem">Login</a>
+      <a href="#contact" class="btn btn-primary" style="padding:.55rem 1.2rem;font-size:.85rem">Get Started</a>
+      <button id="themeToggle" class="btn btn-ghost" style="padding:.5rem .7rem">
+  <i class="bi bi-moon"></i>
+</button>
+    </div>
+    <button class="ham" id="hamBtn" aria-label="Menu"><i class="bi bi-list"></i></button>
+  </div>
+</nav>
+
+<!-- Mobile menu -->
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#access-point" onclick="closeMob()">Access Point</a>
+  <a href="#platform" onclick="closeMob()">Platform</a>
+  <a href="#services" onclick="closeMob()">Services</a>
+  <a href="#pricing" onclick="closeMob()">Pricing</a>
+  <a href="#contact" onclick="closeMob()">Contact</a>
+  <a href="/documentation" onclick="closeMob()">Docs</a>
+  <a href="/login" onclick="closeMob()">Login →</a>
+</div>
+
+<!-- ── HERO ── -->
+<section id="hero">
+  <div class="hero-inner">
+    <div class="hero-grid">
+      <div>
+        <div class="hero-pre">
+          <span class="pill"><i class="bi bi-shield-check"></i> FIRS Accredited · NRS Certified</span>
+        </div>
+        <h1 class="display hero-heading">
+          Nigeria's Premier<br/>
+          <em id="typedText"></em><span class="cursor"></span>
+        </h1>
+        <p class="hero-sub">One certified Access Point. Any ERP. Real-time invoice validation straight to the Nigeria Revenue Service — with zero compliance risk.</p>
+        <div class="hero-actions">
+          <a href="#access-point" class="btn btn-primary"><i class="bi bi-arrow-right-circle"></i> Explore Platform</a>
+          <a href="#contact" class="btn btn-ghost"><i class="bi bi-chat-dots"></i> Talk to Sales</a>
+        </div>
+        <div class="hero-stats">
+          <div class="stat-item">
+            <div class="num">500+</div>
+            <div class="label">Invoices / day</div>
+          </div>
+          <div class="stat-item">
+            <div class="num">99.9%</div>
+            <div class="label">Uptime SLA</div>
+          </div>
+          <div class="stat-item">
+            <div class="num">6+</div>
+            <div class="label">ERP Integrations</div>
+          </div>
+          <div class="stat-item">
+            <div class="num">&lt;2s</div>
+            <div class="label">Validation time</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hub Diagram -->
+      <div>
+        <div class="ap-hub" id="apHub">
+          <!-- Orbit rings -->
+          <div class="orbit-ring ring1"></div>
+          <div class="orbit-ring ring2"></div>
+          <div class="orbit-ring ring3"></div>
+          <!-- Center -->
+          <div class="hub-center">
+            <i class="bi bi-router icon"></i>
+            <span class="label">AP Hub</span>
+          </div>
+          <!-- SVG connector lines -->
+          <svg class="hub-svg" viewBox="0 0 480 480" id="hubSvg"></svg>
+          <!-- Nodes injected by JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── ACCESS POINT FEATURE ── -->
+<section id="access-point">
+  <div class="section-inner">
+    <div class="ap-feature-grid">
+      <!-- Pipeline visual -->
+      <div class="fade-up">
+        <div class="pipeline">
+          <!-- ERP sources -->
+          <div style="font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.4rem">ERP Sources</div>
+          <div class="pipe-step">
+            <div class="pipe-icon pi-erp"><i class="bi bi-layers"></i></div>
+            <div class="pipe-info">
+              <div class="name">Connected ERP Systems</div>
+              <div class="desc">Odoo, SAP, Oracle, QuickBooks, Sage, Microsoft Dynamics</div>
+            </div>
+            <div style="margin-left:auto"><i class="bi bi-check-circle-fill" style="color:var(--teal)"></i></div>
+          </div>
+          <div class="erp-badges">
+            <span class="erp-badge">Odoo</span>
+            <span class="erp-badge">SAP</span>
+            <span class="erp-badge">Oracle</span>
+            <span class="erp-badge">QuickBooks</span>
+            <span class="erp-badge">Sage</span>
+            <span class="erp-badge">MS Dynamics</span>
+            <span class="erp-badge">Custom ERP</span>
+          </div>
+
+          <div class="pipe-arrow" style="margin:.5rem 0"><i class="bi bi-arrow-down"></i> Secure API Transmission</div>
+
+          <!-- AP -->
+          <div style="font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.4rem">Access Point</div>
+          <div class="pipe-step highlight">
+            <div class="pipe-icon pi-ap"><i class="bi bi-router"></i></div>
+            <div class="pipe-info">
+              <div class="name">Layer21 Certified Access Point</div>
+              <div class="desc">Validation, encryption, retry queue, audit trail &amp; real-time status</div>
+            </div>
+            <div style="margin-left:auto;font-size:.65rem;font-weight:700;color:var(--teal);background:rgba(46,197,219,.1);padding:3px 9px;border-radius:999px">FIRS Certified</div>
+          </div>
+
+          <div class="pipe-arrow" style="margin:.5rem 0"><i class="bi bi-arrow-down"></i> Encrypted Submission</div>
+
+          <!-- NRS -->
+          <div style="font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.4rem">Revenue Authority</div>
+          <div class="pipe-step">
+            <div class="pipe-icon pi-nrs"><i class="bi bi-bank"></i></div>
+            <div class="pipe-info">
+              <div class="name">Nigeria Revenue Service (NRS / FIRS)</div>
+              <div class="desc">Real-time invoice submission, acknowledgement &amp; compliance receipts</div>
+            </div>
+            <div style="margin-left:auto"><i class="bi bi-patch-check-fill" style="color:#d4af37"></i></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Copy -->
+      <div class="feature-copy fade-up">
+        <span class="pill"><i class="bi bi-broadcast"></i> Access Point Provider</span>
+        <h2>One Access Point.<br/>Every ERP. Full Compliance.</h2>
+        <p>Layer21 is a FIRS-accredited Certified Access Point Provider. We sit between your ERP and the Nigeria Revenue Service — handling validation, encryption, retry logic, and audit-ready receipt storage so you never miss a submission.</p>
+        <ul class="feature-list">
+          <li><i class="bi bi-check2-circle"></i> Pre-built connectors for Odoo, SAP, Oracle, QuickBooks, Sage & custom systems</li>
+          <li><i class="bi bi-check2-circle"></i> Sub-2-second invoice validation with automated NRS acknowledgement</li>
+          <li><i class="bi bi-check2-circle"></i> Smart retry queue — zero failed submissions from network interruptions</li>
+          <li><i class="bi bi-check2-circle"></i> Full audit trail, tamper-proof receipts &amp; tax archive up to 7 years</li>
+          <li><i class="bi bi-check2-circle"></i> Sandbox environment for testing before going live</li>
+          <li><i class="bi bi-check2-circle"></i> REST API &amp; webhooks — integrate in days, not months</li>
+        </ul>
+        <div style="display:flex;gap:.75rem;flex-wrap:wrap">
+          <a href="#contact" class="btn btn-primary"><i class="bi bi-arrow-right-circle"></i> Get Certified Today</a>
+          <a href="/documentation" class="btn btn-ghost"><i class="bi bi-file-code"></i> View API Docs</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── PLATFORM FEATURES ── -->
+<section id="platform">
+  <div class="section-inner">
+    <div class="section-header fade-up">
+      <span class="pill" style="margin-bottom:1rem"><i class="bi bi-grid-3x3-gap"></i> Platform</span>
+      <h2>Everything in one place</h2>
+      <p>From invoice dashboards to helpdesk — the Layer21 platform gives your team full visibility and control over every transaction.</p>
+    </div>
+    <div class="platform-grid">
+
+      <div class="p-card featured fade-up">
+        <div class="card-badge">Core</div>
+        <div class="card-icon-wrap ci-teal"><i class="bi bi-bar-chart-line"></i></div>
+        <h3>Invoice Dashboard</h3>
+        <p>Real-time view of every invoice submitted, validated, and acknowledged. Filter by ERP source, date, status or business unit. Export audit-ready reports in one click.</p>
+      </div>
+
+      <div class="p-card fade-up">
+        <div class="card-icon-wrap ci-green"><i class="bi bi-check2-all"></i></div>
+        <h3>Live Compliance Status</h3>
+        <p>See NRS submission status instantly — accepted, pending, or failed — with drill-down detail per invoice and auto-retry triggers for rejections.</p>
+      </div>
+
+      <div class="p-card fade-up">
+        <div class="card-icon-wrap ci-gold"><i class="bi bi-headset"></i></div>
+        <h3>HelpDesk & Ticketing</h3>
+        <p>Log complaints, technical issues, or billing queries through a structured ticket system. Track resolution status and SLA timers from submission to close.</p>
+      </div>
+
+      <div class="p-card fade-up">
+        <div class="card-icon-wrap ci-blue"><i class="bi bi-lightning-charge"></i></div>
+        <h3>Priority Support</h3>
+        <p>Business-critical issues get routed to senior engineers within 15 minutes. SLA-backed response tiers: Standard, Priority, and Critical 24/7 escalation.</p>
+      </div>
+
+      <div class="p-card fade-up">
+        <div class="card-icon-wrap ci-purple"><i class="bi bi-bell"></i></div>
+        <h3>Smart Alerts</h3>
+        <p>Receive email, SMS or webhook alerts for submission failures, compliance deadlines, quota thresholds and system maintenance windows.</p>
+      </div>
+
+      <div class="p-card fade-up">
+        <div class="card-icon-wrap ci-orange"><i class="bi bi-lock"></i></div>
+        <h3>Audit Archive</h3>
+        <p>Tamper-proof, encrypted storage of all invoices, NRS receipts, and change logs. 7-year retention with instant search and one-click export for auditors.</p>
+      </div>
+
+      <div class="p-card fade-up">
+        <div class="card-icon-wrap ci-teal"><i class="bi bi-plug"></i></div>
+        <h3>ERP Connector Hub</h3>
+        <p>Manage all your ERP connections from one place. Monitor sync health, token status, field mappings, and data transforms for each connected system.</p>
+      </div>
+
+      <div class="p-card fade-up">
+        <div class="card-icon-wrap ci-blue"><i class="bi bi-people"></i></div>
+        <h3>Multi-User Roles</h3>
+        <p>Granular role-based access: Finance, IT Admin, Auditor, Viewer. Full activity log per user with optional SSO / SAML integration.</p>
+      </div>
+
+      <div class="p-card fade-up">
+        <div class="card-icon-wrap ci-green"><i class="bi bi-graph-up-arrow"></i></div>
+        <h3>Analytics & Reports</h3>
+        <p>Monthly compliance reports, invoice volume trends, error rate analysis, and SLA performance scores — fully downloadable for management review.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── DASHBOARD PREVIEW ── -->
+<section id="dashboard-preview" style="padding:5rem 0">
+  <div class="section-inner">
+    <div class="section-header fade-up">
+      <span class="pill"><i class="bi bi-display"></i> Live Preview</span>
+      <h2>Invoice Dashboard</h2>
+      <p>Everything your finance and compliance teams need — at a glance.</p>
+    </div>
+    <div class="dash-window fade-up">
+      <div class="dash-bar">
+        <div class="dot dot-r"></div>
+        <div class="dot dot-y"></div>
+        <div class="dot dot-g"></div>
+        <span style="margin-left:.75rem;font-size:.8rem;color:var(--muted)">Layer21 · Invoice Command Centre</span>
+        <span style="margin-left:auto;font-size:.72rem;color:var(--teal)"><i class="bi bi-circle-fill" style="font-size:.5rem"></i> LIVE</span>
+      </div>
+      <div class="dash-body">
+        <!-- KPIs -->
+        <div class="dash-kpis">
+          <div class="kpi">
+            <div class="k-label">Total Submitted</div>
+            <div class="k-val" id="kv1">0</div>
+            <div class="k-delta delta-up"><i class="bi bi-arrow-up"></i> 12.4% vs last month</div>
+          </div>
+          <div class="kpi">
+            <div class="k-label">Validated / Accepted</div>
+            <div class="k-val" id="kv2">0</div>
+            <div class="k-delta delta-up"><i class="bi bi-arrow-up"></i> 98.7% acceptance rate</div>
+          </div>
+          <div class="kpi">
+            <div class="k-label">Pending NRS</div>
+            <div class="k-val" id="kv3">0</div>
+            <div class="k-delta" style="color:var(--muted)"><i class="bi bi-clock"></i> Avg 1.4s</div>
+          </div>
+          <div class="kpi">
+            <div class="k-label">Failed / Retrying</div>
+            <div class="k-val" id="kv4">0</div>
+            <div class="k-delta delta-down"><i class="bi bi-arrow-down"></i> 1.3% failure rate</div>
+          </div>
+        </div>
+        <!-- Chart + Table -->
+        <div class="dash-panels">
+          <div class="d-panel">
+            <h4>Daily Invoice Volume — March 2025</h4>
+            <div class="chart-bars" id="chartBars"></div>
+            <div style="display:flex;gap:6px;margin-top:4px" id="barLabels"></div>
+          </div>
+          <div class="d-panel">
+            <h4>Recent Submissions</h4>
+            <table class="inv-table">
+              <thead><tr><th>Invoice #</th><th>ERP</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td>INV-8841</td><td>Odoo</td><td><span class="status-pill s-ok">Accepted</span></td></tr>
+                <tr><td>INV-8840</td><td>SAP</td><td><span class="status-pill s-ok">Accepted</span></td></tr>
+                <tr><td>INV-8839</td><td>QuickBooks</td><td><span class="status-pill s-pend">Pending</span></td></tr>
+                <tr><td>INV-8838</td><td>Oracle</td><td><span class="status-pill s-ok">Accepted</span></td></tr>
+                <tr><td>INV-8837</td><td>Sage</td><td><span class="status-pill s-fail">Retrying</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── INTEGRATIONS ── -->
+<section id="integrations">
+  <div class="section-inner">
+    <div class="section-header fade-up">
+      <span class="pill"><i class="bi bi-plug"></i> Integrations</span>
+      <h2>Works with your ERP</h2>
+      <p>Pre-built connectors ready on day one. Custom ERP? Our API & webhook system connects in days.</p>
+    </div>
+    <div class="int-scroll fade-up">
+      <div class="int-card"><div class="int-icon"><i class="bi bi-layers"></i></div><div><div class="int-name">Odoo</div><div class="int-type">ERP Suite</div></div></div>
+      <div class="int-card"><div class="int-icon"><i class="bi bi-building"></i></div><div><div class="int-name">SAP</div><div class="int-type">Enterprise ERP</div></div></div>
+      <div class="int-card"><div class="int-icon"><i class="bi bi-database"></i></div><div><div class="int-name">Oracle</div><div class="int-type">Cloud ERP</div></div></div>
+      <div class="int-card"><div class="int-icon"><i class="bi bi-calculator"></i></div><div><div class="int-name">QuickBooks</div><div class="int-type">Accounting</div></div></div>
+      <div class="int-card"><div class="int-icon"><i class="bi bi-bar-chart"></i></div><div><div class="int-name">Sage</div><div class="int-type">Business Mgmt</div></div></div>
+      <div class="int-card"><div class="int-icon"><i class="bi bi-microsoft"></i></div><div><div class="int-name">MS Dynamics</div><div class="int-type">CRM & ERP</div></div></div>
+      <div class="int-card"><div class="int-icon"><i class="bi bi-box"></i></div><div><div class="int-name">Xero</div><div class="int-type">Cloud Accounting</div></div></div>
+      <div class="int-card" style="border-style:dashed"><div class="int-icon" style="background:rgba(46,197,219,.05)"><i class="bi bi-plus-lg"></i></div><div><div class="int-name">Custom ERP</div><div class="int-type">REST API</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── SERVICES ── -->
+<section id="services" style="padding:5rem 0">
+  <div class="section-inner">
+    <div class="section-header fade-up">
+      <span class="pill"><i class="bi bi-briefcase"></i> Services</span>
+      <h2>What we deliver</h2>
+      <p>End-to-end technology services built for Nigerian enterprises.</p>
+    </div>
+    <div class="svc-grid">
+      <div class="svc-card fade-up">
+        <div class="svc-num">01</div>
+        <div class="card-icon-wrap ci-teal" style="margin-bottom:.75rem"><i class="bi bi-router"></i></div>
+        <h3>Access Point Provider</h3>
+        <p>Certified e-invoicing Access Point that routes, validates, and submits invoices from any ERP directly to the Nigeria Revenue Service in real time.</p>
+        <a href="#contact" class="svc-link">Get started <i class="bi bi-arrow-right"></i></a>
+      </div>
+      <div class="svc-card fade-up">
+        <div class="svc-num">02</div>
+        <div class="card-icon-wrap ci-purple" style="margin-bottom:.75rem"><i class="bi bi-layers"></i></div>
+        <h3>ERP Solutions</h3>
+        <p>Full Odoo implementation, customization, data migration, and module development. We automate your business processes from day one.</p>
+        <a href="#contact" class="svc-link">Explore ERP <i class="bi bi-arrow-right"></i></a>
+      </div>
+      <div class="svc-card fade-up">
+        <div class="svc-num">03</div>
+        <div class="card-icon-wrap ci-blue" style="margin-bottom:.75rem"><i class="bi bi-diagram-3"></i></div>
+        <h3>System Integration</h3>
+        <p>Architecture, middleware, and API design to connect your enterprise applications into one seamless operational backbone.</p>
+        <a href="#contact" class="svc-link">Learn more <i class="bi bi-arrow-right"></i></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── PRICING ── -->
+<section id="pricing">
+  <div class="section-inner">
+    <div class="section-header fade-up">
+      <span class="pill"><i class="bi bi-tag"></i> Pricing</span>
+      <h2>Transparent, flexible plans</h2>
+      <p>Contact us for a tailored quote — we build around your volume, ERP stack, and SLA needs.</p>
+    </div>
+
+    <!-- Cert banner -->
+    <div class="cert-banner fade-up">
+      <div class="cert-top">
+        <div>
+          <div class="gold-badge"><i class="bi bi-award"></i> FIRS Accredited Access Point</div>
+          <h3>Nigeria's E-Invoicing Compliance — Handled.</h3>
+          <p>As a certified Access Point Provider, Layer21 ensures every invoice you submit is legally compliant, tamper-proof, and acknowledged by the Nigeria Revenue Service — automatically.</p>
+        </div>
+        <a href="#contact" class="btn btn-primary" style="white-space:nowrap;align-self:center"><i class="bi bi-arrow-right-circle"></i> Request Onboarding</a>
+      </div>
+    </div>
+
+    <!-- Cards -->
+    <div class="price-grid fade-up">
+      <div class="price-card">
+        <div class="price-head">
+          <h3>E-Invoicing Access Point</h3>
+          <div class="sub">FIRS-certified AP for NRS submission</div>
+          <div class="price-val">On Request <small>/ quote</small></div>
+        </div>
+        <div class="price-body">
+          <ul class="price-features">
+            <li><i class="bi bi-check2"></i> FIRS-accredited real-time invoice validation</li>
+            <li><i class="bi bi-check2"></i> ERP connector (Odoo, SAP, Oracle, QB, Sage)</li>
+            <li><i class="bi bi-check2"></i> Encrypted submission + auto retry queue</li>
+            <li><i class="bi bi-check2"></i> End-to-end audit trail & 7yr archive</li>
+            <li><i class="bi bi-check2"></i> Invoice dashboard & compliance reports</li>
+            <li><i class="bi bi-check2"></i> Sandbox + onboarding support</li>
+          </ul>
+          <a href="#contact" class="btn btn-primary" style="width:100%;justify-content:center">Request Quote</a>
+        </div>
+      </div>
+
+      <div class="price-card top">
+        <div class="price-head">
+          <div class="pop-badge">Most Popular</div>
+          <h3>Odoo Implementation</h3>
+          <div class="sub">Full ERP + E-Invoicing integration</div>
+          <div class="price-val">On Request <small>/ quote</small></div>
+        </div>
+        <div class="price-body">
+          <ul class="price-features">
+            <li><i class="bi bi-check2"></i> Full Odoo setup: Accounting, Invoicing, Inventory, POS</li>
+            <li><i class="bi bi-check2"></i> Data migration from legacy systems or spreadsheets</li>
+            <li><i class="bi bi-check2"></i> Custom module development & workflow automation</li>
+            <li><i class="bi bi-check2"></i> Built-in E-Invoicing AP + NRS integration</li>
+            <li><i class="bi bi-check2"></i> Platform access: Dashboard, HelpDesk, Alerts</li>
+            <li><i class="bi bi-check2"></i> Training, change management & managed support</li>
+          </ul>
+          <a href="#contact" class="btn btn-primary" style="width:100%;justify-content:center">Request Quote</a>
+        </div>
+      </div>
+    </div>
+    <p style="text-align:center;margin-top:1.5rem;font-size:.85rem;color:var(--muted)">Not sure what you need? <a href="#contact" style="color:var(--teal);font-weight:600">Contact Sales</a> — we'll scope it for you.</p>
+  </div>
+</section>
+
+<!-- ── CONTACT ── -->
+<section id="contact">
+  <div class="section-inner">
+    <div class="contact-grid">
+      <div class="contact-copy fade-up">
+        <span class="pill"><i class="bi bi-envelope"></i> Contact</span>
+        <h2>Let's talk about your project</h2>
+        <p>Whether you need e-invoicing compliance, an Odoo rollout, or a full system integration — tell us about your scope and we'll get back within one business day.</p>
+        <div class="contact-items">
+          <div class="c-item"><i class="bi bi-envelope"></i> sales@layer21.com</div>
+          <div class="c-item"><i class="bi bi-telephone"></i> +234 811 192 2822</div>
+          <div class="c-item"><i class="bi bi-geo-alt"></i> Lagos, Nigeria</div>
+          <div class="c-item"><i class="bi bi-clock"></i> Mon–Fri, 8am–6pm WAT</div>
+        </div>
+        <div style="margin-top:2rem;padding:1.25rem;border-radius:12px;background:rgba(46,197,219,.04);border:1px solid var(--border)">
+          <div style="font-size:.78rem;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.5rem"><i class="bi bi-headset"></i> Need immediate help?</div>
+          <p style="font-size:.85rem;color:var(--muted);margin:0 0 .75rem">Open a HelpDesk ticket for technical issues or billing queries.</p>
+          <button class="btn btn-ghost" style="font-size:.83rem;padding:.5rem 1rem" onclick="document.getElementById('helpdeskModal').classList.add('open')"><i class="bi bi-ticket"></i> Open Ticket</button>
+        </div>
+      </div>
+
+      <div class="contact-form fade-up">
+        <form id="contactForm" action="/contact_sales" method="post" novalidate>
+          <div class="form-row">
+            <div class="field"><label>Business Name *</label><input type="text" name="business_name" placeholder="Acme Corp" required/></div>
+            <div class="field"><label>Contact Person *</label><input type="text" name="contact_person" placeholder="Your name" required/></div>
+          </div>
+          <div class="form-row">
+            <div class="field"><label>Email *</label><input type="email" name="email" placeholder="you@company.com" required/></div>
+            <div class="field"><label>Phone *</label><input type="tel" name="phone" placeholder="+234 800 000 0000" required/></div>
+          </div>
+          <div class="field">
+            <label>Service *</label>
+            <select name="service" required>
+              <option value="">— Select service —</option>
+              <option>E-Invoicing Access Point</option>
+              <option>Odoo ERP Implementation</option>
+              <option>System Integration</option>
+              <option>Platform / Dashboard Access</option>
+              <option>HelpDesk & Support</option>
+            </select>
+          </div>
+          <div class="field"><label>Message</label><textarea name="message" placeholder="Tell us about your project, ERP system, and timeline…"></textarea></div>
+          <!-- Honeypot -->
+          <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off"/>
+          <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center" id="cfSubmit">
+            <span id="cfSpinner" style="display:none">⏳ </span>
+            <i class="bi bi-send"></i> Send Enquiry
+          </button>
+          <div id="formMsg"></div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <img src="/static/img/layer21logo.jpg" alt="Layer21" style="width:52px;border-radius:10px;background:rgba(46,197,219,.07);border:1px solid var(--border);padding:5px" onerror="this.style.display='none'"/>
+        <p>Layer21 IT Services — Certified Access Point Provider, ERP Integrator & System Integrator for Nigerian enterprises.</p>
+        <div class="partners-row">
+          <span class="partner-chip">FIRS Certified</span>
+          <span class="partner-chip">NRS Accredited</span>
+          <span class="partner-chip">Odoo Partner</span>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Platform</h4>
+        <ul>
+          <li><a href="#access-point">Access Point</a></li>
+          <li><a href="#dashboard-preview">Invoice Dashboard</a></li>
+          <li><a href="#platform">HelpDesk</a></li>
+          <li><a href="#integrations">Integrations</a></li>
+          <li><a href="/documentation">API Docs</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Services</h4>
+        <ul>
+          <li><a href="#services">E-Invoicing</a></li>
+          <li><a href="#services">Odoo ERP</a></li>
+          <li><a href="#services">System Integration</a></li>
+          <li><a href="#pricing">Pricing</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="#contact">Contact Sales</a></li>
+          <li><a href="#" onclick="document.getElementById('helpdeskModal').classList.add('open');return false">HelpDesk</a></li>
+          <li><a href="/login">Login</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© <span id="fyear"></span> Layer21 IT Services. All rights reserved.</p>
+      <div class="socials">
+        <a href="#" aria-label="Twitter"><i class="bi bi-twitter-x"></i></a>
+        <a href="#" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a>
+        <a href="#" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- ── HELPDESK MODAL ── -->
+<div class="modal-overlay" id="helpdeskModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="document.getElementById('helpdeskModal').classList.remove('open')">&times;</button>
+    <div style="margin-bottom:1.5rem">
+      <span class="pill"><i class="bi bi-headset"></i> HelpDesk</span>
+      <h2 style="color:var(--silver);font-size:1.4rem;margin:.75rem 0 .5rem">Open a Support Ticket</h2>
+      <p style="color:var(--muted);font-size:.85rem">We respond within 15 minutes for critical issues. SLA tracked from submission.</p>
+    </div>
+    <form id="hdForm" novalidate>
+      <div class="field"><label>Subject *</label><input type="text" name="subject" placeholder="Brief issue summary" required/></div>
+      <div class="field">
+        <label>Priority *</label>
+        <select name="priority" required>
+          <option value="">— Select priority —</option>
+          <option value="low">Low — General query</option>
+          <option value="medium">Medium — Operational impact</option>
+          <option value="high">High — Business disruption</option>
+          <option value="critical">Critical — System down</option>
+        </select>
+      </div>
+      <div class="field"><label>Category *</label>
+        <select name="category" required>
+          <option value="">— Select category —</option>
+          <option>Invoice Submission Failure</option>
+          <option>ERP Connector Issue</option>
+          <option>NRS Acknowledgement Missing</option>
+          <option>Dashboard / Platform Access</option>
+          <option>Billing & Invoicing</option>
+          <option>API / Integration</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="field"><label>Description *</label><textarea name="description" placeholder="Describe the issue in detail, including any error messages, invoice IDs, or ERP system…" required></textarea></div>
+      <div class="field"><label>Your Email *</label><input type="email" name="email" placeholder="you@company.com" required/></div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center" id="hdSubmit">
+        <i class="bi bi-ticket"></i> Submit Ticket
+      </button>
+      <div id="hdMsg" style="margin-top:.75rem;font-size:.85rem"></div>
+    </form>
+  </div>
+</div>
+
+<!-- ── STICKY CTA ── -->
+<div class="sticky-cta">
+  <div style="text-align:right">
+    <div class="scta-label">HelpDesk</div>
+    <button class="scta-btn scta-help" onclick="document.getElementById('helpdeskModal').classList.add('open')" title="Open HelpDesk"><i class="bi bi-headset"></i></button>
+  </div>
+  <div style="text-align:right">
+    <div class="scta-label">Contact Sales</div>
+    <a href="#contact"><button class="scta-btn scta-main" title="Contact Sales"><i class="bi bi-chat-dots"></i></button></a>
+  </div>
+</div>
+
+<script>
+// ── MOBILE MENU ──
+const hamBtn = document.getElementById('hamBtn');
+const mobileMenu = document.getElementById('mobileMenu');
+hamBtn.addEventListener('click',()=>{
+  mobileMenu.classList.toggle('open');
+  hamBtn.innerHTML = mobileMenu.classList.contains('open') ? '<i class="bi bi-x-lg"></i>' : '<i class="bi bi-list"></i>';
+});
+function closeMob(){mobileMenu.classList.remove('open');hamBtn.innerHTML='<i class="bi bi-list"></i>';}
+
+// ── TYPED HERO TEXT ──
+const phrases=['E-Invoicing Hub','Access Point Provider','ERP Integration Platform','NRS Compliance Engine'];
+let pi=0,ci=0,del=false;
+const el=document.getElementById('typedText');
+function typeLoop(){
+  const phrase=phrases[pi];
+  if(!del){
+    el.textContent=phrase.substring(0,ci+1);
+    ci++;
+    if(ci===phrase.length){del=true;setTimeout(typeLoop,1800);return;}
+  }else{
+    el.textContent=phrase.substring(0,ci-1);
+    ci--;
+    if(ci===0){del=false;pi=(pi+1)%phrases.length;}
+  }
+  setTimeout(typeLoop,del?60:90);
+}
+typeLoop();
+
+// ── HUB DIAGRAM ──
+const nodes=[
+  {label:'Odoo',icon:'bi-layers',angle:0},
+  {label:'SAP',icon:'bi-building',angle:60},
+  {label:'Oracle',icon:'bi-database',angle:120},
+  {label:'FIRS/NRS',icon:'bi-bank',angle:180,gold:true},
+  {label:'QuickBooks',icon:'bi-calculator',angle:240},
+  {label:'Sage',icon:'bi-bar-chart',angle:300},
+];
+const hub=document.getElementById('apHub');
+const svg=document.getElementById('hubSvg');
+const cx=240,cy=240,r=165;
+nodes.forEach(n=>{
+  const rad=(n.angle-90)*(Math.PI/180);
+  const x=cx+r*Math.cos(rad);
+  const y=cy+r*Math.sin(rad);
+  const pct_x=(x/480*100)+'%';
+  const pct_y=(y/480*100)+'%';
+  // Node
+  const div=document.createElement('div');
+  div.className='orbit-node';
+  div.style.left=pct_x;div.style.top=pct_y;
+  if(n.gold)div.style.borderColor='rgba(212,175,55,.4)';
+  div.innerHTML=`<i class="bi ${n.icon} ni" ${n.gold?'style="color:#d4af37"':""}></i><span class="nl">${n.label}</span>`;
+  hub.appendChild(div);
+  // SVG line
+  const line=document.createElementNS('http://www.w3.org/2000/svg','line');
+  line.setAttribute('x1',cx);line.setAttribute('y1',cy);
+  line.setAttribute('x2',x);line.setAttribute('y2',y);
+  line.classList.add('pulse-line');
+  line.style.animationDelay=(n.angle/60*0.4)+'s';
+  if(n.gold)line.style.stroke='rgba(212,175,55,.4)';
+  svg.appendChild(line);
+});
+
+// ── FADE-UP OBSERVER ──
+const obs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')});
+},{threshold:.12});
+document.querySelectorAll('.fade-up').forEach(el=>obs.observe(el));
+
+// ── KPI COUNTERS ──
+function countUp(id,target){
+  const el=document.getElementById(id);let v=0;
+  const step=Math.ceil(target/60);
+  const t=setInterval(()=>{v=Math.min(v+step,target);el.textContent=v.toLocaleString();if(v>=target)clearInterval(t);},25);
+}
+const kpiObs=new IntersectionObserver(entries=>{
+  if(entries[0].isIntersecting){
+    countUp('kv1',4287);countUp('kv2',4232);countUp('kv3',38);countUp('kv4',17);
+    kpiObs.disconnect();
+  }
+},{threshold:.3});
+kpiObs.observe(document.getElementById('kv1'));
+
+// ── BAR CHART ──
+const barData=[65,82,74,91,88,95,70,110,105,98,112,88,75,130,145,138,152,160,148,142,155,168,172,145,158,162,175,170,165,182];
+const months=['M','T','W','T','F','S','S','M','T','W','T','F','S','S','M','T','W','T','F','S','S','M','T','W','T','F','S','S','M','T'];
+const barsEl=document.getElementById('chartBars');
+const labsEl=document.getElementById('barLabels');
+const max=Math.max(...barData);
+barData.forEach((v,i)=>{
+  const b=document.createElement('div');
+  b.className='bar'+(i===barData.length-1?' active':'');
+  b.style.height=(v/max*100)+'%';
+  b.title=`${v} invoices`;
+  barsEl.appendChild(b);
+  if(i%5===0){
+    const l=document.createElement('div');
+    l.className='bar-label';l.textContent=months[i];
+    l.style.flex=`0 0 ${100/barData.length}%`;
+    labsEl.appendChild(l);
+  }
+});
+
+// ── CONTACT FORM ──
+document.getElementById('contactForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const form=e.target,msg=document.getElementById('formMsg'),btn=document.getElementById('cfSubmit');
+  const data={};
+  new FormData(form).forEach((v,k)=>data[k]=v);
+  if(!data.business_name||!data.contact_person||!data.email||!data.phone||!data.service){
+    msg.textContent='Please fill all required fields.';msg.className='msg-err';return;
+  }
+  if(data.website&&data.website.trim()){msg.textContent='Thank you!';return;}
+  btn.disabled=true;document.getElementById('cfSpinner').style.display='inline';
+  try{
+    const res=await fetch('/contact_sales',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data),credentials:'same-origin'});
+    if(res.ok){msg.textContent='✓ Enquiry sent! We\'ll be in touch within one business day.';msg.className='msg-ok';form.reset();}
+    else{const d=await res.json().catch(()=>({}));msg.textContent=d.error||`Error (${res.status})`;msg.className='msg-err';}
+  }catch{msg.textContent='Network error — please try again.';msg.className='msg-err';}
+  finally{btn.disabled=false;document.getElementById('cfSpinner').style.display='none';}
+});
+
+// ── HELPDESK FORM ──
+document.getElementById('hdForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const form=e.target,msg=document.getElementById('hdMsg'),btn=document.getElementById('hdSubmit');
+  const data={};new FormData(form).forEach((v,k)=>data[k]=v);
+  if(!data.subject||!data.priority||!data.category||!data.description||!data.email){
+    msg.textContent='Please fill all required fields.';msg.style.color='#ff5f57';return;
+  }
+  btn.disabled=true;
+  try{
+    await new Promise(r=>setTimeout(r,900));// simulate
+    msg.textContent='✓ Ticket submitted! Check your email for confirmation & ticket ID.';
+    msg.style.color='#00d278';form.reset();
+  }catch{msg.textContent='Error submitting ticket.';msg.style.color='#ff5f57';}
+  finally{btn.disabled=false;}
+});
+
+// ── CLOSE MODAL ON BACKDROP ──
+document.getElementById('helpdeskModal').addEventListener('click',e=>{
+  if(e.target===document.getElementById('helpdeskModal'))e.target.classList.remove('open');
+});
+
+// ── YEAR ──
+document.getElementById('fyear').textContent=new Date().getFullYear();
+</script>
+<script>
+  const toggleBtn = document.getElementById("themeToggle");
+  const body = document.body;
+  const icon = toggleBtn.querySelector("i");
+
+  // Load saved theme
+  const savedTheme = localStorage.getItem("theme");
+  if (savedTheme === "light") {
+    body.classList.add("light");
+    icon.classList.replace("bi-moon", "bi-sun");
+  }
+
+  toggleBtn.addEventListener("click", () => {
+    body.classList.toggle("light");
+
+    if (body.classList.contains("light")) {
+      localStorage.setItem("theme", "light");
+      icon.classList.replace("bi-moon", "bi-sun");
+    } else {
+      localStorage.setItem("theme", "dark");
+      icon.classList.replace("bi-sun", "bi-moon");
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,437 @@
+/* css/index.css
+   Layer21 front-end base styles (matches the page layout & footer partners)
+*/
+
+/* ---------------------------
+   Variables & base
+   --------------------------- */
+   :root{
+    --brand-dark: #0f1720;
+    --brand-teal: #2ec5db;
+    --brand-teal-2: #36b9d1;
+    --brand-silver: #e6eef2;
+  
+    --max-width: 1200px;
+    --radius-lg: 14px;
+  }
+  
+  * { box-sizing: border-box; }
+  html,body { height: 100%; }
+  body {
+    font-family: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--brand-silver);
+    color: #0b1220;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  
+  /* container helper */
+  .container {
+    width: 90%;
+    max-width: var(--max-width);
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  /* ---------------------------
+     NAVBAR
+     --------------------------- */
+  .site-nav {
+    background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.02));
+    backdrop-filter: blur(6px);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    border-bottom: 1px solid rgba(15,23,36,0.02);
+  }
+  
+  .site-nav .nav-inner {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:1rem;
+    padding: 1rem 1.25rem;
+    max-width: var(--max-width);
+    margin: 0 auto;
+  }
+  
+  .logo-badge {
+    width:88px;
+    height:88px;
+    object-fit:contain;
+    border-radius:12px;
+    padding:8px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    box-shadow: 0 6px 30px rgba(18,28,40,0.45);
+  }
+  
+  /* desktop nav links (use class "nav-links" on the element) */
+  .nav-links {
+    display:flex;
+    gap:1.25rem;
+    align-items:center;
+  }
+  .nav-links a {
+    color: var(--brand-dark);
+    text-decoration: none;
+    font-weight:600;
+    font-size:0.95rem;
+    letter-spacing: 0.2px;
+  }
+  .nav-links a:hover { color: var(--brand-teal); }
+  
+  /* mobile toggle */
+  #menuToggle{ font-size:1.4rem; background:transparent; border:none; cursor:pointer; color:var(--brand-dark); }
+  
+  /* mobile menu */
+  #mobileMenu { display:none; padding: 0.75rem 1.25rem; border-top:1px solid rgba(15,23,36,0.03); }
+  
+  /* ---------------------------
+     HERO
+     --------------------------- */
+  .hero {
+    min-height: 520px;
+    background: linear-gradient(180deg, rgba(11,18,32,0.92), rgba(6,12,20,0.82));
+    color: white;
+    position: relative;
+    overflow: hidden;
+    padding: 3.5rem 1rem;
+  }
+  .hero::before{
+    content:'';
+    position:absolute;
+    inset:0;
+    background:
+      radial-gradient(600px 300px at 15% 30%, rgba(46,197,219,0.12), transparent 10%),
+      radial-gradient(500px 250px at 85% 70%, rgba(54,185,209,0.08), transparent 15%);
+    pointer-events:none;
+  }
+  
+  /* text layout inside hero */
+  .hero .grid {
+    display: grid;
+    gap: 1.5rem;
+    align-items: start;
+    grid-template-columns: 1fr; /* always single column */
+  }
+  
+  @media (min-width: 1024px) {
+    /* keep spacing a bit larger on desktop, but still stacked */
+    .hero .grid { gap: 2rem; }
+  }
+
+/* style for the "What we do" panel to keep text readable */
+.hero .feature-panel, .hero .what-we-do, .hero .bg-panel {
+  background: rgba(255,255,255,0.04); /* slight translucent surface */
+  padding: 1rem;
+  border-radius: 12px;
+  backdrop-filter: blur(2px);
+}
+
+  
+  /* headings */
+  h1 { margin:0 0 .6rem 0; font-weight:800; line-height:1.05; }
+  h2,h3 { margin:0 0 .5rem 0; font-weight:700; }
+  
+  /* ---------------------------
+     BUTTONS
+     --------------------------- */
+  .btn {
+    display:inline-flex;
+    align-items:center;
+    gap:.5rem;
+    font-weight:600;
+    padding:.7rem 1.2rem;
+    border-radius:9999px;
+    cursor:pointer;
+    text-decoration:none;
+    border: none;
+  }
+  .btn-primary {
+    background: linear-gradient(90deg,var(--brand-teal),var(--brand-teal-2));
+    color: #04202a;
+    box-shadow: 0 8px 24px rgba(46,197,219,0.12), inset 0 -1px 0 rgba(255,255,255,0.08);
+  }
+  .btn-outline {
+    border: 1px solid rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.95);
+    background: transparent;
+  }
+  
+  /* ---------------------------
+     SERVICE CARDS
+     --------------------------- */
+  .service-card {
+    background: white;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: 0 8px 30px rgba(6,12,20,0.06);
+    padding: 1.15rem;
+  }
+  
+  .service-card h3 { margin:0; font-size:1.05rem; color:var(--brand-dark); }
+  .service-card p { margin-top:.5rem; color: #59636a; font-size: .95rem; }
+  
+  /* ---------------------------
+     PRICING boxes
+     --------------------------- */
+  .pricing-card {
+    border-radius: 12px;
+    border: 1px solid rgba(6,12,20,0.05);
+    padding: 1.25rem;
+    background: white;
+  }
+  
+  /* ---------------------------
+     CTA / contact section
+     --------------------------- */
+  .section-cta {
+    padding: 3rem 1rem;
+    text-align:center;
+  }
+  
+  /* ---------------------------
+     FOOTER (partners included)
+     --------------------------- */
+  footer {
+    background: var(--brand-dark);
+    color: var(--brand-silver);
+    padding-top: 2.5rem;
+    padding-bottom: 2.5rem;
+  }
+  
+  /* footer grid wrapper expected to be .container or .max width */
+  footer .grid {
+    display:grid;
+    gap:1rem;
+    grid-template-columns: 1fr;
+  }
+  @media(min-width:1024px){
+    footer .grid { grid-template-columns: repeat(4, 1fr); gap: 1.25rem; }
+  }
+  
+  footer h4 { color: var(--brand-silver); margin:0 0 .5rem 0; font-weight:700; }
+  footer p, footer li, footer a { color: rgba(230,238,242,0.92); font-size: .95rem; text-decoration: none; }
+  footer a:hover { color: var(--brand-teal); }
+  
+  /* partners grid inside footer */
+  .partner-grid {
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: .5rem;
+    align-items:center;
+  }
+  @media(min-width:640px){
+    .partner-grid { gap: .75rem; }
+  }
+  .partner-logo {
+    width: 100%;
+    height: 48px;
+    object-fit: contain;
+    /* show natural colors by default (removed grayscale) */
+    filter: none;
+    transition: transform .28s ease, opacity .28s ease, box-shadow .28s ease;
+    display: block;
+    padding: 6px;
+    background: rgba(255,255,255,0.02); /* keeps subtle contrast on dark footer */
+    border-radius: 8px;
+    opacity: 0.98;
+  }
+  
+  .partner-item:hover .partner-logo {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 10px 30px rgba(2,12,20,0.18);
+    opacity: 1;
+  }
+  /* Contact Sales modal styles (add to css/index.css) */
+.cs-modal { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; }
+
+/* hidden utility already exists in tailwind setup; keep simple */
+.cs-modal.hidden { display: none; }
+
+/* semi-opaque backdrop */
+.cs-backdrop {
+  position:absolute; inset:0; background: rgba(2,8,16,0.6); backdrop-filter: blur(3px);
+}
+
+/* panel */
+.cs-panel {
+  position:relative;
+  width: 96%;
+  max-width: 720px;
+  margin: 1.5rem;
+  background: linear-gradient(180deg,#ffffff 0%, #fbfdff 100%);
+  border-radius: 12px;
+  box-shadow: 0 30px 80px rgba(2,12,20,0.45);
+  padding: 1.25rem 1.25rem 1.5rem 1.25rem;
+  z-index: 70;
+  overflow: hidden;
+}
+
+/* close */
+.cs-close {
+  position:absolute; right:10px; top:8px; border:none; background:transparent; font-size:28px; line-height:1; cursor:pointer; color:var(--brand-dark);
+}
+
+/* header */
+.cs-header { text-align:left; margin-bottom: .6rem }
+.cs-logo { width:56px; height:auto; border-radius:8px; display:inline-block; margin-right:.75rem; vertical-align:middle; box-shadow: 0 6px 20px rgba(2,12,20,0.08); }
+.cs-header h3 { display:inline-block; vertical-align:middle; margin:0; font-size:1.25rem; color:var(--brand-dark); }
+.cs-header p.muted { margin: .4rem 0 0 0; color: rgba(11,18,32,0.6); font-size: .95rem; }
+
+/* form */
+.cs-form { display:flex; flex-direction:column; gap:0.65rem; margin-top: 0.6rem; }
+.cs-form input[type="text"],
+.cs-form input[type="email"],
+.cs-form input[type="tel"],
+.cs-form select {
+  width:100%;
+  padding: .7rem .85rem;
+  border-radius: 10px;
+  border: 1px solid rgba(6,12,20,0.06);
+  font-size: .98rem;
+  outline: none;
+}
+.cs-form select { appearance: none; background-image: linear-gradient(45deg, transparent 50%, rgba(11,18,32,0.6) 50%), linear-gradient(135deg, rgba(11,18,32,0.6) 50%, transparent 50%); background-position: calc(100% - 14px) calc(1rem), calc(100% - 9px) calc(1rem); background-size: 8px 8px, 8px 8px; background-repeat: no-repeat; padding-right: 2.5rem; }
+
+.hp-field { position: absolute; left: -9999px; top: auto; width: 1px; height: 1px; overflow: hidden; }
+
+/* actions */
+.cs-actions { display:flex; gap: .6rem; margin-top: .65rem; align-items:center; }
+.cs-secondary { background:transparent; border:1px solid rgba(6,12,20,0.06); padding:.6rem .9rem; border-radius:9999px; cursor:pointer; }
+
+.cs-spinner { margin-right: .45rem; }
+
+/* message area */
+.cs-message { margin-top:.6rem; font-size:.95rem; min-height: 1.3rem; color: var(--brand-dark); }
+
+/* small responsive */
+@media (max-width:480px) {
+  .cs-panel { padding: .9rem; }
+  .cs-header h3 { font-size:1.05rem; }
+}
+/* Make auth-side text white but keep links (small-link) in brand teal */
+.auth-side {
+  color: #ffffff !important;
+}
+
+/* Force headings and normal copy inside the side panel to white,
+   overriding any inline styles like style="color:var(--brand-dark)". */
+.auth-side h1,
+.auth-side h2,
+.auth-side h3,
+.auth-side h4,
+.auth-side p,
+.auth-side ul,
+.auth-side li,
+.auth-side .muted {
+  color: #ffffff !important;
+}
+
+/* Keep "small-link" and other anchors in the side panel using the teal brand color */
+.auth-side a,
+.auth-side .small-link {
+  color: var(--brand-teal) !important;
+  text-decoration: underline;
+}
+
+/* Slightly soften supportive text for hierarchy */
+.auth-side .muted { color: rgba(255,255,255,0.88) !important; }
+.auth-side ul li { color: rgba(255,255,255,0.95) !important; }
+/* Specific darker-text override for a single auth-side instance.
+   Uses a more specific selector and !important to override any previous .auth-side white rules. */
+   .auth-side.auth-side-darker {
+    color: #0b1220 !important;              /* primary darker body text */
+  }
+  
+  /* headings slightly darker & bolder */
+  .auth-side.auth-side-darker h1,
+  .auth-side.auth-side-darker h4,
+  .auth-side.auth-side-darker h2,
+  .auth-side.auth-side-darker h3 {
+    color: #071021 !important;
+  }
+  
+  /* "muted" text in the darked side should be a softer dark gray */
+  .auth-side.auth-side-darker .muted {
+    color: rgba(11,18,32,0.66) !important;
+  }
+  
+  /* keep action links (small-link) using brand teal so they remain visible and consistent */
+  .auth-side.auth-side-darker .small-link,
+  .auth-side.auth-side-darker a.small-link {
+    color: var(--brand-teal) !important;
+    text-decoration: underline;
+  }
+  
+  /* bullets/list items */
+  .auth-side.auth-side-darker ul li {
+    color: rgba(11,18,32,0.85) !important;
+  }
+  
+  /* if you have white backgrounds behind the aside, ensure contrast (optional) */
+  .auth-side.auth-side-darker { /* optional subtle background to separate from page */
+    /* background: rgba(255,255,255,0.02); */
+  }
+  
+/* ALERTS*/
+.alert { margin-top: .5rem; padding: .45rem .6rem; border-radius: 6px; font-size: .95rem; }
+.alert-danger { color: #7b1111; background: rgba(255,0,0,0.04); }
+.alert-success { color: #0b6b2d; background: rgba(0,200,100,0.04); }
+.alert-info { color: inherit; background: rgba(6,12,20,0.02); }
+
+/* Flash Message Styles */
+#flash-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 320px;
+  z-index: 9999;
+}
+
+.flash-message {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  animation: slideIn 0.3s ease-out;
+}
+
+.flash-message span {
+  flex-grow: 1;
+}
+
+.flash-close {
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-size: 18px;
+  font-weight: bold;
+  margin-left: 12px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+.flash-close:hover {
+  opacity: 0.7;
+}
+
+/* Category Colors */
+.flash-success { background: #28a745; }   /* Green */
+.flash-danger  { background: #dc3545; }   /* Red */
+.flash-warning { background: #ffc107; color: #222; } /* Yellow */
+.flash-info    { background: #17a2b8; }   /* Blue */
+
+/* Entry Animation */
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

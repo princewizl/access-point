@@ -1,0 +1,17 @@
+sudo tee /etc/systemd/system/layer21app.service > /dev/null <<'EOF'
+[Unit]
+Description=Layer21 App (gunicorn)
+After=network.target
+
+[Service]
+User=root
+Group=root
+WorkingDirectory=/home/ofemi/layer21app
+Environment="PATH=/home/ofemi/layer21app/venv/bin"
+ExecStart=/home/ofemi/layer21app/venv/bin/gunicorn --workers 3 --bind 127.0.0.1:8000 app:app
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF

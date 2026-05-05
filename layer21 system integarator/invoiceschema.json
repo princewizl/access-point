@@ -1,0 +1,260 @@
+// B2C
+
+{
+    "businessId": "4a63a327-5391-4861-ab2e-385cfd9773d0",
+    "irn": "INV0768686-AE815391-20250503",
+    "issueDate": "2024-05-14", 
+    "invoiceTypeCode": "396",
+    "invoiceKind": "B2C",
+    "paymentStatus": "PENDING", //optional, defaults to pending  
+    "documentCurrencyCode": "NGN",
+    "taxCurrencyCode": "NGN",
+    "orderReference": "INV/0909/0998", //optional - Internal invoice reference
+    "accountingSupplierParty": {
+        "partyName": "Your company name", //optional if id is set    
+        "tin": "76819548-6539",
+        "email": "supplier_business@email.com",
+        "telephone": "+23480254099000", //optional, must start with + (meaning country code) 
+        "businessDescription": "this entity is into sales of Cement and building materials", //optional 
+        "postalAddress": {
+            "streetName": "32, owonikoko street", //optional if id is set
+            "cityName": "Gwarikpa", //optional if id is set
+            "postalZone": "023401", //optional if id is set
+            "country": "NG" //optional if id is set
+        } //optional if id is set
+    },
+    "taxTotal": [
+        {
+            "taxAmount": 56.07,
+            "taxSubtotal": [
+                {
+                    "taxableAmount": 800,
+                    "taxAmount": 8,
+                    "taxCategory": {
+                        "id": "LOCAL_SALES_TAX",
+                        "percent": 2.3
+                    }
+                }
+            ]
+        }//second value to ...x in array is always optional if you want to add it
+    ],
+    "legalMonetaryTotal": {
+        "lineExtensionAmount": 340.50,
+        "taxExclusiveAmount": 400,
+        "taxInclusiveAmount": 430,
+        "payableAmount": 30
+    },
+    "invoiceLine": [
+        {
+            "hsnCode": "CC-001", // 
+            "productCategory": "Food and Beverages", // 
+            "discountRate": 2.01, // 
+            "discountAmount": 3500, // 
+            "feeRate": 1.01, // 
+            "feeAmount": 50, // 
+            "invoicedQuantity": 15,
+            "lineExtensionAmount": 30,
+            "item": {
+                "name": "item name",
+                "description": "item description",
+                "sellersItemIdentification": "identified as spoon by the seller" //optional
+            },
+            "price": {
+                "priceAmount": 10,
+                "baseQuantity": 3,
+                "priceUnit": "NGN per 1"
+            }
+        },
+        {
+            "hsnCode": "CC-001", // 
+            "productCategory": "Food and Beverages", // 
+            "discountRate": 2.01, // 
+            "discountAmount": 3500, // 
+            "feeRate": 1.01, // 
+            "feeAmount": 50, // 
+            "invoicedQuantity": 15,
+            "lineExtensionAmount": 30,
+            "item": {
+                "name": "item nam 2",
+                "description": "item description 2",
+                "sellersItemIdentification": "identified as shovel by the seller"
+            },
+            "price": {
+                "priceAmount": 20,
+                "baseQuantity": 5,
+                "priceUnit": "NGN per 1"
+            }
+        }//optional - second value to ...x in array is always optional
+    ]
+
+}
+
+
+//  B2B
+
+{
+    "businessId": "7b2415f1-ab22-48ba-addc-8c765c93a72c",
+    "irn": "INV057055532562780-2774AB22-20251021",
+    "issueDate": "2025-10-21",
+    "dueDate": "2025-10-25", //optional
+    "issueTime": "17:59:04", //optional   
+    "invoiceTypeCode": "396",
+    "invoiceKind": "B2B",
+    "paymentStatus": "PENDING", //optional, defaults to pending  
+    "note": "FIRS Demo (will be encryted in storage 2)", //optional
+    "taxPointDate": "2024-05-14", //optional
+    "documentCurrencyCode": "NGN",
+    "taxCurrencyCode": "NGN", //optional
+    "accountingCost": "2000", //optional
+    "buyerReference": "buyer REF IRN?", //optional
+    "invoiceDeliveryPeriod": {
+        "startDate": "2024-06-14",
+        "endDate": "2024-06-16"
+    }, //optional
+    "orderReference": "INV/0909/0998", //optional - Internal invoice reference
+    "billingReference": [
+        {
+            "irn": "ITW001-E9E0C0D3-20240619",
+            "issueDate":"2024-05-14"
+        },
+        {
+            "irn": "ITW001-E9E0C0D3-20240619",
+            "issueDate":"2024-05-14"
+        } //optional - second value to ...x in array is always optional
+    ], //optional
+    "dispatchDocumentReference": {
+        "irn": "ITW001-E9E0C0D3-20240619",
+        "issueDate":"2024-05-14"
+    }, //optional
+    "receiptDocumentReference": {
+        "irn": "ITW001-E9E0C0D3-20240619",
+        "issueDate":"2024-05-14"
+    }, //optional
+    "originatorDocumentReference": {
+        "irn": "ITW001-E9E0C0D3-20240619",
+        "issueDate":"2024-05-14"
+    }, // optional
+    "contractDocumentReference": {
+        "irn": "ITW001-E9E0C0D3-20240619",
+        "issueDate":"2024-05-14"
+    }, //optional
+    "documentReference": [
+        {
+            "irn": "ITW001-E9E0C0D3-20240619",
+            "issueDate":"2024-05-14"
+        }
+    ], //optional
+    "accountingSupplierParty": {
+        "partyName": "Test Pls", //optional if id is set    
+        "tin": "76819548-6539",
+        "email": "supplier_business@email.com",
+        "telephone": "+23480254099000", //optional, must start with + (meaning country code) 
+        "businessDescription": "this entity is into sales of Cement and building materials", //optional 
+        "postalAddress": {
+            "streetName": "32, owonikoko street", //optional if id is set
+            "cityName": "Gwarikpa", //optional if id is set
+            "postalZone": "023401", //optional if id is set
+            "country": "NG" //optional if id is set
+        } //optional if id is set
+    },
+    "accountingCustomerParty": {
+        "partyName": "Test Pls", //optional if id is set
+        "tin": "76819548-6539",
+        "email": "business@email.com",
+        "telephone": "+23480254000000", //optional, must start with + (meaning country code) 
+        "businessDescription": "this entity is into sales of Cement and building materials", //optional 
+        "postalAddress": {
+            "streetName": "30, owonikoko street", //optional if id is set
+            "cityName": "Gwarikpa", //optional if id is set
+            "postalZone": "023401", //optional if id is set
+            "country": "NG" //optional if id is set
+        } //optional if id is set
+    },
+    // "payeeParty": {}, //optional (party object, just like accounting_customer_party)
+    // "taxRepresentativeParty": {}, //optional (party object, just like accounting_customer_party)
+    "actualDeliveryDate": "2024-05-14", //optional
+    "paymentMeans": [
+        {
+            "paymentMeansCode": "10",
+            "paymentDueDate": "2024-05-14"
+        },
+        {
+            "paymentMeansCode": "43",
+            "paymentDueDate": "2024-05-14"
+        }//optional - second value to ...x in array is always optional
+    ],//optional
+    "paymentTermsNote": "Just a test payment (will be encryted in storage)",//optional
+    "allowanceCharge": [
+        {
+            "chargeIndicator": true, //indicates whether the amount is a charge (true) or an allowance (false)
+            "amount": 800.60
+        },
+        {
+            "chargeIndicator": false, //indicates whether the amount is a charge (true) or an allowance (false)
+            "amount": 10
+        }//optional - second value to ...x in array is always optional
+    ],//optional
+    "taxTotal": [
+        {
+            "taxAmount": 56.07,
+            "taxSubtotal": [
+                {
+                    "taxableAmount": 800,
+                    "taxAmount": 8,
+                    "taxCategory": {
+                        "id": "LOCAL_SALES_TAX",
+                        "percent": 2.3
+                    }
+                }
+            ]
+        }//second value to ...x in array is always optional if you want to add it
+    ],
+    "legalMonetaryTotal": {
+        "lineExtensionAmount": 340.50,
+        "taxExclusiveAmount": 400,
+        "taxInclusiveAmount": 430,
+        "payableAmount": 30
+    },
+    "invoiceLine": [
+        {
+            "hsnCode": "CC-001", // 
+            "productCategory": "Food and Beverages", // 
+            "discountRate": 2.01, // 
+            "discountAmount": 3500, // 
+            "feeRate": 1.01, // 
+            "feeAmount": 50, // 
+            "invoicedQuantity": 15,
+            "lineExtensionAmount": 30,
+            "item": {
+                "name": "item name",
+                "description": "item description",
+                "sellersItemIdentification": "identified as spoon by the seller" //optional
+            },
+            "price": {
+                "priceAmount": 10,
+                "baseQuantity": 3,
+                "priceUnit": "NGN per 1"
+            }
+        },
+        {
+            "hsnCode": "CC-001", // 
+            "productCategory": "Food and Beverages", // 
+            "discountRate": 2.01, // 
+            "discountAmount": 3500, // 
+            "feeRate": 1.01, // 
+            "feeAmount": 50, // 
+            "invoicedQuantity": 15,
+            "lineExtensionAmount": 30,
+            "item": {
+                "name": "item nam 2",
+                "description": "item description 2",
+                "sellersItemIdentification": "identified as shovel by the seller"
+            },
+            "price": {
+                "priceAmount": 20,
+                "baseQuantity": 5,
+                "priceUnit": "NGN per 1"
+            }
+        }//optional - second value to ...x in array is always optional
+    ]
+}
