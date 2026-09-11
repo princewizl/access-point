@@ -1,0 +1,10 @@
+# secrets / credentials - never commit
+**/secrets/
+*ssh*.txt
+*credential*
+*.pem
+*.key
+__pycache__/
+*.pyc
+instance/
+*.db
