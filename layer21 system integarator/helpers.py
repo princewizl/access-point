@@ -1833,70 +1833,82 @@ def firs_validate_invoice(payload: dict, raise_for_status=True) -> dict:
     if api_secret:
         headers["x-api-secret"] = api_secret
 
-    # If payload already appears to be the flat snake_case payload (top-level 'irn' or 'business_id'),
-    # assume caller passed the final shape and post as-is (this avoids sandbox wrapper/camelCase mismatches).
+    # NOTE: previously, a payload that already looked "flat" (top-level 'irn' or
+    # 'business_id', as produced by build_firs_validate_payload_from_invoice) was
+    # posted to FIRS as-is, on the assumption that the sandbox docs wanted flat
+    # snake_case. In practice the live FIRS endpoint validates against the nested
+    # UBL-style shape (invoiceRequest.invoice.invoiceLine[].lineExtensionAmount, etc,
+    # in camelCase) -- posting flat snake_case means that whole structure is simply
+    # absent from the body, which FIRS reports as "required" fields missing (e.g.
+    # "invoicerequest.invoice.invoiceline[0].lineextensionamount is required").
+    # So: always transform + wrap into invoiceRequest.invoice, regardless of the
+    # shape of the incoming payload.
     posting_payload = None
-    if isinstance(payload, dict) and ("irn" in payload or "business_id" in payload):
-        posting_payload = payload
-        logger.info("firs_validate_invoice: detected flat payload; will POST flat snake_case payload")
-    else:
-        # fall back to old behaviour: transform to camelCase and wrap into invoiceRequest if needed
-        try:
-            firs_payload = transform_keys_to_camel(payload)
-        except Exception:
-            firs_payload = dict(payload)
+    try:
+        firs_payload = transform_keys_to_camel(payload)
+    except Exception:
+        firs_payload = dict(payload)
 
-        # Normalize to ensure we have an invoiceRequest.invoice structure
-        invoice_request = firs_payload.get("invoiceRequest") or firs_payload
-        invoice = invoice_request.get("invoice") if isinstance(invoice_request, dict) else None
-        if not invoice:
-            if firs_payload.get("invoice"):
-                invoice = firs_payload.get("invoice")
-                invoice_request = {"invoice": invoice}
-                firs_payload = {"invoiceRequest": invoice_request}
-            else:
-                invoice = firs_payload
-                firs_payload = {"invoiceRequest": {"invoice": invoice}}
+    # Normalize to ensure we have an invoiceRequest.invoice structure
+    invoice_request = firs_payload.get("invoiceRequest") or firs_payload
+    invoice = invoice_request.get("invoice") if isinstance(invoice_request, dict) else None
+    if not invoice:
+        if firs_payload.get("invoice"):
+            invoice = firs_payload.get("invoice")
+            invoice_request = {"invoice": invoice}
+            firs_payload = {"invoiceRequest": invoice_request}
+        else:
+            invoice = firs_payload
+            firs_payload = {"invoiceRequest": {"invoice": invoice}}
 
-        # ensure supplier postalAddress exists, or try to populate from payload's snake_case or tenant
-        supplier = firs_payload["invoiceRequest"]["invoice"].get("accountingSupplierParty") or {}
-        postal = supplier.get("postalAddress")
-        if not _has_postal_address(postal):
-            cand = payload.get("accounting_supplier_party") or payload.get("accountingSupplierParty") or {}
-            cand_post = cand.get("postal_address") if isinstance(cand, dict) else None
-            if cand_post and isinstance(cand_post, dict):
-                firs_payload["invoiceRequest"]["invoice"].setdefault("accountingSupplierParty", {})
-                firs_payload["invoiceRequest"]["invoice"]["accountingSupplierParty"]["postalAddress"] = transform_keys_to_camel(cand_post)
-                postal = firs_payload["invoiceRequest"]["invoice"]["accountingSupplierParty"]["postalAddress"]
+    # If the source payload was the flat shape, businessId will have landed inside
+    # invoice (alongside irn, invoiceLine, ...) rather than as a sibling of invoice.
+    # Lift it up to invoiceRequest.businessId (where the rest of this codebase, and
+    # FIRS, expect it) while still leaving a copy on invoice in case that's also read.
+    if not firs_payload["invoiceRequest"].get("businessId"):
+        lifted_business_id = firs_payload["invoiceRequest"]["invoice"].get("businessId")
+        if lifted_business_id:
+            firs_payload["invoiceRequest"]["businessId"] = lifted_business_id
 
-        if not _has_postal_address(postal):
-            business_id = payload.get("business_id") or payload.get("businessId") or firs_payload["invoiceRequest"].get("businessId")
-            if business_id:
-                try:
-                    from models import Business
-                    biz = Business.query.filter_by(id=business_id).first() or Business.query.filter_by(name=business_id).first()
-                    if biz:
-                        stored = getattr(biz, "postal_address", None) or getattr(biz, "address", None)
-                        if stored and isinstance(stored, dict):
-                            firs_payload["invoiceRequest"]["invoice"].setdefault("accountingSupplierParty", {})
-                            firs_payload["invoiceRequest"]["invoice"]["accountingSupplierParty"]["postalAddress"] = transform_keys_to_camel(stored)
-                            postal = firs_payload["invoiceRequest"]["invoice"]["accountingSupplierParty"]["postalAddress"]
-                except Exception:
-                    logger.debug("Business postal address lookup failed for business_id=%s", business_id)
+    # ensure supplier postalAddress exists, or try to populate from payload's snake_case or tenant
+    supplier = firs_payload["invoiceRequest"]["invoice"].get("accountingSupplierParty") or {}
+    postal = supplier.get("postalAddress")
+    if not _has_postal_address(postal):
+        cand = payload.get("accounting_supplier_party") or payload.get("accountingSupplierParty") or {}
+        cand_post = cand.get("postal_address") if isinstance(cand, dict) else None
+        if cand_post and isinstance(cand_post, dict):
+            firs_payload["invoiceRequest"]["invoice"].setdefault("accountingSupplierParty", {})
+            firs_payload["invoiceRequest"]["invoice"]["accountingSupplierParty"]["postalAddress"] = transform_keys_to_camel(cand_post)
+            postal = firs_payload["invoiceRequest"]["invoice"]["accountingSupplierParty"]["postalAddress"]
 
-        # final check for wrapper path
-        if not _has_postal_address(firs_payload["invoiceRequest"]["invoice"].get("accountingSupplierParty", {}).get("postalAddress")):
-            msg = ("accountingSupplierParty.postalAddress is required by FIRS but missing or empty. "
-                   "Provide supplier postal_address in your payload (street_name, city_name, postal_zone, country) "
-                   "or store a default address on the tenant Business record.")
-            logger.warning("FIRS payload missing postal address; aborting validate: %s", msg)
-            raise RuntimeError(msg)
+    if not _has_postal_address(postal):
+        business_id = payload.get("business_id") or payload.get("businessId") or firs_payload["invoiceRequest"].get("businessId")
+        if business_id:
+            try:
+                from models import Business
+                biz = Business.query.filter_by(id=business_id).first() or Business.query.filter_by(name=business_id).first()
+                if biz:
+                    stored = getattr(biz, "postal_address", None) or getattr(biz, "address", None)
+                    if stored and isinstance(stored, dict):
+                        firs_payload["invoiceRequest"]["invoice"].setdefault("accountingSupplierParty", {})
+                        firs_payload["invoiceRequest"]["invoice"]["accountingSupplierParty"]["postalAddress"] = transform_keys_to_camel(stored)
+                        postal = firs_payload["invoiceRequest"]["invoice"]["accountingSupplierParty"]["postalAddress"]
+            except Exception:
+                logger.debug("Business postal address lookup failed for business_id=%s", business_id)
 
-        # ensure invoice.irn exists (FIRS sandbox requires it for validation)
-        if not firs_payload["invoiceRequest"]["invoice"].get("irn"):
-            raise RuntimeError("invoice.irn is required by FIRS validate endpoint")
+    # final check for wrapper path
+    if not _has_postal_address(firs_payload["invoiceRequest"]["invoice"].get("accountingSupplierParty", {}).get("postalAddress")):
+        msg = ("accountingSupplierParty.postalAddress is required by FIRS but missing or empty. "
+               "Provide supplier postal_address in your payload (street_name, city_name, postal_zone, country) "
+               "or store a default address on the tenant Business record.")
+        logger.warning("FIRS payload missing postal address; aborting validate: %s", msg)
+        raise RuntimeError(msg)
 
-        posting_payload = firs_payload
+    # ensure invoice.irn exists (FIRS sandbox requires it for validation)
+    if not firs_payload["invoiceRequest"]["invoice"].get("irn"):
+        raise RuntimeError("invoice.irn is required by FIRS validate endpoint")
+
+    posting_payload = firs_payload
 
     # log (truncated)
     try:
@@ -1925,35 +1937,12 @@ def firs_validate_invoice(payload: dict, raise_for_status=True) -> dict:
             body = resp.text
         logger.error("FIRS validate failed: status=%s url=%s body=%s", resp.status_code, url, body)
 
-        # If the wrapper POST failed with an IRN error, attempt the alternate flat snake_case payload once
-        details = ""
-        if isinstance(body, dict):
-            details = (body.get("error") or {}).get("details", "") or body.get("message", "") or str(body)
-        if resp.status_code == 400 and "irn" in details.lower():
-            # attempt fallback only if we didn't already send flat
-            if not (isinstance(payload, dict) and ("irn" in payload or "business_id" in payload)):
-                try:
-                    alt_payload = build_firs_validate_payload_from_invoice(inv=payload if isinstance(payload, dict) else {}, biz=None)  # best-effort
-                except Exception:
-                    alt_payload = _invoice_wrapper_to_flat_snake(firs_payload) if 'firs_payload' in locals() else None
-                if alt_payload:
-                    try:
-                        alt_resp = requests.post(url, json=alt_payload, headers=headers, timeout=current_app.config.get("FIRS_REQUEST_TIMEOUT", 30))
-                        alt_body = None
-                        try:
-                            alt_body = alt_resp.json()
-                        except Exception:
-                            alt_body = alt_resp.text
-                        if 200 <= alt_resp.status_code < 300:
-                            logger.info("Fallback validate succeeded: %s", alt_body)
-                            return alt_body
-                        else:
-                            logger.error("Fallback validate also failed: status=%s body=%s", alt_resp.status_code, alt_body)
-                            raise RuntimeError(f"FIRS validate failed (fallback): status={alt_resp.status_code} body={alt_body}") from e
-                    except requests.RequestException as ex:
-                        logger.exception("Fallback validate request failed: %s", ex)
-                        raise RuntimeError(f"FIRS validate failed: status={resp.status_code} body={body}") from e
-
+        # NOTE: a previous version of this function retried failed IRN-related 400s by
+        # re-posting the flat snake_case payload as a "fallback". That flat shape is the
+        # one now known to be wrong for the live FIRS endpoint (it lacks the nested
+        # invoiceRequest.invoice.invoiceLine[] structure entirely), so retrying with it
+        # would just reproduce a different variant of that bug. No fallback retry here now
+        # that the primary POST already sends the correct wrapped/camelCase shape.
         raise RuntimeError(f"FIRS validate failed: status={resp.status_code} body={body}") from e
     # ✅ success branch
     try:
