@@ -200,6 +200,17 @@ def api_receive_invoice():
             if isinstance(raw_price, dict):
                 # support both camelCase and snake_case keys
                 price_amount = raw_price.get("price_amount") or raw_price.get("priceAmount") or raw_price.get("amount") or 0
+                # the model stores price as a bare number, so keep the rest of the
+                # price object on the line instead of discarding it
+                unit = raw_price.get("price_unit") or raw_price.get("priceUnit")
+                if unit and not (ln.get("price_unit") or ln.get("priceUnit")):
+                    ln["price_unit"] = unit
+                base_qty = raw_price.get("base_quantity") or raw_price.get("baseQuantity")
+                if base_qty is not None and ln.get("base_quantity") is None:
+                    try:
+                        ln["base_quantity"] = float(base_qty)
+                    except Exception:
+                        pass
             else:
                 price_amount = raw_price
 
@@ -217,6 +228,16 @@ def api_receive_invoice():
             # ensure invoice_line has item normalized (optional)
             if ln.get("item") and isinstance(ln["item"], dict):
                 itm = ln["item"]
+                # rewriting item drops every key not listed below, so lift any
+                # unit of measure onto the line before it is lost
+                if not (ln.get("price_unit") or ln.get("priceUnit")):
+                    itm_uom = (itm.get("uom") or itm.get("unit")
+                               or itm.get("product_uom") or itm.get("productUom")
+                               or itm.get("unit_of_measure") or itm.get("unitOfMeasure"))
+                    if isinstance(itm_uom, dict):
+                        itm_uom = itm_uom.get("name") or itm_uom.get("code")
+                    if itm_uom:
+                        ln["price_unit"] = itm_uom
                 ln["item"] = {
                     "name": itm.get("name") or itm.get("item_name") or "",
                     "description": itm.get("description") or itm.get("item_description") or "",
@@ -306,21 +327,19 @@ def api_receive_invoice():
                 f"Duplicate receive request — resuming pipeline from status={existing_status!r}",
                 )
             try:
-                if existing_invoice.irn_status in ("issued", "signed") or getattr(existing_submission, "status", None) in ("signed", "issued"):
-                    customer_obj = dict(data.get("accounting_customer_party") or {})
-                    print(existing_invoice.accounting_customer_party)
-                    existing_invoice.accounting_customer_party = customer_obj
-                    db.session.commit()
-                    print(existing_invoice.accounting_customer_party)
+                if existing_invoice.irn_status in ("issued", "signed") or getattr(existing_submission, "status", None) in ("signed", "issued", "transmit_failed"):
+                    incoming_customer = data.get("accounting_customer_party")
+                    if incoming_customer and incoming_customer.get("tin"):
+                        existing_invoice.accounting_customer_party = dict(incoming_customer)
+                        db.session.commit()
+                        logger.info("Updated customer party on resume for invoice %s", existing_invoice.id)
                     pipeline_result = _process_invoice_transmit_only(existing_invoice.id)
-                elif existing_invoice.irn_status == "transmitted"  or getattr(existing_submission, "status", None) in ("transmitted"):
-                    return jsonify({"ok": False, "error": "invoice already exists"}), 500
                 else:
-                    customer_obj = dict(data.get("accounting_customer_party") or {})
-                    print(existing_invoice.accounting_customer_party)
-                    existing_invoice.accounting_customer_party = customer_obj
-                    db.session.commit()
-                    print(existing_invoice.accounting_customer_party)
+                    incoming_customer = data.get("accounting_customer_party")
+                    if incoming_customer and incoming_customer.get("tin"):
+                        existing_invoice.accounting_customer_party = dict(incoming_customer)
+                        db.session.commit()
+                        logger.info("Updated customer party on resume for invoice %s", existing_invoice.id)
                     pipeline_result = _process_invoice_irn_request(existing_invoice.id)
             except Exception as exc:
                 logger.exception("Pipeline resume failed for invoice %s: %s", existing_invoice.id, exc)

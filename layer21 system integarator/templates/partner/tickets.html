@@ -1,0 +1,249 @@
+{% extends "partner/base_partner.html" %}
+
+{% block title %}Support Tickets{% endblock %}
+{% block page_title %}Support Tickets{% endblock %}
+{% block page_crumb %}Partner Portal › Support{% endblock %}
+
+{% block extra_css %}
+/* ── STATS ROW ──────────────────────────────────── */
+.ticket-stats {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: .75rem; margin-bottom: 1.25rem;
+}
+@media (max-width: 720px) { .ticket-stats { grid-template-columns: 1fr 1fr; } }
+
+.ts-card {
+  background: var(--ink2); border: 1px solid var(--line);
+  border-radius: var(--r2); padding: 1rem 1.1rem;
+  transition: all .2s var(--ease);
+}
+.ts-card:hover { border-color: rgba(255,255,255,.1); transform: translateY(-1px); }
+.ts-label { font-size: .6rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: .35rem; }
+.ts-value { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 800; color: #fff; line-height: 1; }
+
+/* ── TICKET TABLE ───────────────────────────────── */
+.ticket-table { width: 100%; border-collapse: collapse; }
+.ticket-table thead { background: rgba(255,255,255,.02); }
+.ticket-table th {
+  padding: .6rem 1.1rem; font-size: .6rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .08em;
+  color: var(--muted); text-align: left; white-space: nowrap;v 
+  border-bottom: 1px solid var(--line);
+}
+.ticket-table th:last-child { text-align: right; }
+.ticket-table td {
+  padding: .8rem 1.1rem; font-size: .8rem;
+  border-bottom: 1px solid var(--line2); vertical-align: middle;
+}
+.ticket-table td:last-child { text-align: right; }
+.ticket-table tbody tr:hover { background: rgba(255,255,255,.015); }
+.ticket-table tbody tr:last-child td { border-bottom: none; }
+
+/* Status indicator */
+.status-row { display: flex; align-items: center; gap: .4rem; }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+/* Priority badge */
+.priority-high   { background: var(--err-t); color: #f87171; border: 1px solid rgba(239,68,68,.18); }
+.priority-normal { background: var(--warn-t); color: #fbbf24; border: 1px solid rgba(245,158,11,.18); }
+.priority-low    { background: rgba(255,255,255,.04); color: var(--muted); border: 1px solid var(--line); }
+
+/* ── RAISE TICKET FORM ──────────────────────────── */
+.ticket-modal .form-grid { grid-template-columns: 1fr; }
+{% endblock %}
+
+{% block topbar_actions %}
+<button class="btn btn-primary btn-sm" onclick="openModal('raiseModal')">
+  <i class="bi bi-plus-lg"></i> Raise Ticket
+</button>
+{% endblock %}
+
+{% block content %}
+
+<!-- STATS ROW -->
+{% set open_count      = tickets | selectattr('status', 'eq', 'open')      | list | length %}
+{% set progress_count  = tickets | selectattr('status', 'eq', 'in_progress')| list | length %}
+{% set escalated_count = tickets | selectattr('status', 'eq', 'escalated')  | list | length %}
+{% set resolved_count  = tickets | selectattr('status', 'in', ['resolved','closed']) | list | length %}
+
+<div class="ticket-stats">
+  <div class="ts-card anim-up">
+    <div class="ts-label">Open</div>
+    <div class="ts-value" style="color:var(--teal)">{{ open_count }}</div>
+  </div>
+  <div class="ts-card anim-up">
+    <div class="ts-label">In Progress</div>
+    <div class="ts-value" style="color:#c4b5fd">{{ progress_count }}</div>
+  </div>
+  <div class="ts-card anim-up">
+    <div class="ts-label">Escalated</div>
+    <div class="ts-value" style="color:var(--err)">{{ escalated_count }}</div>
+  </div>
+  <div class="ts-card anim-up">
+    <div class="ts-label">Resolved</div>
+    <div class="ts-value" style="color:var(--ok)">{{ resolved_count }}</div>
+  </div>
+</div>
+
+{# ── Macro: render one ticket row ────────────────────────────────────────── #}
+{% macro ticket_row(t) %}
+{% set st = t.status %}
+<tr>
+  <td style="font-family:monospace;font-size:.72rem;color:var(--muted)">#{{ t.id }}</td>
+  <td>
+    <div style="font-weight:600;color:#fff;font-size:.82rem;max-width:280px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.title }}</div>
+    <div style="font-size:.7rem;color:var(--muted);max-width:280px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.description[:70] }}{% if t.description|length > 70 %}…{% endif %}</div>
+  </td>
+  <td>
+    <div class="status-row">
+      <span class="status-dot" style="background:{% if st=='open' %}var(--teal){% elif st=='in_progress' %}var(--purple){% elif st=='escalated' %}var(--err){% elif st in ['resolved','closed'] %}var(--ok){% else %}var(--muted){% endif %}"></span>
+      <span class="pill {% if st=='open' %}pill-teal{% elif st=='in_progress' %}pill-purple{% elif st=='escalated' %}pill-red{% elif st in ['resolved','closed'] %}pill-green{% else %}pill-muted{% endif %}">
+        {{ st.replace('_',' ')|title }}
+      </span>
+    </div>
+  </td>
+  <td>
+    {% if t.internal_complaint_id %}
+    <span class="pill pill-amber"><i class="bi bi-link-45deg" style="font-size:.6rem"></i> Ref #{{ t.internal_complaint_id }}</span>
+    {% else %}<span style="color:var(--muted);font-size:.75rem">—</span>{% endif %}
+  </td>
+  <td style="font-size:.73rem;color:var(--muted);font-family:monospace">{{ t.created_at.strftime('%d %b %Y') if t.created_at else '—' }}</td>
+  <td>
+    <div style="display:flex;align-items:center;gap:.35rem;justify-content:flex-end;flex-wrap:wrap">
+      <a href="{{ url_for('partner_portal.ticket_detail', ticket_id=t.id) }}" class="btn btn-ghost btn-xs">
+        <i class="bi bi-eye"></i> View
+      </a>
+      {% if st not in ['escalated','resolved','closed'] %}
+        <form method="post" action="{{ url_for('partner_portal.update_partner_ticket_status', ticket_id=t.id) }}" style="display:flex;gap:.25rem">
+          <select name="status" style="padding:.25rem .5rem;border-radius:6px;border:1px solid var(--line);background:var(--ink2);color:#fff;font-size:.7rem">
+            <option value="open"        {% if st=='open' %}selected{% endif %}>Open</option>
+            <option value="in_progress" {% if st=='in_progress' %}selected{% endif %}>In Progress</option>
+            <option value="resolved"    {% if st=='resolved' %}selected{% endif %}>Resolved</option>
+          </select>
+          <button type="submit" class="btn btn-ghost btn-xs" title="Update status"><i class="bi bi-check2"></i></button>
+        </form>
+        <form method="post" action="{{ url_for('partner_portal.escalate_ticket', ticket_id=t.id) }}"
+              onsubmit="return confirm('Escalate ticket #{{ t.id }} to the Layer21 support team?')">
+          <button type="submit" class="btn btn-danger btn-xs"><i class="bi bi-arrow-up-right-circle"></i> Escalate</button>
+        </form>
+      {% elif st == 'escalated' %}
+        <span style="font-size:.72rem;color:var(--err);display:flex;align-items:center;gap:.3rem"><i class="bi bi-arrow-up-right-circle"></i>Escalated</span>
+      {% else %}
+        <span style="font-size:.72rem;color:var(--ok);display:flex;align-items:center;gap:.3rem"><i class="bi bi-check-circle"></i>{{ st|title }}</span>
+      {% endif %}
+    </div>
+  </td>
+</tr>
+{% endmacro %}
+
+{# ── Client tickets routed to this partner ─── #}
+{% if routed_tickets %}
+<div class="sec-hd anim-up" style="margin-top:0">
+  <div>
+    <div class="sec-title">
+      <i class="bi bi-arrow-down-left-circle" style="color:var(--teal);margin-right:.35rem"></i>
+      Client Helpdesk Tickets
+      <span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:.6rem;font-weight:700;border:1px solid var(--line);color:var(--muted);background:rgba(255,255,255,.03);margin-left:.4rem">{{ routed_tickets|length }}</span>
+    </div>
+    <div class="sec-sub">Tickets raised by clients in your portfolio — resolve first, escalate to Layer21 if needed</div>
+  </div>
+</div>
+<div class="card anim-up">
+  <table class="ticket-table">
+    <thead>
+      <tr><th>#</th><th>Title</th><th>Status</th><th>L21 Ref</th><th>Created</th><th>Action</th></tr>
+    </thead>
+    <tbody>
+      {% for t in routed_tickets %}{{ ticket_row(t) }}{% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{# ── Partner-raised tickets ─── #}
+<div class="sec-hd anim-up">
+  <div>
+    <div class="sec-title">
+      <i class="bi bi-ticket-perforated" style="color:var(--muted);margin-right:.35rem"></i>
+      Your Support Tickets
+      <span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:.6rem;font-weight:700;border:1px solid var(--line);color:var(--muted);background:rgba(255,255,255,.03);margin-left:.4rem">{{ raised_tickets|length }}</span>
+    </div>
+    <div class="sec-sub">Issues your team has raised directly with Layer21 support</div>
+  </div>
+  <button class="btn btn-primary btn-sm" onclick="openModal('raiseModal')">
+    <i class="bi bi-plus-lg"></i> Raise Ticket
+  </button>
+</div>
+
+<div class="card anim-up">
+  {% if raised_tickets %}
+  <table class="ticket-table">
+    <thead>
+      <tr><th>#</th><th>Title</th><th>Status</th><th>L21 Ref</th><th>Raised</th><th>Action</th></tr>
+    </thead>
+    <tbody>
+      {% for t in raised_tickets %}{{ ticket_row(t) }}{% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty-state" style="padding:3.5rem 1.5rem">
+    <i class="bi bi-ticket-perforated"></i>
+    <h3>No tickets yet</h3>
+    <p style="margin-bottom:1rem">Raise a ticket to get help from the Layer21 team</p>
+    <button class="btn btn-primary btn-sm" onclick="openModal('raiseModal')"><i class="bi bi-plus-lg"></i> Raise First Ticket</button>
+  </div>
+  {% endif %}
+</div>
+
+<!-- ── RAISE TICKET MODAL ────────────────────────────────── -->
+<div class="modal-back ticket-modal" id="raiseModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('raiseModal')">&times;</button>
+    <div class="modal-title"><i class="bi bi-ticket-perforated-fill" style="color:var(--teal);margin-right:.4rem"></i>Raise Support Ticket</div>
+    <div class="modal-sub">Describe the issue and our team will follow up within one business day</div>
+
+    <form action="{{ url_for('partner_portal.raise_ticket') }}" method="post">
+      <div style="display:flex;flex-direction:column;gap:.8rem">
+        <div class="field">
+          <label>Title <span style="color:var(--err)">*</span></label>
+          <input name="title" placeholder="Brief summary of the issue" required/>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem">
+          <div class="field">
+            <label>Priority</label>
+            <select name="priority">
+              <option value="low">Low</option>
+              <option value="normal" selected>Normal</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Category</label>
+            <select name="category">
+              <option value="">General</option>
+              <option value="invoice_failure">Invoice Failure</option>
+              <option value="erp_connector">ERP Connector</option>
+              <option value="billing">Billing</option>
+              <option value="api">API / Integration</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Description <span style="color:var(--err)">*</span></label>
+          <textarea name="description" rows="4" placeholder="Describe the issue in detail — include any error messages, steps to reproduce, or context that will help the team understand the problem…" required></textarea>
+        </div>
+      </div>
+      <div style="padding:.75rem .9rem;margin-top:.65rem;background:var(--teal-t);border:1px solid var(--teal-b);border-radius:var(--r);font-size:.75rem;color:var(--silver2);display:flex;gap:.5rem;align-items:flex-start">
+        <i class="bi bi-info-circle" style="color:var(--teal);flex-shrink:0;margin-top:.05rem"></i>
+        <span>Tickets are visible to all agents in your company. You can escalate a ticket to the Layer21 internal helpdesk once submitted.</span>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('raiseModal')">Cancel</button>
+        <button type="submit" class="btn btn-primary"><i class="bi bi-send"></i> Submit Ticket</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

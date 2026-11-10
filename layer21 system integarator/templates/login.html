@@ -1,227 +1,633 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Layer21 — Sign in</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="{{ url_for('static', filename='stylesheets/index.css') }}" rel="stylesheet">
-
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Layer21 — Sign In</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
   <style>
-    /* small local overrides for the login page only */
-    .auth-bg {
-      background: linear-gradient(180deg, rgba(11,18,32,0.94) 0%, rgba(6,12,20,0.84) 100%);
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #080f1c;
+      --card:     rgba(255,255,255,.035);
+      --card2:    rgba(255,255,255,.055);
+      --teal:     #2ec5db;
+      --teal2:    #22a8be;
+      --teal-faint: rgba(46,197,219,.07);
+      --bd:       rgba(255,255,255,.07);
+      --bd2:      rgba(255,255,255,.11);
+      --silver:   rgba(255,255,255,.78);
+      --muted:    rgba(255,255,255,.38);
+      --ok:       #10b981;
+      --r:        14px;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg);
+      color: #fff;
+      overflow-x: hidden;
+    }
+
+    /* ── background ─────────────────────────────── */
+    .bg-layer {
+      position: fixed; inset: 0; z-index: 0;
+      background: radial-gradient(ellipse 80% 60% at 20% 30%, rgba(46,197,219,.08) 0%, transparent 60%),
+                  radial-gradient(ellipse 60% 50% at 80% 70%, rgba(46,197,219,.05) 0%, transparent 60%),
+                  linear-gradient(180deg, #080f1c 0%, #050c18 100%);
+    }
+    .bg-grid {
+      position: fixed; inset: 0; z-index: 0;
+      background-image:
+        linear-gradient(rgba(46,197,219,.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(46,197,219,.03) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+    .bg-noise {
+      position: fixed; inset: 0; z-index: 0; opacity: .025;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+    }
+
+    /* ── layout ─────────────────────────────────── */
+    .page {
+      position: relative; z-index: 1;
       min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 3rem 1rem;
+      display: flex; flex-direction: column;
     }
 
-    .auth-card {
+    .topbar {
+      display: flex; align-items: center; gap: .75rem;
+      padding: 1.25rem 2rem;
+      border-bottom: 1px solid var(--bd);
+      background: rgba(8,15,28,.6);
+      backdrop-filter: blur(12px);
+      flex-shrink: 0;
+    }
+    .logo-wrap { display: flex; align-items: center; gap: .65rem; }
+    .logo-img {
+      width: 34px; height: 34px; border-radius: 9px;
+      object-fit: cover; border: 1px solid var(--bd2);
+    }
+    .logo-text { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1rem; letter-spacing: -.01em; }
+    .logo-sub { font-size: .62rem; color: var(--teal); font-weight: 600; text-transform: uppercase; letter-spacing: .1em; margin-top: -2px; }
+    .topbar-spacer { flex: 1; }
+    .topbar-link {
+      display: flex; align-items: center; gap: .35rem;
+      font-size: .8rem; color: var(--muted); text-decoration: none;
+      padding: .35rem .7rem; border-radius: 8px; border: 1px solid transparent;
+      transition: all .2s;
+    }
+    .topbar-link:hover { color: var(--silver); border-color: var(--bd2); background: var(--card2); }
+
+    .main {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      padding: 2rem 1.5rem;
+    }
+
+    .auth-wrap {
+      width: 100%; max-width: 960px;
+      display: grid; grid-template-columns: 1fr;
+      gap: 1.5rem; align-items: stretch;
+      animation: fadeUp .55s cubic-bezier(.22,.61,.36,1) both;
+    }
+    @media(min-width: 860px) {
+      .auth-wrap { grid-template-columns: 1fr 400px; }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── left panel ──────────────────────────────── */
+    .brand-panel {
+      border-radius: var(--r);
+      border: 1px solid var(--bd2);
+      background: linear-gradient(145deg, rgba(46,197,219,.06) 0%, rgba(8,15,28,.8) 100%);
+      padding: 2.5rem 2.25rem;
+      display: flex; flex-direction: column; gap: 1.75rem;
+      position: relative; overflow: hidden;
+    }
+    .brand-panel::before {
+      content: '';
+      position: absolute; top: -80px; left: -80px;
+      width: 320px; height: 320px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(46,197,219,.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .brand-heading {
+      font-family: 'Syne', sans-serif; font-weight: 800;
+      font-size: clamp(1.5rem, 3vw, 2rem); line-height: 1.15;
+      color: #fff;
+    }
+    .brand-heading span { color: var(--teal); }
+    .brand-sub { font-size: .88rem; color: var(--muted); line-height: 1.65; margin-top: .6rem; }
+
+    .feature-list { display: flex; flex-direction: column; gap: .75rem; }
+    .f-item {
+      display: flex; align-items: flex-start; gap: .75rem;
+      padding: .75rem .9rem; border-radius: 10px;
+      background: rgba(255,255,255,.03); border: 1px solid var(--bd);
+      transition: border-color .2s, background .2s;
+    }
+    .f-item:hover { border-color: rgba(46,197,219,.2); background: var(--teal-faint); }
+    .f-ico {
+      width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .9rem;
+    }
+    .f-ico-teal { background: rgba(46,197,219,.12); color: var(--teal); }
+    .f-ico-green { background: rgba(16,185,129,.1); color: #34d399; }
+    .f-ico-amber { background: rgba(245,158,11,.1); color: #fbbf24; }
+    .f-body-title { font-size: .82rem; font-weight: 600; color: var(--silver); }
+    .f-body-sub { font-size: .72rem; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+
+    .brand-footer { margin-top: auto; }
+    .live-chip {
+      display: inline-flex; align-items: center; gap: .4rem;
+      padding: .3rem .75rem; border-radius: 999px;
+      background: rgba(16,185,129,.1); border: 1px solid rgba(16,185,129,.2);
+      font-size: .68rem; font-weight: 700; color: #34d399; text-transform: uppercase; letter-spacing: .07em;
+    }
+    .live-dot { width: 6px; height: 6px; border-radius: 50%; background: #10b981; animation: lpulse 1.8s ease-in-out infinite; }
+    @keyframes lpulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.75)} }
+
+    /* ── right / form panel ──────────────────────── */
+    .form-panel {
+      border-radius: var(--r);
+      border: 1px solid var(--bd2);
+      background: rgba(10,18,32,.85);
+      backdrop-filter: blur(24px);
+      padding: 2.25rem 2rem;
+      display: flex; flex-direction: column; gap: 1.5rem;
+      box-shadow: 0 32px 80px rgba(0,0,0,.5);
+    }
+
+    .form-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.35rem; color: #fff; }
+    .form-sub { font-size: .82rem; color: var(--muted); margin-top: .3rem; line-height: 1.5; }
+
+    /* flash messages */
+    .flash { display: flex; align-items: flex-start; gap: .5rem; padding: .7rem .9rem; border-radius: 9px; font-size: .8rem; line-height: 1.4; }
+    .flash-err { background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.2); color: #f87171; }
+    .flash-ok  { background: rgba(16,185,129,.1); border: 1px solid rgba(16,185,129,.2); color: #34d399; }
+    .flash-info{ background: rgba(46,197,219,.1); border: 1px solid rgba(46,197,219,.2); color: var(--teal); }
+
+    /* form fields */
+    .fields { display: flex; flex-direction: column; gap: 1rem; }
+    .field-wrap { display: flex; flex-direction: column; gap: .35rem; }
+    .field-label {
+      font-size: .75rem; font-weight: 600; color: var(--silver);
+      text-transform: uppercase; letter-spacing: .06em;
+    }
+    .field-inner { position: relative; }
+    .field-ico {
+      position: absolute; left: .9rem; top: 50%; transform: translateY(-50%);
+      color: var(--muted); font-size: .95rem; pointer-events: none;
+      transition: color .2s;
+    }
+    .field-input {
       width: 100%;
-      max-width: 980px;
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 1.5rem;
-      align-items: stretch;
+      padding: .75rem 1rem .75rem 2.5rem;
+      border-radius: 10px;
+      border: 1px solid var(--bd2);
+      background: rgba(255,255,255,.04);
+      color: #fff;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .88rem;
+      outline: none;
+      transition: border-color .2s, background .2s, box-shadow .2s;
     }
-
-    @media(min-width: 900px){
-      .auth-card { grid-template-columns: 1fr 420px; }
+    .field-input::placeholder { color: var(--muted); }
+    .field-input:focus {
+      border-color: var(--teal);
+      background: rgba(46,197,219,.04);
+      box-shadow: 0 0 0 3px rgba(46,197,219,.1);
     }
+    .field-wrap:focus-within .field-ico { color: var(--teal); }
 
-    .auth-side {
-      background: linear-gradient(180deg, rgba(46,197,219,0.06), rgba(54,185,209,0.03));
-      border-radius: 14px;
-      padding: 2.25rem;
-      color: rgba(255,255,255,0.95);
-      display:flex;
-      flex-direction:column;
-      justify-content:center;
-      gap:1rem;
+    .pw-toggle {
+      position: absolute; right: .8rem; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer;
+      color: var(--muted); font-size: 1rem; padding: .25rem;
+      border-radius: 5px; transition: color .2s;
     }
+    .pw-toggle:hover { color: var(--silver); }
+    #password { padding-right: 2.6rem; }
 
-    .auth-form {
-      background: white;
-      border-radius: 14px;
-      padding: 2rem;
-      box-shadow: 0 18px 60px rgba(2,12,20,0.45);
+    /* remember + forgot row */
+    .row-meta { display: flex; align-items: center; justify-content: space-between; }
+    .check-label {
+      display: flex; align-items: center; gap: .5rem;
+      font-size: .8rem; color: var(--muted); cursor: pointer; user-select: none;
     }
+    .check-label input[type="checkbox"] { accent-color: var(--teal); width: 14px; height: 14px; }
+    .forgot-link { font-size: .8rem; color: var(--teal); text-decoration: none; transition: color .2s; }
+    .forgot-link:hover { color: var(--teal2); text-decoration: underline; }
 
-    .field {
-      display:block;
-      width:100%;
-      margin-bottom: .75rem;
+    /* submit button */
+    .btn-signin {
+      width: 100%;
+      padding: .85rem 1rem;
+      border-radius: 10px;
+      border: none;
+      background: linear-gradient(135deg, var(--teal), var(--teal2));
+      color: #041018;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .92rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: .5rem;
+      transition: opacity .2s, transform .15s, box-shadow .2s;
+      box-shadow: 0 4px 20px rgba(46,197,219,.2);
     }
-
-    .field label { display:block; margin-bottom:.35rem; font-weight:600; color:var(--brand-dark); font-size:.95rem; }
-    .field input, .field select {
-      width:100%;
-      padding:.7rem .9rem;
-      border-radius:10px;
-      border:1px solid rgba(6,12,20,0.06);
-      font-size: 0.98rem;
-      outline:none;
-    }
-
-    .muted { color: rgba(6,12,20,0.6); }
-
-    .small-link { font-size:.9rem; color:var(--brand-teal); text-decoration:none; }
-    .small-link:hover { text-decoration:underline; }
-
-    .visually-hidden { position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden; }
+    .btn-signin:hover { opacity: .92; transform: translateY(-1px); box-shadow: 0 8px 28px rgba(46,197,219,.28); }
+    .btn-signin:active { transform: translateY(0); }
+    .btn-signin:disabled { opacity: .55; cursor: not-allowed; transform: none; }
 
     /* spinner */
-    .spinner { display:inline-block; width:18px; height:18px; border-radius:50%; border:2px solid rgba(0,0,0,0.08); border-top-color: rgba(2,12,20,0.6); animation: spin .9s linear infinite; vertical-align:middle; margin-right:.5rem; }
+    .spin { display: inline-block; width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(4,16,24,.2); border-top-color: #041018; animation: spin .8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* divider */
+    .divider { display: flex; align-items: center; gap: .75rem; }
+    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--bd); }
+    .divider span { font-size: .72rem; color: var(--muted); white-space: nowrap; }
+
+    /* contact sales btn */
+    .btn-ghost {
+      width: 100%; padding: .75rem 1rem; border-radius: 10px;
+      border: 1px solid var(--bd2); background: transparent;
+      color: var(--silver); font-family: 'DM Sans', sans-serif;
+      font-size: .88rem; font-weight: 500; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: .5rem;
+      transition: all .2s;
+    }
+    .btn-ghost:hover { border-color: var(--teal); color: var(--teal); background: var(--teal-faint); }
+
+    /* bottom footer note */
+    .form-note { text-align: center; font-size: .72rem; color: var(--muted); }
+    .form-note a { color: var(--teal); text-decoration: none; }
+    .form-note a:hover { text-decoration: underline; }
+
+    /* page footer */
+    .site-footer {
+      text-align: center; padding: 1.25rem; font-size: .72rem; color: var(--muted);
+      border-top: 1px solid var(--bd); background: rgba(8,15,28,.6);
+      position: relative; z-index: 1;
+    }
   </style>
 </head>
 <body>
 
-  <header class="site-nav bg-white border-b">
-    <div class="container max-w-7xl mx-auto px-5 md:px-8 py-3 flex items-center justify-between">
-      <div class="flex items-center gap-4">
-        <img src="/static/img/layer21logo.jpg" alt="Layer21" class="logo-badge" />
-        <div>
-          <div class="text-lg font-bold text-[var(--brand-dark)]">LAYER21</div>
-          <div class="text-xs text-[var(--brand-teal)] font-semibold -mt-1">IT Services</div>
-        </div>
-      </div>
+<div class="bg-layer"></div>
+<div class="bg-grid"></div>
+<div class="bg-noise"></div>
 
-      <nav class="hidden md:flex items-center gap-6">
-        <a href="/" class="nav-link text-sm font-medium">Back to home</a>
-      </nav>
+<div class="page">
+
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="logo-wrap">
+      <img src="/static/img/layer21light.png" alt="Layer21" class="logo-img"/>
     </div>
+    <div class="topbar-spacer"></div>
+    <a href="/" class="topbar-link">
+      <i class="bi bi-house"></i> Back to home
+    </a>
   </header>
 
-  <!-- AUTH AREA -->
-  <main class="auth-bg">
-    <div class="auth-card container">
+  <!-- Main -->
+  <main class="main">
+    <div class="auth-wrap">
 
-      <!-- Left / info side -->
-      <aside class="auth-side">
+      <!-- Left: brand panel -->
+      <aside class="brand-panel">
         <div>
-          <h1 class="text-2xl md:text-3xl font-extrabold" style="color:var(--brand-dark)">Sign in to your Portal</h1>
-          <p class="muted mt-2">Create and post invoices, manage clients, and track payments. Secure access for your team.</p>
+          <div class="brand-heading">
+            Smart invoicing<br/>for <span>modern businesses</span>
+          </div>
+          <p class="brand-sub">
+            Layer21 is Nigeria's leading FIRS e-invoicing integration platform — connecting your ERP to the government tax authority in real time.
+          </p>
         </div>
 
-        <div class="mt-4">
-          <h4 class="text-md font-semibold" style="color:var(--brand-dark)">Why use the Portal?</h4>
-          <ul class="mt-3 space-y-2 text-sm muted">
-            <li>• Generate professional invoices in seconds</li>
-            <li>• Send invoices and track status</li>
-            <li>• Maintain client and billing records</li>
-          </ul>
+        <div class="feature-list">
+          <div class="f-item">
+            <div class="f-ico f-ico-teal"><i class="bi bi-send-check-fill"></i></div>
+            <div>
+              <div class="f-body-title">FIRS-compliant submissions</div>
+              <div class="f-body-sub">Validate, sign, and transmit invoices to FIRS automatically</div>
+            </div>
+          </div>
+          <div class="f-item">
+            <div class="f-ico f-ico-green"><i class="bi bi-activity"></i></div>
+            <div>
+              <div class="f-body-title">Real-time IRN tracking</div>
+              <div class="f-body-sub">Live pipeline status, submission logs, and IRN assignment</div>
+            </div>
+          </div>
+          <div class="f-item">
+            <div class="f-ico f-ico-amber"><i class="bi bi-people-fill"></i></div>
+            <div>
+              <div class="f-body-title">Multi-client management</div>
+              <div class="f-body-sub">Manage businesses, API credentials, and user access in one place</div>
+            </div>
+          </div>
         </div>
 
-        <div class="mt-auto text-sm muted">
-          <div>Need help? <a href="/" class="small-link">Contact Sales</a></div>
-          <div class="mt-2">Forgot your password? <a href="#forgot" class="small-link">Reset it here</a></div>
+        <div class="brand-footer">
+          <div class="live-chip">
+            <span class="live-dot"></span> All systems operational
+          </div>
         </div>
       </aside>
 
-      <!-- Right / login form -->
-      <section class="auth-form" aria-labelledby="signinTitle">
-        <h2 id="signinTitle" class="text-xl font-bold mb-2">Sign in</h2>
-        <p class="muted mb-4">Use your company email or username to access the invoice portal.</p>
+      <!-- Right: login form -->
+      <section class="form-panel" aria-labelledby="signinTitle">
+        <div class="form-header">
+          <div class="form-title" id="signinTitle">Welcome back</div>
+          <div class="form-sub">Sign in to your Layer21 portal account</div>
+        </div>
 
-        <form id="loginForm" method="POST" action="{{ url_for('login') }}">
-            <div class="mt-3 text-sm">
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for cat, msg in messages %}
-                    <div class="alert 
-                        {% if cat == 'danger' %}alert-danger
-                        {% elif cat == 'success' %}alert-success
-                        {% else %}alert-info{% endif %}">
-                        {{ msg }}
-                    </div>
-                    {% endfor %}
-                {% endif %}
-                {% endwith %}
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div>
+          {% for cat, msg in messages %}
+          <div class="flash {% if cat == 'danger' %}flash-err{% elif cat == 'success' %}flash-ok{% else %}flash-info{% endif %}">
+            <i class="bi bi-{% if cat == 'danger' %}exclamation-circle{% elif cat == 'success' %}check-circle{% else %}info-circle{% endif %}"></i>
+            <span>{{ msg }}</span>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <form id="loginForm" method="POST" action="{{ url_for('login') }}" novalidate>
+          <div class="fields">
+
+            <!-- Username -->
+            <div class="field-wrap">
+              <label class="field-label" for="username">Username</label>
+              <div class="field-inner">
+                <i class="bi bi-person field-ico"></i>
+                <input class="field-input" type="text" id="username" name="username"
+                       autocomplete="username" placeholder="your.username" required autofocus/>
+              </div>
             </div>
-        
-            <div class="field">
-                <label for="username">Username</label>
-                <input type="text" name="username" id="username" required>
-            </div>
-        
-            <div class="field" style="position:relative;">
-                <label for="password">Password</label>
-                <input id="password" name="password" type="password" 
-                       autocomplete="current-password" required 
-                       placeholder="Enter your password" />
-                <button type="button" id="pwToggle" aria-label="Show password" title="Show password"
-                        style="position:absolute; right:10px; top:37px; background:transparent; border:none; cursor:pointer;">
-                    <svg id="eyeOpen" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7
-                                 -1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                    <svg id="eyeClosed" xmlns="http://www.w3.org/2000/svg" 
-                         class="h-5 w-5 text-gray-500 hidden" fill="none" 
-                         viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                              d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7
-                                 a9.97 9.97 0 012.223-3.328M6.22 6.22L18.78 18.78M9.88 9.88
-                                 A3 3 0 0114.12 14.12" />
-                    </svg>
+
+            <!-- Password -->
+            <div class="field-wrap">
+              <label class="field-label" for="password">Password</label>
+              <div class="field-inner">
+                <i class="bi bi-lock field-ico"></i>
+                <input class="field-input" type="password" id="password" name="password"
+                       autocomplete="current-password" placeholder="••••••••••" required/>
+                <button type="button" class="pw-toggle" id="pwToggle" aria-label="Toggle password visibility">
+                  <i class="bi bi-eye" id="pwEye"></i>
                 </button>
+              </div>
             </div>
-        
-            <div class="flex items-center justify-between mt-2">
-                <label class="flex items-center text-sm muted">
-                    <input id="remember" name="remember" type="checkbox" class="mr-2" />
-                    Remember me
-                </label>
-                <a href="#forgot" class="small-link">Forgot password?</a>
+
+            <!-- Remember + Forgot -->
+            <div class="row-meta">
+              <label class="check-label">
+                <input type="checkbox" name="remember" id="remember"/>
+                Remember me
+              </label>
+              <a href="#" class="forgot-link" id="forgotBtn">Forgot password?</a>
             </div>
-        
-            <div class="mt-6 flex items-center gap-3">
-                <button type="submit" id="signinBtn" class="btn btn-primary">
-                    <span class="spinner hidden" id="signinSpinner" aria-hidden="true"></span>
-                    <span id="signinLabel">Sign in</span>
-                </button>
-                <button type="button" id="contactSalesBtn" class="btn" 
-                        style="border:1px solid rgba(6,12,20,0.06);">
-                    Contact Sales
-                </button>
-            </div>
-        
-            <div id="loginMessage" class="mt-3" role="status" aria-live="polite"></div>
+
+            <!-- Submit -->
+            <button type="submit" class="btn-signin" id="signinBtn">
+              <span id="signinContent" style="display:flex;align-items:center;gap:.5rem">
+                <i class="bi bi-box-arrow-in-right"></i> Sign in
+              </span>
+            </button>
+
+            <div class="divider"><span>or</span></div>
+
+            <!-- Contact Sales -->
+            <button type="button" class="btn-ghost" id="salesBtn">
+              <i class="bi bi-headset"></i> Contact Sales
+            </button>
+
+          </div>
         </form>
-        
+
+        <div class="form-note">
+          By signing in you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+        </div>
       </section>
 
     </div>
   </main>
 
-  <!-- small footer (consistent with site) -->
-  <footer class="py-6 bg-white border-t">
-    <div class="container max-w-7xl mx-auto px-5 text-sm muted text-center">
-      © <span id="yearLogin"></span> Layer21 — All rights reserved.
-    </div>
+  <footer class="site-footer">
+    &copy; <span id="yr"></span> Layer21 IT Services — All rights reserved
   </footer>
 
-  <!-- Scripts: small interactive behavior -->
-  <script>
-form.addEventListener('submit', function(){
-  spinner.classList.remove('hidden');
-  label.textContent = 'Signing in...';
+</div>
 
-  // Disable only the submit button, not the inputs
-  const submitBtn = form.querySelector('button[type="submit"]');
-  if (submitBtn) submitBtn.disabled = true;
+<!-- ── Forgot Password Modal ──────────────────────────────── -->
+<div id="forgotModal" style="display:none;position:fixed;inset:0;z-index:200;align-items:center;justify-content:center;background:rgba(0,0,0,.6);backdrop-filter:blur(4px)">
+  <div style="background:#0d1829;border:1px solid var(--bd2);border-radius:16px;padding:2rem;max-width:400px;width:calc(100% - 2rem);box-shadow:0 32px 80px rgba(0,0,0,.6)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
+      <div style="display:flex;align-items:center;gap:.6rem">
+        <div style="width:32px;height:32px;border-radius:8px;background:rgba(46,197,219,.12);display:flex;align-items:center;justify-content:center"><i class="bi bi-key" style="color:var(--teal)"></i></div>
+        <span style="font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;color:#fff">Reset Password</span>
+      </div>
+      <button id="closeForgot" style="background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;padding:.25rem;border-radius:6px" aria-label="Close"><i class="bi bi-x"></i></button>
+    </div>
+    <p style="font-size:.82rem;color:var(--muted);line-height:1.6;margin-bottom:1.25rem">Enter your email address or username. If an account exists, you'll receive a reset link valid for 30 minutes.</p>
+    <div id="forgotMsg" style="display:none;padding:.65rem .85rem;border-radius:9px;font-size:.8rem;margin-bottom:1rem"></div>
+    <form id="forgotForm" style="display:flex;flex-direction:column;gap:.85rem">
+      <div>
+        <label style="font-size:.7rem;font-weight:600;color:var(--silver);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:.35rem">Email or Username</label>
+        <div style="position:relative">
+          <i class="bi bi-person" style="position:absolute;left:.9rem;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.95rem;pointer-events:none"></i>
+          <input type="text" name="identifier" id="forgotIdentifier" required placeholder="your@email.com or username"
+            style="width:100%;padding:.72rem 1rem .72rem 2.5rem;border-radius:10px;border:1px solid var(--bd2);background:rgba(255,255,255,.04);color:#fff;font-size:.88rem;outline:none;font-family:'DM Sans',sans-serif"/>
+        </div>
+      </div>
+      <button type="submit" id="forgotSubmit" style="width:100%;padding:.8rem;border-radius:10px;border:none;background:linear-gradient(135deg,var(--teal),var(--teal2));color:#041018;font-weight:700;font-size:.88rem;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:.5rem">
+        <i class="bi bi-send"></i> Send Reset Link
+      </button>
+    </form>
+  </div>
+</div>
 
-  // Optional: make inputs readonly so values still submit
-  form.querySelectorAll('input').forEach(el => el.readOnly = true);
-}); 
-  </script>
-  
+<!-- ── Contact Sales Modal ────────────────────────────────── -->
+<div id="salesModal" style="display:none;position:fixed;inset:0;z-index:200;align-items:center;justify-content:center;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);overflow-y:auto;padding:1rem">
+  <div style="background:#0d1829;border:1px solid var(--bd2);border-radius:16px;padding:2rem;max-width:480px;width:100%;box-shadow:0 32px 80px rgba(0,0,0,.6);margin:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
+      <div style="display:flex;align-items:center;gap:.6rem">
+        <div style="width:32px;height:32px;border-radius:8px;background:rgba(46,197,219,.12);display:flex;align-items:center;justify-content:center"><i class="bi bi-headset" style="color:var(--teal)"></i></div>
+        <span style="font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;color:#fff">Contact Sales</span>
+      </div>
+      <button id="closeSales" style="background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;padding:.25rem;border-radius:6px" aria-label="Close"><i class="bi bi-x"></i></button>
+    </div>
+    <p style="font-size:.82rem;color:var(--muted);margin-bottom:1.25rem">Tell us about your business and we'll be in touch within one business day.</p>
+    <div id="salesMsg" style="display:none;padding:.7rem .9rem;border-radius:9px;font-size:.82rem;margin-bottom:1rem"></div>
+    <form id="salesForm" style="display:flex;flex-direction:column;gap:.85rem">
+      <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off"/>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+        <div>
+          <label style="font-size:.7rem;font-weight:600;color:var(--silver);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:.3rem">Business Name *</label>
+          <input type="text" name="business_name" required placeholder="Acme Ltd" style="width:100%;padding:.65rem .85rem;border-radius:9px;border:1px solid var(--bd2);background:rgba(255,255,255,.04);color:#fff;font-size:.84rem;outline:none;font-family:'DM Sans',sans-serif"/>
+        </div>
+        <div>
+          <label style="font-size:.7rem;font-weight:600;color:var(--silver);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:.3rem">Contact Person *</label>
+          <input type="text" name="contact_person" required placeholder="Jane Doe" style="width:100%;padding:.65rem .85rem;border-radius:9px;border:1px solid var(--bd2);background:rgba(255,255,255,.04);color:#fff;font-size:.84rem;outline:none;font-family:'DM Sans',sans-serif"/>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+        <div>
+          <label style="font-size:.7rem;font-weight:600;color:var(--silver);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:.3rem">Email *</label>
+          <input type="email" name="email" required placeholder="jane@acme.com" style="width:100%;padding:.65rem .85rem;border-radius:9px;border:1px solid var(--bd2);background:rgba(255,255,255,.04);color:#fff;font-size:.84rem;outline:none;font-family:'DM Sans',sans-serif"/>
+        </div>
+        <div>
+          <label style="font-size:.7rem;font-weight:600;color:var(--silver);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:.3rem">Phone *</label>
+          <input type="tel" name="phone" required placeholder="+234 800 000 0000" style="width:100%;padding:.65rem .85rem;border-radius:9px;border:1px solid var(--bd2);background:rgba(255,255,255,.04);color:#fff;font-size:.84rem;outline:none;font-family:'DM Sans',sans-serif"/>
+        </div>
+      </div>
+      <div>
+        <label style="font-size:.7rem;font-weight:600;color:var(--silver);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:.3rem">Service Interested In *</label>
+        <select name="service" required style="width:100%;padding:.65rem .85rem;border-radius:9px;border:1px solid var(--bd2);background:#0d1829;color:#fff;font-size:.84rem;outline:none;font-family:'DM Sans',sans-serif">
+          <option value="" disabled selected>Select a service…</option>
+          <option>FIRS e-Invoicing Integration</option>
+          <option>ERP Integration (Odoo / SAP / Others)</option>
+          <option>API Access Point</option>
+          <option>Compliance Consulting</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:.7rem;font-weight:600;color:var(--silver);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:.3rem">Message</label>
+        <textarea name="message" rows="3" placeholder="Tell us more about your needs…" style="width:100%;padding:.65rem .85rem;border-radius:9px;border:1px solid var(--bd2);background:rgba(255,255,255,.04);color:#fff;font-size:.84rem;outline:none;resize:vertical;font-family:'DM Sans',sans-serif"></textarea>
+      </div>
+      <button type="submit" id="salesSubmit" style="width:100%;padding:.8rem;border-radius:10px;border:none;background:linear-gradient(135deg,var(--teal),var(--teal2));color:#041018;font-weight:700;font-size:.88rem;cursor:pointer;font-family:'DM Sans',sans-serif">
+        Send Enquiry
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+  document.getElementById('yr').textContent = new Date().getFullYear();
+
+  // Password toggle
+  const pwInput = document.getElementById('password');
+  const pwEye   = document.getElementById('pwEye');
+  document.getElementById('pwToggle').addEventListener('click', function () {
+    const show = pwInput.type === 'password';
+    pwInput.type = show ? 'text' : 'password';
+    pwEye.className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
+    this.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+  });
+
+  // Modal helpers
+  function openModal(id) {
+    const m = document.getElementById(id);
+    m.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal(id) {
+    document.getElementById(id).style.display = 'none';
+    document.body.style.overflow = '';
+  }
+
+  // Forgot password modal
+  document.getElementById('forgotBtn').addEventListener('click', function(e) {
+    e.preventDefault();
+    document.getElementById('forgotMsg').style.display = 'none';
+    document.getElementById('forgotIdentifier').value = '';
+    openModal('forgotModal');
+  });
+  document.getElementById('closeForgot').addEventListener('click', () => closeModal('forgotModal'));
+
+  // Forgot form submit
+  document.getElementById('forgotForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('forgotSubmit');
+    const msg = document.getElementById('forgotMsg');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spin" style="border-top-color:#041018"></span> Sending…';
+    msg.style.display = 'none';
+    try {
+      const resp = await fetch('/forgot-password', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ identifier: document.getElementById('forgotIdentifier').value.trim() })
+      });
+      // Always show success (server never reveals whether account exists)
+      msg.textContent = '✓ If an account matches, a reset link has been sent. Check your inbox.';
+      msg.style.cssText += 'display:block;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);color:#34d399';
+      btn.innerHTML = '<i class="bi bi-check2"></i> Sent';
+    } catch(err) {
+      msg.textContent = 'Something went wrong. Please try again.';
+      msg.style.cssText += 'display:block;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:#f87171';
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-send"></i> Send Reset Link';
+    }
+  });
+
+  // Contact sales modal
+  document.getElementById('salesBtn').addEventListener('click', () => openModal('salesModal'));
+  document.getElementById('closeSales').addEventListener('click', () => closeModal('salesModal'));
+
+  // Close on backdrop click
+  ['forgotModal','salesModal'].forEach(id => {
+    document.getElementById(id).addEventListener('click', function(e) {
+      if (e.target === this) closeModal(id);
+    });
+  });
+
+  // Sales form submission
+  document.getElementById('salesForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('salesSubmit');
+    const msg = document.getElementById('salesMsg');
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+    msg.style.display = 'none';
+    try {
+      const resp = await fetch('/contact_sales', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(Object.fromEntries(new FormData(this)))
+      });
+      const j = await resp.json();
+      if (resp.ok && j.ok) {
+        msg.textContent = '✓ Enquiry sent! We\'ll be in touch within one business day.';
+        msg.style.cssText += 'display:block;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);color:#34d399';
+        this.reset();
+        btn.textContent = 'Sent!';
+      } else {
+        throw new Error(j.error || 'Submission failed');
+      }
+    } catch(err) {
+      msg.textContent = err.message || 'Something went wrong. Please try again.';
+      msg.style.cssText += 'display:block;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:#f87171';
+      btn.disabled = false;
+      btn.textContent = 'Send Enquiry';
+    }
+  });
+
+  // Submit loading state
+  document.getElementById('loginForm').addEventListener('submit', function () {
+    const btn     = document.getElementById('signinBtn');
+    const content = document.getElementById('signinContent');
+    btn.disabled  = true;
+    content.innerHTML = '<span class="spin"></span> Signing in…';
+    this.querySelectorAll('input').forEach(el => el.readOnly = true);
+  });
+</script>
+
 </body>
 </html>

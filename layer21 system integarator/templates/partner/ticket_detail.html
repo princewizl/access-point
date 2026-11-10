@@ -1,0 +1,218 @@
+{% extends "partner/base_partner.html" %}
+
+{% block title %}Ticket #{{ ticket.id }}{% endblock %}
+{% block page_title %}Ticket #{{ ticket.id }}{% endblock %}
+{% block page_crumb %}Partner Portal › Support › #{{ ticket.id }}{% endblock %}
+
+{% block extra_css %}
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 1rem;
+  align-items: start;
+}
+@media (max-width: 860px) { .detail-grid { grid-template-columns: 1fr; } }
+
+.ticket-hero {
+  padding: 1.75rem;
+  border-bottom: 1px solid var(--line);
+  position: relative;
+}
+.ticket-hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 5% 50%, rgba(46,197,219,.04), transparent 60%);
+  pointer-events: none;
+}
+.ticket-num {
+  font-family: monospace; font-size: .72rem; font-weight: 700;
+  color: var(--teal); letter-spacing: .05em;
+  margin-bottom: .45rem;
+  display: flex; align-items: center; gap: .4rem;
+}
+.ticket-title-text {
+  font-family: 'Syne', sans-serif; font-size: 1.35rem;
+  font-weight: 800; color: #fff; line-height: 1.25;
+  margin-bottom: .75rem;
+}
+.meta-row { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+
+.desc-block {
+  padding: 1.5rem 1.75rem;
+  font-size: .84rem; color: var(--silver2);
+  line-height: 1.75; white-space: pre-wrap;
+}
+
+.sidebar-card { display: flex; flex-direction: column; gap: 1rem; }
+
+.info-block { padding: 1.25rem; }
+.info-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: .55rem 0; border-bottom: 1px solid var(--line2);
+  font-size: .8rem;
+}
+.info-row:last-child { border-bottom: none; }
+.info-label { color: var(--muted); font-size: .72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+.info-value { font-weight: 500; color: var(--silver); text-align: right; }
+
+.actions-block { padding: 1.25rem; display: flex; flex-direction: column; gap: .5rem; }
+.actions-title {
+  font-size: .65rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .08em; color: var(--muted); margin-bottom: .25rem;
+}
+
+.notice {
+  padding: .75rem 1rem; border-radius: var(--r);
+  font-size: .75rem; color: var(--silver2);
+  display: flex; gap: .5rem; align-items: flex-start;
+}
+.notice-info  { background: var(--teal-t); border: 1px solid var(--teal-b); }
+.notice-warn  { background: var(--warn-t); border: 1px solid rgba(245,158,11,.2); }
+.notice-err   { background: var(--err-t);  border: 1px solid rgba(239,68,68,.2); }
+.notice-ok    { background: var(--ok-t);   border: 1px solid rgba(34,197,94,.2); }
+{% endblock %}
+
+{% block topbar_actions %}
+<a href="{{ url_for('partner_portal.ticket_dashboard') }}" class="btn btn-ghost btn-sm">
+  <i class="bi bi-arrow-left"></i> All Tickets
+</a>
+{% endblock %}
+
+{% block content %}
+
+{% set st = ticket.status %}
+
+<div class="detail-grid">
+
+  <!-- LEFT: ticket body -->
+  <div style="display:flex;flex-direction:column;gap:1rem">
+
+    <!-- Hero card -->
+    <div class="card anim-up">
+      <div class="ticket-hero">
+        <div class="ticket-num">
+          <i class="bi bi-ticket-perforated" style="color:var(--teal)"></i>
+          TICKET-{{ '%04d' % ticket.id }}
+        </div>
+        <div class="ticket-title-text">{{ ticket.title }}</div>
+        <div class="meta-row">
+          <span class="pill
+            {% if st == 'open' %}pill-teal
+            {% elif st == 'in_progress' %}pill-purple
+            {% elif st == 'escalated' %}pill-red
+            {% elif st in ['resolved','closed'] %}pill-green
+            {% else %}pill-muted{% endif %}">
+            <i class="bi bi-{% if st=='open' %}envelope-open{% elif st=='in_progress' %}arrow-repeat{% elif st=='escalated' %}arrow-up-right-circle{% elif st in ['resolved','closed'] %}check-circle{% else %}dash-circle{% endif %}"></i>
+            {{ st.replace('_',' ')|title }}
+          </span>
+          <span class="pill pill-muted">
+            <i class="bi bi-clock" style="font-size:.55rem"></i>
+            {{ ticket.created_at.strftime('%d %b %Y, %H:%M') if ticket.created_at else '—' }}
+          </span>
+          {% if ticket.internal_complaint_id %}
+          <span class="pill pill-amber">
+            <i class="bi bi-link-45deg"></i> Internal Ref #{{ ticket.internal_complaint_id }}
+          </span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="desc-block">{{ ticket.description }}</div>
+    </div>
+
+    <!-- Status notices -->
+    {% if st == 'escalated' %}
+    <div class="notice notice-warn anim-up">
+      <i class="bi bi-arrow-up-right-circle" style="color:var(--warn);flex-shrink:0;margin-top:.05rem"></i>
+      <span>This ticket has been escalated to the Layer21 support team.
+        {% if ticket.internal_complaint_id %}
+          Internal reference: <strong>#{{ ticket.internal_complaint_id }}</strong>.
+        {% endif %}
+        You will be notified once it is resolved.</span>
+    </div>
+    {% elif st in ['resolved', 'closed'] %}
+    <div class="notice notice-ok anim-up">
+      <i class="bi bi-check-circle" style="color:var(--ok);flex-shrink:0;margin-top:.05rem"></i>
+      <span>This ticket has been <strong>{{ st }}</strong>. If the issue persists, raise a new ticket.</span>
+    </div>
+    {% elif st == 'open' %}
+    <div class="notice notice-info anim-up">
+      <i class="bi bi-info-circle" style="color:var(--teal);flex-shrink:0;margin-top:.05rem"></i>
+      <span>Your ticket is open and awaiting review. Use the actions on the right to escalate or close it.</span>
+    </div>
+    {% elif st == 'in_progress' %}
+    <div class="notice notice-warn anim-up">
+      <i class="bi bi-arrow-repeat" style="color:var(--warn);flex-shrink:0;margin-top:.05rem"></i>
+      <span>This ticket is currently <strong>in progress</strong>. The support team is actively working on it.</span>
+    </div>
+    {% endif %}
+
+  </div>
+
+  <!-- RIGHT: sidebar -->
+  <div class="sidebar-card">
+
+    <!-- Details -->
+    <div class="card anim-up">
+      <div class="info-block">
+        <div class="actions-title" style="margin-bottom:.65rem">Ticket Details</div>
+        <div class="info-row">
+          <span class="info-label">Status</span>
+          <span class="pill
+            {% if st=='open' %}pill-teal{% elif st=='in_progress' %}pill-purple{% elif st=='escalated' %}pill-red{% elif st in ['resolved','closed'] %}pill-green{% else %}pill-muted{% endif %}
+            " style="font-size:.62rem">{{ st.replace('_',' ')|title }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Ticket ID</span>
+          <span class="info-value" style="font-family:monospace;font-size:.75rem">#{{ ticket.id }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Raised by</span>
+          <span class="info-value">{{ ticket.opened_by.first_name }} {{ ticket.opened_by.last_name if ticket.opened_by else '—' }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Opened</span>
+          <span class="info-value" style="font-size:.75rem">{{ ticket.created_at.strftime('%d %b %Y') if ticket.created_at else '—' }}</span>
+        </div>
+        {% if ticket.internal_complaint_id %}
+        <div class="info-row">
+          <span class="info-label">Internal Ref</span>
+          <span class="pill pill-amber" style="font-size:.62rem"><i class="bi bi-link-45deg"></i> #{{ ticket.internal_complaint_id }}</span>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Actions -->
+    {% if st not in ['escalated', 'resolved', 'closed'] %}
+    <div class="card anim-up">
+      <div class="actions-block">
+        <div class="actions-title">Actions</div>
+
+        <form method="post" action="{{ url_for('partner_portal.escalate_ticket', ticket_id=ticket.id) }}"
+              onsubmit="return confirm('Escalate this ticket to the Layer21 support team?')">
+          <input type="hidden" name="next" value="{{ request.url }}">
+          <button type="submit" class="btn btn-danger" style="width:100%;justify-content:center">
+            <i class="bi bi-arrow-up-right-circle"></i> Escalate to Support
+          </button>
+        </form>
+
+        <form method="post" action="{{ url_for('partner_portal.close_ticket', ticket_id=ticket.id) }}"
+              onsubmit="return confirm('Close this ticket?')">
+          <button type="submit" class="btn btn-ghost" style="width:100%;justify-content:center">
+            <i class="bi bi-x-circle"></i> Close Ticket
+          </button>
+        </form>
+
+        <p style="font-size:.7rem;color:var(--muted);text-align:center;margin-top:.25rem">
+          Escalating sends this ticket to the Layer21 internal helpdesk for urgent resolution.
+        </p>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+
+</div>
+
+{% endblock %}

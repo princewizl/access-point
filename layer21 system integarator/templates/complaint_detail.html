@@ -17,8 +17,8 @@
     aside.sidebar.collapsed{width:64px}
     aside.sidebar.collapsed .sb-label,aside.sidebar.collapsed .sb-brand-text,aside.sidebar.collapsed .sb-section-label,aside.sidebar.collapsed .sb-badge,aside.sidebar.collapsed .sb-bottom-info{display:none}
     aside.sidebar.collapsed .sb-link{justify-content:center;padding:.7rem}
-    .sb-brand{padding:1.25rem 1rem;display:flex;align-items:center;gap:.75rem;border-bottom:1px solid var(--bd2);text-decoration:none;min-height:68px}
-    .sb-logo{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--teal),var(--teal2));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:.75rem;font-weight:800;color:#041018;flex-shrink:0;box-shadow:0 0 20px rgba(46,197,219,.3)}
+    .sb-brand{padding:.6rem 1rem;display:flex;align-items:center;border-bottom:1px solid var(--bd2);text-decoration:none}
+    .sb-logo{height:38px;width:auto;max-width:100%;display:block}
     .sb-brand-text .name{font-family:'Syne',sans-serif;font-size:.95rem;font-weight:800;color:var(--silver)}
     .sb-brand-text .sub{font-size:.6rem;font-weight:600;color:var(--teal);text-transform:uppercase;letter-spacing:.1em}
     .sb-nav{flex:1;overflow-y:auto;padding:.75rem 0;scrollbar-width:none}
@@ -142,7 +142,7 @@
 <div class="mob-veil" id="veil" onclick="closeSB()"></div>
 <div class="shell">
   <aside class="sidebar" id="sidebar">
-    <a href="/" class="sb-brand"><div class="sb-logo">L21</div><div class="sb-brand-text"><div class="name">LAYER21</div><div class="sub">IT Services</div></div></a>
+    <a href="/" class="sb-brand"><img src="/static/img/layer21light.png" alt="Layer21" class="sb-logo"/></a>
     <nav class="sb-nav">
       <div class="sb-section-label">Main</div>
       <a href="{{ url_for('dashboard') }}" class="sb-link"><i class="bi bi-grid-1x2 sb-icon"></i><span class="sb-label">Dashboard</span></a>
@@ -154,6 +154,10 @@
       <div class="sb-section-label">Management</div>
       <a href="{{ url_for('list_users') }}" class="sb-link"><i class="bi bi-people sb-icon"></i><span class="sb-label">Users</span></a>
       <a href="{{ url_for('list_businesses') }}" class="sb-link"><i class="bi bi-building sb-icon"></i><span class="sb-label">Businesses</span></a>
+      <a href="{{ url_for('admin_partner.list_partners') }}" class="sb-link">
+  <i class="bi bi-diagram-3 sb-icon"></i>
+  <span class="sb-label">Partners</span>
+</a>
       <a href="#" class="sb-link"><i class="bi bi-key sb-icon"></i><span class="sb-label">API Keys</span></a>
       <div class="sb-section-label">Support</div>
       <a href="{{ url_for('list_complaints') }}" class="sb-link active"><i class="bi bi-headset sb-icon"></i><span class="sb-label">HelpDesk</span></a>

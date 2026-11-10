@@ -1,0 +1,203 @@
+{% extends "partner/base_partner.html" %}
+
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_crumb %}Partner Portal › Overview{% endblock %}
+
+{% block extra_css %}
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+@media (max-width: 720px) { .kpi-grid { grid-template-columns: 1fr 1fr; } }
+
+.kpi-card {
+  background: var(--ink2);
+  border: 1px solid var(--line);
+  border-radius: var(--r3);
+  padding: 1.3rem 1.4rem;
+  transition: all .25s var(--ease);
+  position: relative;
+  overflow: hidden;
+}
+.kpi-card::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 0% 100%, var(--accent-glow, rgba(46,197,219,.05)), transparent 65%);
+  pointer-events: none;
+}
+.kpi-card:hover {
+  border-color: rgba(46,197,219,.2);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+.kpi-icon {
+  width: 38px; height: 38px; border-radius: var(--r);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; margin-bottom: .9rem;
+}
+.kpi-label {
+  font-size: .62rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .08em; color: var(--muted); margin-bottom: .3rem;
+}
+.kpi-value {
+  font-family: 'Syne', sans-serif; font-size: 1.9rem;
+  font-weight: 800; line-height: 1; color: #fff;
+}
+.kpi-sub { font-size: .7rem; color: var(--muted); margin-top: .3rem; }
+
+/* Two-col layout */
+.dash-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 1rem;
+  align-items: start;
+}
+@media (max-width: 960px) { .dash-grid { grid-template-columns: 1fr; } }
+
+/* Recent prospects table */
+.prospect-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 1rem;
+  padding: .9rem 1.2rem;
+  border-bottom: 1px solid var(--line2);
+  transition: background .18s;
+}
+.prospect-row:last-child { border-bottom: none; }
+.prospect-row:hover { background: rgba(255,255,255,.015); }
+.pr-name { font-size: .83rem; font-weight: 600; color: #fff; }
+.pr-contact { font-size: .7rem; color: var(--muted); margin-top: 1px; }
+
+/* Stage dot */
+.stage-dot {
+  width: 7px; height: 7px; border-radius: 50%; display: inline-block;
+  margin-right: 5px;
+}
+
+/* Quick actions */
+.action-list { display: flex; flex-direction: column; gap: .5rem; padding: 1.2rem; }
+.action-item {
+  display: flex; align-items: center; gap: .75rem;
+  padding: .75rem; border-radius: var(--r2);
+  background: rgba(255,255,255,.02); border: 1px solid var(--line);
+  text-decoration: none; color: var(--silver);
+  transition: all .18s var(--ease);
+}
+.action-item:hover {
+  border-color: var(--teal-b); background: var(--teal-t);
+  color: var(--teal); transform: translateX(3px);
+}
+.action-ico {
+  width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: .9rem;
+}
+.action-label { font-size: .8rem; font-weight: 600; }
+.action-desc { font-size: .68rem; color: var(--muted); }
+{% endblock %}
+
+{% block topbar_actions %}
+<a href="{{ url_for('partner_portal.list_prospects') }}" class="btn btn-primary btn-sm">
+  <i class="bi bi-plus-lg"></i> Add Prospect
+</a>
+{% endblock %}
+
+{% block content %}
+
+<!-- KPI ROW -->
+<div class="kpi-grid">
+  <div class="kpi-card anim-up" style="--accent-glow:rgba(46,197,219,.06)">
+    <div class="kpi-icon" style="background:var(--teal-t);color:var(--teal)"><i class="bi bi-funnel-fill"></i></div>
+    <div class="kpi-label">Active Prospects</div>
+    <div class="kpi-value" style="color:var(--teal)">{{ active_prospects_count }}</div>
+    <div class="kpi-sub">New &amp; in progress</div>
+  </div>
+  <div class="kpi-card anim-up" style="--accent-glow:rgba(34,197,94,.05)">
+    <div class="kpi-icon" style="background:var(--ok-t);color:var(--ok)"><i class="bi bi-check-circle-fill"></i></div>
+    <div class="kpi-label">Closed Deals</div>
+    <div class="kpi-value" style="color:var(--ok)">{{ completed_prospects_count }}</div>
+    <div class="kpi-sub">Successfully completed</div>
+  </div>
+  <div class="kpi-card anim-up" style="--accent-glow:rgba(239,68,68,.04)">
+    <div class="kpi-icon" style="background:var(--err-t);color:var(--err)"><i class="bi bi-exclamation-circle-fill"></i></div>
+    <div class="kpi-label">Escalated Tickets</div>
+    <div class="kpi-value" style="color:var(--err)">{{ escalated_tickets_count }}</div>
+    <div class="kpi-sub">Escalated to Layer21 support</div>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="dash-grid">
+
+  <!-- Recent prospects -->
+  <div class="card anim-up">
+    <div style="padding:.9rem 1.2rem;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-family:'Syne',sans-serif;font-size:.8rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">
+          <i class="bi bi-clock-history" style="color:var(--teal);margin-right:.35rem"></i>Recent Activity
+        </div>
+      </div>
+      <a href="{{ url_for('partner_portal.list_prospects') }}" class="btn btn-ghost btn-sm">View all <i class="bi bi-arrow-right"></i></a>
+    </div>
+
+    {% if recent_prospects %}
+      {% for p in recent_prospects %}
+      {% set stage_colors = {'new':'var(--teal)','inprogress':'var(--purple)','completed':'var(--ok)','lost':'var(--muted)'} %}
+      <div class="prospect-row">
+        <div>
+          <div class="pr-name">{{ p.company_name }}</div>
+          <div class="pr-contact">{{ p.contact_name }} · {{ p.service_type }}</div>
+        </div>
+        <span class="pill {% if p.stage == 'new' %}pill-teal{% elif p.stage == 'inprogress' %}pill-purple{% elif p.stage == 'completed' %}pill-green{% else %}pill-muted{% endif %}">
+          <span class="stage-dot" style="background:{{ stage_colors.get(p.stage,'var(--muted)') }}"></span>
+          {{ p.stage|title }}
+        </span>
+        <a href="{{ url_for('partner_portal.prospect_detail', prospect_id=p.id) }}" class="btn btn-ghost btn-xs"><i class="bi bi-arrow-right"></i></a>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state">
+        <i class="bi bi-funnel"></i>
+        <h3>No prospects yet</h3>
+        <p>Add your first prospect to start building the pipeline</p>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Quick actions -->
+  <div class="card anim-up">
+    <div style="padding:.9rem 1.2rem;border-bottom:1px solid var(--line)">
+      <div style="font-family:'Syne',sans-serif;font-size:.8rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">
+        <i class="bi bi-lightning-charge" style="color:var(--teal);margin-right:.35rem"></i>Quick Actions
+      </div>
+    </div>
+    <div class="action-list">
+      <a href="{{ url_for('partner_portal.list_prospects') }}" class="action-item">
+        <div class="action-ico" style="background:var(--teal-t);color:var(--teal)"><i class="bi bi-plus-circle-fill"></i></div>
+        <div>
+          <div class="action-label">Add Prospect</div>
+          <div class="action-desc">Log a new lead to the pipeline</div>
+        </div>
+      </a>
+      <a href="{{ url_for('partner_portal.list_prospects') }}?view=kanban" class="action-item">
+        <div class="action-ico" style="background:var(--purple-t);color:var(--purple)"><i class="bi bi-kanban-fill"></i></div>
+        <div>
+          <div class="action-label">Kanban Board</div>
+          <div class="action-desc">View full pipeline by stage</div>
+        </div>
+      </a>
+      <a href="{{ url_for('partner_portal.ticket_dashboard') }}" class="action-item">
+        <div class="action-ico" style="background:var(--warn-t);color:var(--warn)"><i class="bi bi-ticket-fill"></i></div>
+        <div>
+          <div class="action-label">Support Tickets</div>
+          <div class="action-desc">Raise or review support issues</div>
+        </div>
+      </a>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

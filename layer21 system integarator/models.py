@@ -486,6 +486,10 @@ class Business(db.Model):
     firs_api_secret = db.Column(db.String(255), nullable=True)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+    # Which partner company referred / onboarded this business (nullable — direct clients have None)
+    referred_by_partner_id = Column(Integer, nullable=True, index=True)
+    # Billing / rate-limit tier: 'starter' | 'professional' | 'enterprise'
+    tier = Column(String(16), nullable=True)  # NULL treated as 'starter'
 
     @classmethod
     def create_with_credentials(cls, name, tin=None, service_id=None, secret_key=None):
@@ -559,10 +563,47 @@ class Complaint(db.Model):
     title = db.Column(db.String(200), nullable=False)
     category = db.Column(db.String(150), nullable=False)
     description = db.Column(db.Text, nullable=True)
-    status = db.Column(db.String(32), default='open')  # open / in_progress / closed
-    priority = db.Column(db.String(16), default='normal')  # low/normal/high
+    status = db.Column(db.String(32), default='open')  # new / open / in_progress / escalated / resolved / closed
+    priority = db.Column(db.String(16), default='normal')  # low/normal/high/critical
     created_by = db.Column(db.String(100), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    # Business that raised the ticket (Integer FK to businesses.id, kept loose to avoid cross-model import)
+    business_id = db.Column(db.Integer, nullable=True, index=True)
+    # Set when the ticket is auto-routed to a partner (FK to partner_companies.id)
+    routed_to_partner_id = db.Column(db.Integer, nullable=True)
+
+class TierConfig(db.Model):
+    """Admin-configurable limits for each business and partner tier."""
+    __tablename__ = 'tier_configs'
+
+    id           = db.Column(db.Integer, primary_key=True)
+    tier_type    = db.Column(db.String(16), nullable=False)  # 'business' or 'partner'
+    tier_name    = db.Column(db.String(32), nullable=False)  # e.g. 'starter', 'professional'
+    display_name = db.Column(db.String(64), nullable=False)
+    # Business-tier limits
+    rate_per_min      = db.Column(db.Integer, default=60)    # API requests per minute
+    daily_invoice_cap = db.Column(db.Integer, default=500)   # -1 = unlimited
+    # Partner-tier limits
+    max_businesses    = db.Column(db.Integer, default=10)    # -1 = unlimited
+    sla_hours         = db.Column(db.Integer, default=48)    # first-response SLA in hours
+    updated_at        = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    __table_args__ = (db.UniqueConstraint('tier_type', 'tier_name', name='uq_tier_type_name'),)
+
+
+# Default seed data — inserted by _migrate_schema() if the table is empty
+TIER_DEFAULTS = [
+    # Business tiers
+    dict(tier_type='business', tier_name='starter',      display_name='Starter',      rate_per_min=60,    daily_invoice_cap=500,   max_businesses=0,  sla_hours=48),
+    dict(tier_type='business', tier_name='professional', display_name='Professional', rate_per_min=300,   daily_invoice_cap=5000,  max_businesses=0,  sla_hours=8),
+    dict(tier_type='business', tier_name='enterprise',   display_name='Enterprise',   rate_per_min=1000,  daily_invoice_cap=-1,    max_businesses=0,  sla_hours=4),
+    # Partner tiers
+    dict(tier_type='partner',  tier_name='registered',   display_name='Registered',   rate_per_min=0,     daily_invoice_cap=0,     max_businesses=10, sla_hours=48),
+    dict(tier_type='partner',  tier_name='certified',    display_name='Certified',    rate_per_min=0,     daily_invoice_cap=0,     max_businesses=-1, sla_hours=8),
+    dict(tier_type='partner',  tier_name='premier',      display_name='Premier',      rate_per_min=0,     daily_invoice_cap=0,     max_businesses=-1, sla_hours=4),
+]
+
 
 class Document(db.Model):
     id = db.Column(db.Integer, primary_key=True)

@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% block title %}Tier Configuration{% endblock %}
+{% block page_title %}Tier Configuration{% endblock %}
+{% block page_crumb %}Admin › Tier Configuration{% endblock %}
+
+{% block extra_css %}
+<style>
+  .tier-section { margin-bottom: 2.5rem; }
+  .tier-section-title {
+    font-size: .7rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .1em; color: var(--teal); margin-bottom: 1rem;
+    display: flex; align-items: center; gap: .5rem;
+  }
+  .tier-section-title::after {
+    content: ''; flex: 1; height: 1px; background: var(--bd2);
+  }
+  .tier-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+  @media (max-width: 800px) { .tier-cards { grid-template-columns: 1fr; } }
+  .tier-card {
+    background: var(--card); border: 1px solid var(--bd2);
+    border-radius: 12px; padding: 1.25rem;
+  }
+  .tier-card-name {
+    font-size: .65rem; font-weight: 800; text-transform: uppercase;
+    letter-spacing: .1em; color: var(--muted); margin-bottom: .25rem;
+  }
+  .tier-card-label-input {
+    width: 100%; background: rgba(255,255,255,.05); border: 1px solid var(--bd2);
+    border-radius: 8px; color: #fff; font-family: 'Syne', sans-serif;
+    font-size: 1rem; font-weight: 800; padding: .4rem .6rem;
+    margin-bottom: 1rem;
+  }
+  .tier-field { margin-bottom: .75rem; }
+  .tier-field label {
+    display: block; font-size: .68rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .07em;
+    color: var(--muted); margin-bottom: .3rem;
+  }
+  .tier-field .hint {
+    font-size: .62rem; color: var(--muted); margin-top: .2rem;
+  }
+  .tier-field input[type="number"] {
+    width: 100%; padding: .55rem .75rem;
+    border-radius: 8px; border: 1px solid var(--bd2);
+    background: rgba(255,255,255,.04); color: #fff;
+    font-size: .88rem; outline: none;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .tier-field input:focus {
+    border-color: var(--teal); box-shadow: 0 0 0 3px rgba(46,197,219,.1);
+  }
+  .tier-card-save {
+    width: 100%; margin-top: 1rem;
+    padding: .6rem 1rem; border: none; border-radius: 8px;
+    background: linear-gradient(135deg, var(--teal), #1BA8C0);
+    color: #041018; font-weight: 700; font-size: .82rem;
+    cursor: pointer; transition: opacity .2s;
+  }
+  .tier-card-save:hover { opacity: .88; }
+  .info-note {
+    background: rgba(46,197,219,.06); border: 1px solid rgba(46,197,219,.15);
+    border-radius: 10px; padding: .9rem 1.1rem; margin-bottom: 2rem;
+    font-size: .8rem; color: var(--muted); line-height: 1.6;
+  }
+  .info-note strong { color: var(--teal); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="info-note">
+  <strong>How tiers work:</strong>
+  Businesses are assigned a billing tier (Starter / Professional / Enterprise). The limits you set here are enforced in real time on every API request.
+  Setting <strong>Daily Invoice Cap to -1</strong> or <strong>Max Businesses to -1</strong> means unlimited.
+  Changes take effect immediately — no restart needed.
+</div>
+
+<form method="POST" action="{{ url_for('admin_tier_config') }}">
+
+  <!-- ── Business tiers ─────────────────────────────────────────── -->
+  <div class="tier-section">
+    <div class="tier-section-title"><i class="bi bi-building"></i> Business API Tiers</div>
+    <div class="tier-cards">
+      {% for t in biz_tiers %}
+      <div class="tier-card">
+        <div class="tier-card-name">{{ t.tier_name }}</div>
+        <input class="tier-card-label-input" type="text"
+               name="display_name_{{ t.id }}" value="{{ t.display_name }}"/>
+
+        <div class="tier-field">
+          <label>Requests per minute</label>
+          <input type="number" name="rate_per_min_{{ t.id }}" value="{{ t.rate_per_min }}" min="1" required/>
+          <div class="hint">Max API calls this business can make per 60-second window</div>
+        </div>
+        <div class="tier-field">
+          <label>Daily invoice cap</label>
+          <input type="number" name="daily_invoice_cap_{{ t.id }}" value="{{ t.daily_invoice_cap }}" min="-1" required/>
+          <div class="hint">Max invoices per calendar day. Set -1 for unlimited.</div>
+        </div>
+        <div class="tier-field">
+          <label>Max businesses (unused for business tiers)</label>
+          <input type="number" name="max_businesses_{{ t.id }}" value="{{ t.max_businesses }}" min="0" required/>
+        </div>
+        <div class="tier-field">
+          <label>Support SLA (hours)</label>
+          <input type="number" name="sla_hours_{{ t.id }}" value="{{ t.sla_hours }}" min="1" required/>
+          <div class="hint">First-response SLA commitment in hours</div>
+        </div>
+        {% if t.updated_at %}
+        <div style="font-size:.65rem;color:var(--muted);margin-top:.5rem">
+          Last updated: {{ t.updated_at.strftime('%d %b %Y %H:%M') }}
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- ── Partner tiers ──────────────────────────────────────────── -->
+  <div class="tier-section">
+    <div class="tier-section-title"><i class="bi bi-people"></i> Partner Programme Tiers</div>
+    <div class="tier-cards">
+      {% for t in partner_tiers %}
+      <div class="tier-card">
+        <div class="tier-card-name">{{ t.tier_name }}</div>
+        <input class="tier-card-label-input" type="text"
+               name="display_name_{{ t.id }}" value="{{ t.display_name }}"/>
+
+        <div class="tier-field">
+          <label>Max client businesses</label>
+          <input type="number" name="max_businesses_{{ t.id }}" value="{{ t.max_businesses }}" min="-1" required/>
+          <div class="hint">Max number of attributed client businesses. Set -1 for unlimited.</div>
+        </div>
+        <div class="tier-field">
+          <label>Support SLA (hours)</label>
+          <input type="number" name="sla_hours_{{ t.id }}" value="{{ t.sla_hours }}" min="1" required/>
+          <div class="hint">First-response SLA for partner support tickets</div>
+        </div>
+        <div class="tier-field">
+          <label>Requests per minute (N/A for partners)</label>
+          <input type="number" name="rate_per_min_{{ t.id }}" value="{{ t.rate_per_min }}" min="0" required/>
+        </div>
+        <div class="tier-field">
+          <label>Daily invoice cap (N/A for partners)</label>
+          <input type="number" name="daily_invoice_cap_{{ t.id }}" value="{{ t.daily_invoice_cap }}" min="-1" required/>
+        </div>
+        {% if t.updated_at %}
+        <div style="font-size:.65rem;color:var(--muted);margin-top:.5rem">
+          Last updated: {{ t.updated_at.strftime('%d %b %Y %H:%M') }}
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <button type="submit" class="btn btn-primary" style="padding:.75rem 2rem;font-size:.9rem">
+    <i class="bi bi-floppy-fill"></i> Save All Tier Configurations
+  </button>
+</form>
+{% endblock %}

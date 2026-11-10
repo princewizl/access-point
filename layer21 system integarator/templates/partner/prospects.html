@@ -1,0 +1,345 @@
+{% extends "partner/base_partner.html" %}
+
+{% block title %}Prospects{% endblock %}
+{% block page_title %}Prospects{% endblock %}
+{% block page_crumb %}Partner Portal › Pipeline{% endblock %}
+
+{% block extra_css %}
+/* ── VIEW TOGGLE ────────────────────────────────── */
+.view-toggle {
+  display: flex; background: rgba(255,255,255,.04);
+  border: 1px solid var(--line); border-radius: var(--r); overflow: hidden;
+}
+.vt-btn {
+  padding: .35rem .75rem; font-size: .75rem; font-weight: 600;
+  border: none; background: none; cursor: pointer; color: var(--muted);
+  transition: all .18s; font-family: inherit; display: flex; align-items: center; gap: .3rem;
+}
+.vt-btn.active { background: var(--teal-b); color: var(--teal); }
+
+/* ── KANBAN ─────────────────────────────────────── */
+.kanban-wrap {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(220px, 1fr));
+  gap: .85rem;
+  overflow-x: auto;
+  padding-bottom: .5rem;
+}
+.kanban-col {
+  background: var(--ink2);
+  border: 1px solid var(--line);
+  border-radius: var(--r2);
+  display: flex; flex-direction: column;
+  min-height: 320px;
+}
+.kanban-col-hd {
+  padding: .85rem 1rem;
+  border-bottom: 1px solid var(--line2);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0;
+}
+.col-stage-label {
+  font-size: .68rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .1em; display: flex; align-items: center; gap: .45rem;
+}
+.col-count {
+  font-size: .62rem; font-weight: 700; padding: 1px 7px;
+  border-radius: 999px; background: rgba(255,255,255,.06); color: var(--muted);
+}
+.kanban-cards { padding: .65rem; display: flex; flex-direction: column; gap: .5rem; flex: 1; }
+
+.k-card {
+  background: var(--ink3);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  padding: .85rem;
+  cursor: pointer;
+  transition: all .2s var(--ease);
+  animation: fadeUp .35s var(--ease) both;
+}
+.k-card:hover {
+  border-color: rgba(46,197,219,.2);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+.k-company { font-size: .8rem; font-weight: 600; color: #fff; margin-bottom: .25rem; }
+.k-contact { font-size: .68rem; color: var(--muted); }
+.k-footer { display: flex; align-items: center; justify-content: space-between; margin-top: .65rem; }
+.k-service { font-size: .62rem; font-weight: 700; padding: 1px 7px; border-radius: 999px; }
+.k-date { font-size: .62rem; color: var(--muted); }
+
+/* empty kanban column */
+.k-empty {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  font-size: .75rem; color: var(--muted); opacity: .5; padding: 1.5rem;
+  text-align: center; border: 1px dashed rgba(255,255,255,.06);
+  border-radius: var(--r); margin: .65rem;
+}
+
+/* ── LIST VIEW ──────────────────────────────────── */
+.list-table { width: 100%; border-collapse: collapse; }
+.list-table thead { background: rgba(255,255,255,.02); }
+.list-table th {
+  padding: .6rem 1rem; font-size: .6rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .08em;
+  color: var(--muted); text-align: left; white-space: nowrap;
+  border-bottom: 1px solid var(--line);
+}
+.list-table th:last-child { text-align: right; }
+.list-table td {
+  padding: .75rem 1rem; font-size: .8rem;
+  border-bottom: 1px solid var(--line2); vertical-align: middle;
+}
+.list-table td:last-child { text-align: right; }
+.list-table tbody tr:hover { background: rgba(255,255,255,.015); }
+.list-table tbody tr:last-child td { border-bottom: none; }
+.td-company { font-weight: 600; color: #fff; font-size: .82rem; }
+.td-contact { font-size: .7rem; color: var(--muted); }
+
+/* ── ADD PROSPECT FORM ──────────────────────────── */
+.add-form-card { background: var(--ink2); border: 1px solid var(--line); border-radius: var(--r3); padding: 1.4rem; margin-bottom: 1.25rem; }
+{% endblock %}
+
+{% block topbar_actions %}
+<button class="btn btn-primary btn-sm" onclick="openModal('addModal')">
+  <i class="bi bi-plus-lg"></i> Add Prospect
+</button>
+{% endblock %}
+
+{% block content %}
+
+<!-- SECTION HEADER -->
+<div class="sec-hd anim-up">
+  <div>
+    <div class="sec-title">
+      Prospect Pipeline
+      <span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:.6rem;font-weight:700;border:1px solid var(--teal-b);color:var(--teal);background:var(--teal-t);margin-left:.4rem">{{ prospects|length }}</span>
+    </div>
+    <div class="sec-sub">Manage and progress your company's shared prospect pipeline</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap">
+    <div class="view-toggle">
+      <button class="vt-btn {% if view_type == 'kanban' %}active{% endif %}"
+              onclick="window.location='{{ url_for('partner_portal.list_prospects') }}?view=kanban'">
+        <i class="bi bi-kanban"></i> Kanban
+      </button>
+      <button class="vt-btn {% if view_type == 'list' %}active{% endif %}"
+              onclick="window.location='{{ url_for('partner_portal.list_prospects') }}?view=list'">
+        <i class="bi bi-list-ul"></i> List
+      </button>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="openModal('addModal')">
+      <i class="bi bi-plus-lg"></i> Add Prospect
+    </button>
+  </div>
+</div>
+
+{% if view_type == 'kanban' %}
+<!-- ═══ KANBAN VIEW ════════════════════════════════════════ -->
+<div class="kanban-wrap anim-up">
+
+  <!-- NEW -->
+  <div class="kanban-col">
+    <div class="kanban-col-hd">
+      <div class="col-stage-label" style="color:var(--teal)">
+        <span style="width:8px;height:8px;border-radius:50%;background:var(--teal);display:inline-block"></span>
+        New
+      </div>
+      <span class="col-count">{{ kanban_data.new|length }}</span>
+    </div>
+    <div class="kanban-cards">
+      {% for p in kanban_data.new %}
+      <a href="{{ url_for('partner_portal.prospect_detail', prospect_id=p.id) }}" style="text-decoration:none">
+        <div class="k-card">
+          <div class="k-company">{{ p.company_name }}</div>
+          <div class="k-contact">{{ p.contact_name }} · {{ p.email }}</div>
+          <div class="k-footer">
+            <span class="k-service pill pill-teal">{{ p.service_type }}</span>
+            <span class="k-date">{{ p.created_at.strftime('%d %b') if p.created_at else '' }}</span>
+          </div>
+        </div>
+      </a>
+      {% else %}
+      <div class="k-empty">No new prospects</div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- IN PROGRESS -->
+  <div class="kanban-col">
+    <div class="kanban-col-hd">
+      <div class="col-stage-label" style="color:#c4b5fd">
+        <span style="width:8px;height:8px;border-radius:50%;background:var(--purple);display:inline-block"></span>
+        In Progress
+      </div>
+      <span class="col-count">{{ kanban_data.inprogress|length }}</span>
+    </div>
+    <div class="kanban-cards">
+      {% for p in kanban_data.inprogress %}
+      <a href="{{ url_for('partner_portal.prospect_detail', prospect_id=p.id) }}" style="text-decoration:none">
+        <div class="k-card">
+          <div class="k-company">{{ p.company_name }}</div>
+          <div class="k-contact">{{ p.contact_name }} · {{ p.email }}</div>
+          <div class="k-footer">
+            <span class="k-service pill pill-purple">{{ p.service_type }}</span>
+            <span class="k-date">{{ p.created_at.strftime('%d %b') if p.created_at else '' }}</span>
+          </div>
+        </div>
+      </a>
+      {% else %}
+      <div class="k-empty">Nothing in progress</div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- COMPLETED -->
+  <div class="kanban-col">
+    <div class="kanban-col-hd">
+      <div class="col-stage-label" style="color:var(--ok)">
+        <span style="width:8px;height:8px;border-radius:50%;background:var(--ok);display:inline-block"></span>
+        Completed
+      </div>
+      <span class="col-count">{{ kanban_data.completed|length }}</span>
+    </div>
+    <div class="kanban-cards">
+      {% for p in kanban_data.completed %}
+      <a href="{{ url_for('partner_portal.prospect_detail', prospect_id=p.id) }}" style="text-decoration:none">
+        <div class="k-card">
+          <div class="k-company">{{ p.company_name }}</div>
+          <div class="k-contact">{{ p.contact_name }} · {{ p.email }}</div>
+          <div class="k-footer">
+            <span class="k-service pill pill-green">{{ p.service_type }}</span>
+            <span class="k-date">{{ p.created_at.strftime('%d %b') if p.created_at else '' }}</span>
+          </div>
+        </div>
+      </a>
+      {% else %}
+      <div class="k-empty">No completed deals</div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- LOST -->
+  <div class="kanban-col">
+    <div class="kanban-col-hd">
+      <div class="col-stage-label" style="color:var(--muted)">
+        <span style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.2);display:inline-block"></span>
+        Lost
+      </div>
+      <span class="col-count">{{ kanban_data.lost|length }}</span>
+    </div>
+    <div class="kanban-cards">
+      {% for p in kanban_data.lost %}
+      <a href="{{ url_for('partner_portal.prospect_detail', prospect_id=p.id) }}" style="text-decoration:none">
+        <div class="k-card" style="opacity:.65">
+          <div class="k-company">{{ p.company_name }}</div>
+          <div class="k-contact">{{ p.contact_name }} · {{ p.email }}</div>
+          <div class="k-footer">
+            <span class="k-service pill pill-muted">{{ p.service_type }}</span>
+            <span class="k-date">{{ p.created_at.strftime('%d %b') if p.created_at else '' }}</span>
+          </div>
+        </div>
+      </a>
+      {% else %}
+      <div class="k-empty">No lost deals</div>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+
+{% else %}
+<!-- ═══ LIST VIEW ══════════════════════════════════════════ -->
+<div class="card anim-up">
+  {% if prospects %}
+  <table class="list-table">
+    <thead>
+      <tr>
+        <th>Company / Contact</th>
+        <th>Service</th>
+        <th>Email</th>
+        <th>Stage</th>
+        <th>Added</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in prospects %}
+      <tr>
+        <td>
+          <div class="td-company">{{ p.company_name }}</div>
+          <div class="td-contact">{{ p.contact_name }}</div>
+        </td>
+        <td><span class="pill pill-teal">{{ p.service_type }}</span></td>
+        <td style="font-size:.76rem;color:var(--silver2)">{{ p.email }}</td>
+        <td>
+          <span class="pill {% if p.stage=='new' %}pill-teal{% elif p.stage=='inprogress' %}pill-purple{% elif p.stage=='completed' %}pill-green{% else %}pill-muted{% endif %}">
+            {{ p.stage|title }}
+          </span>
+        </td>
+        <td style="font-size:.74rem;color:var(--muted);font-family:monospace">{{ p.created_at.strftime('%d %b %Y') if p.created_at else '—' }}</td>
+        <td>
+          <a href="{{ url_for('partner_portal.prospect_detail', prospect_id=p.id) }}" class="btn btn-ghost btn-xs">
+            <i class="bi bi-eye"></i> View
+          </a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty-state">
+    <i class="bi bi-funnel"></i>
+    <h3>Pipeline is empty</h3>
+    <p>Add your first prospect to get started</p>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
+<!-- ── ADD PROSPECT MODAL ────────────────────────────────── -->
+<div class="modal-back" id="addModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('addModal')">&times;</button>
+    <div class="modal-title"><i class="bi bi-plus-circle-fill" style="color:var(--teal);margin-right:.4rem"></i>Add Prospect</div>
+    <div class="modal-sub">Log a new lead into your company's shared pipeline</div>
+
+    <form action="{{ url_for('partner_portal.add_prospect') }}" method="post">
+      <div class="form-grid">
+        <div class="field">
+          <label>Company Name <span style="color:var(--err)">*</span></label>
+          <input name="company_name" placeholder="Acme Nigeria Ltd" required/>
+        </div>
+        <div class="field">
+          <label>Contact Person <span style="color:var(--err)">*</span></label>
+          <input name="contact_name" placeholder="Full name" required/>
+        </div>
+        <div class="field">
+          <label>Email <span style="color:var(--err)">*</span></label>
+          <input name="email" type="email" placeholder="contact@company.com" required/>
+        </div>
+        <div class="field">
+          <label>Phone</label>
+          <input name="phone" placeholder="+234 800 000 0000"/>
+        </div>
+        <div class="field form-full">
+          <label>Service Interest <span style="color:var(--err)">*</span></label>
+          <select name="service_type" required>
+            <option value="" disabled selected>— Select service —</option>
+            <option value="APP">Access Point Provider (APP)</option>
+            <option value="SI">System Integrator (SI)</option>
+            <option value="ERP">ERP Integration</option>
+            <option value="CONSULTING">Consulting</option>
+            <option value="OTHER">Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('addModal')">Cancel</button>
+        <button type="submit" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Add to Pipeline</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

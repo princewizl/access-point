@@ -1,812 +1,293 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Layer21 — Invoice Command Centre</title>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
-  <link href="{{ url_for('static', filename='stylesheets/portal.css') }}" rel="stylesheet">
-  <style>
-    /* ═══════════════════════════════════════
-       LAYER21 DASHBOARD — REDESIGN 2025
-       Brand: #0b1220 dark · #2ec5db teal
-    ═══════════════════════════════════════ */
-    :root {
-      --bg:          #0b1220;
-      --bg2:         #0f1a2e;
-      --bg3:         #152236;
-      --sidebar-w:   230px;
-      --teal:        #2ec5db;
-      --teal2:       #36b9d1;
-      --teal-glow:   rgba(46,197,219,.18);
-      --teal-faint:  rgba(46,197,219,.06);
-      --silver:      #e6eef2;
-      --muted:       rgba(230,238,242,.5);
-      --border:      rgba(46,197,219,.1);
-      --border2:     rgba(255,255,255,.06);
-      --card:        rgba(21,34,54,.8);
-      --card2:       rgba(15,26,46,.9);
-      --success:     #10b981;
-      --warning:     #f59e0b;
-      --danger:      #ef4444;
-      --info:        #3b82f6;
-      --r:           12px;
-      --r2:          16px;
-    }
+{% extends "base.html" %}
+{% block title %}Invoice Command Centre{% endblock %}
+{% block page_title %}Invoice Command Centre{% endblock %}
+{% block page_crumb %}Dashboard › Invoices{% endblock %}
 
-    *{box-sizing:border-box;margin:0;padding:0}
-    html{height:100%;scroll-behavior:smooth}
-    body{
-      font-family:'DM Sans',system-ui,sans-serif;
-      background:var(--bg);
-      color:var(--silver);
-      height:100%;
-      overflow-x:hidden;
-      line-height:1.6;
-    }
+{% block topbar_search %}
+<div class="search-box">
+  <i class="bi bi-search"></i>
+  <input type="search" id="globalSearch" placeholder="Search invoices…" autocomplete="off"/>
+</div>
+{% endblock %}
 
-    /* ── Noise + grid overlay ── */
-    body::before{
-      content:'';position:fixed;inset:0;
-      background-image:
-        url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
-      pointer-events:none;z-index:1000;opacity:.4;
-    }
+{% block topbar_extras %}
+<button class="icon-btn" title="Settings"><i class="bi bi-gear"></i></button>
+{% endblock %}
 
-    /* ══════════════ LAYOUT ══════════════ */
-    .shell{display:flex;height:100vh;overflow:hidden}
+{% block extra_css %}
+<style>
+  /* KPI trend indicators */
+  .kpi-trend{font-size:.68rem;font-weight:600;padding:3px 8px;border-radius:999px;display:flex;align-items:center;gap:3px}
+  .trend-up{background:rgba(16,185,129,.1);color:var(--ok)}
+  .trend-down{background:rgba(239,68,68,.1);color:var(--err)}
+  .trend-neutral{background:rgba(255,255,255,.06);color:var(--muted)}
+  .sparkline{height:32px;margin-top:.75rem}
+  .sparkline svg{width:100%;height:100%}
 
-    /* ── SIDEBAR ── */
-    aside.sidebar{
-      width:var(--sidebar-w);
-      flex-shrink:0;
-      background:linear-gradient(180deg,var(--bg2),var(--bg3) 100%);
-      border-right:1px solid var(--border);
-      display:flex;flex-direction:column;
-      position:relative;z-index:10;
-      transition:width .3s ease;
-    }
-    aside.sidebar.collapsed{width:64px}
-    aside.sidebar.collapsed .sb-label,
-    aside.sidebar.collapsed .sb-brand-text,
-    aside.sidebar.collapsed .sb-section-label,
-    aside.sidebar.collapsed .sb-badge,
-    aside.sidebar.collapsed .sb-bottom-info{display:none}
-    aside.sidebar.collapsed .sb-link{justify-content:center;padding:.7rem}
-    aside.sidebar.collapsed .sb-icon{margin:0}
+  /* FIRS status row */
+  .firs-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1rem}
+  @media(max-width:900px){.firs-row{grid-template-columns:1fr 1fr}}
+  .firs-card{border-radius:var(--r2);padding:1.1rem 1.3rem;background:var(--card);border:1px solid var(--bd2);display:flex;align-items:center;gap:1rem;transition:all .3s;animation:kpiIn .5s ease-out both}
+  .firs-card:nth-child(1){animation-delay:.25s}.firs-card:nth-child(2){animation-delay:.3s}.firs-card:nth-child(3){animation-delay:.35s}
+  .firs-card:hover{border-color:var(--teal);box-shadow:0 10px 30px rgba(0,0,0,.25)}
+  .firs-ico{width:44px;height:44px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+  .firs-body .fl{font-size:.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.2rem}
+  .firs-body .fv{font-family:'Syne',sans-serif;font-size:1.55rem;font-weight:800;line-height:1}
+  .fv-ok{color:var(--ok)}.fv-bad{color:var(--err)}
+  .firs-progress{margin-top:.4rem;height:3px;border-radius:999px;background:rgba(255,255,255,.06);overflow:hidden}
+  .firs-progress-fill{height:100%;border-radius:999px;transition:width .8s ease}
 
-    .sb-brand{
-      padding:1.25rem 1rem;
-      display:flex;align-items:center;gap:.75rem;
-      border-bottom:1px solid var(--border2);
-      text-decoration:none;
-      min-height:68px;
-    }
-    .sb-logo{
-      width:38px;height:38px;border-radius:10px;
-      background:linear-gradient(135deg,var(--teal),var(--teal2));
-      display:flex;align-items:center;justify-content:center;
-      font-family:'Syne',sans-serif;font-size:.75rem;font-weight:800;
-      color:#041018;flex-shrink:0;
-      box-shadow:0 0 20px rgba(46,197,219,.3);
-    }
-    .sb-brand-text .name{font-family:'Syne',sans-serif;font-size:.95rem;font-weight:800;color:var(--silver);line-height:1.1}
-    .sb-brand-text .sub{font-size:.6rem;font-weight:600;color:var(--teal);text-transform:uppercase;letter-spacing:.1em}
+  /* Ticker */
+  .ticker-strip{background:rgba(46,197,219,.04);border-bottom:1px solid var(--bd);padding:.45rem 1.75rem;display:flex;align-items:center;gap:1rem;min-height:44px}
+  .ticker-label{font-size:.62rem;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.1em;display:flex;align-items:center;gap:.35rem;flex-shrink:0}
+  .live-pulse{width:6px;height:6px;border-radius:50%;background:var(--teal);animation:livepulse 1.5s ease-in-out infinite}
+  @keyframes livepulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+  .ticker-scroll{flex:1;overflow:hidden;display:flex;gap:.5rem;align-items:center}
+  .t-chip{display:inline-flex;align-items:center;gap:.4rem;padding:.22rem .65rem;border-radius:6px;border:1px solid;font-size:.68rem;font-weight:600;white-space:nowrap;animation:chipIn .35s ease-out;flex-shrink:0;cursor:default}
+  @keyframes chipIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
+  .t-success{background:#dcfce7;color:#15803d;border-color:#86efac}
+  .t-error{background:#fee2e2;color:#991b1b;border-color:#fca5a5}
+  .t-warning{background:#fef3c7;color:#92400e;border-color:#fde68a}
+  .t-info{background:#dbeafe;color:#1e40af;border-color:#93c5fd}
+  .t-view{font-size:.62rem;text-decoration:underline;opacity:.7;cursor:pointer}
+  .ticker-actions{display:flex;gap:.4rem;flex-shrink:0}
+  .t-btn{padding:.22rem .6rem;border-radius:6px;font-size:.68rem;font-weight:600;border:1px solid var(--bd2);background:rgba(255,255,255,.04);color:var(--muted);cursor:pointer;transition:all .2s}
+  .t-btn:hover{border-color:var(--teal);color:var(--teal)}
+  .t-btn-primary{background:var(--teal);color:#041018;border-color:var(--teal)}
 
-    .sb-nav{flex:1;overflow-y:auto;padding:.75rem 0;scrollbar-width:none}
-    .sb-nav::-webkit-scrollbar{display:none}
-    .sb-section-label{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);padding:.5rem 1rem .25rem;margin-top:.5rem}
-    .sb-link{
-      display:flex;align-items:center;gap:.7rem;
-      padding:.65rem 1rem;margin:.1rem .5rem;
-      border-radius:9px;
-      text-decoration:none;
-      color:var(--muted);font-size:.85rem;font-weight:500;
-      transition:all .2s;position:relative;
-      cursor:pointer;border:none;background:none;width:calc(100% - 1rem);text-align:left;
-    }
-    .sb-link:hover{background:var(--teal-faint);color:var(--silver)}
-    .sb-link.active{background:rgba(46,197,219,.1);color:var(--teal)}
-    .sb-link.active::before{content:'';position:absolute;left:-4px;top:50%;transform:translateY(-50%);width:3px;height:60%;background:var(--teal);border-radius:0 3px 3px 0}
-    .sb-icon{font-size:1rem;flex-shrink:0;width:20px;text-align:center}
-    .sb-badge{margin-left:auto;font-size:.6rem;font-weight:700;padding:2px 7px;border-radius:999px;background:rgba(46,197,219,.15);color:var(--teal)}
-    .sb-badge.red{background:rgba(239,68,68,.15);color:var(--danger)}
+  /* Invoice table */
+  .inv-table{width:100%;border-collapse:collapse}
+  .inv-table thead{background:rgba(255,255,255,.03);border-bottom:1px solid var(--bd2)}
+  .inv-table th{padding:.7rem .9rem;font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);text-align:left;white-space:nowrap}
+  .inv-table th:first-child{padding-left:1rem}.inv-table th:last-child{padding-right:1rem;text-align:right}
+  .inv-table td{padding:.7rem .9rem;font-size:.8rem;border-bottom:1px solid rgba(255,255,255,.03);vertical-align:top}
+  .inv-table td:first-child{padding-left:1rem}.inv-table td:last-child{padding-right:1rem}
+  .inv-table tbody tr{transition:background .15s}
+  .inv-table tbody tr:hover{background:rgba(46,197,219,.03)}
+  .inv-table tbody tr:last-child td{border-bottom:none}
+  .cell-irn{font-weight:600;color:#fff;font-size:.8rem;font-family:'DM Mono','Courier New',monospace;letter-spacing:-.01em}
+  .cell-note{font-size:.67rem;color:var(--muted);margin-top:2px}
+  .cell-cust{font-weight:600;color:var(--silver);font-size:.8rem}
+  .cell-email{font-size:.67rem;color:var(--muted);margin-top:2px}
+  .cell-date{font-size:.78rem;color:var(--silver)}
+  .cell-due{font-size:.67rem;color:var(--muted);margin-top:2px}
+  .cell-amount{font-weight:700;color:#fff;font-size:.85rem;text-align:right}
+  .cell-currency{font-size:.67rem;color:var(--muted);text-align:right;margin-top:2px}
 
-    .sb-bottom{border-top:1px solid var(--border2);padding:.75rem}
-    .sb-bottom-info{display:flex;align-items:center;gap:.6rem;padding:.5rem .25rem}
-    .sb-avatar{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--teal),var(--teal2));display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:#041018;flex-shrink:0}
-    .sb-user-name{font-size:.8rem;font-weight:600;color:var(--silver)}
-    .sb-user-role{font-size:.65rem;color:var(--muted)}
-    .sb-collapse-btn{
-      width:100%;display:flex;align-items:center;justify-content:center;gap:.5rem;
-      padding:.5rem;border:1px solid var(--border);border-radius:9px;background:none;
-      color:var(--muted);font-size:.75rem;cursor:pointer;transition:all .2s;margin-bottom:.5rem;
-    }
-    .sb-collapse-btn:hover{color:var(--teal);border-color:var(--teal)}
+  /* Status badges (invoice-specific) */
+  .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px;font-size:.65rem;font-weight:700}
+  .badge::before{content:'';width:5px;height:5px;border-radius:50%;animation:bpulse 2s ease-in-out infinite}
+  .b-paid{background:rgba(16,185,129,.12);color:#34d399;border:1px solid rgba(16,185,129,.2)}.b-paid::before{background:var(--ok)}
+  .b-pending{background:rgba(245,158,11,.1);color:#fbbf24;border:1px solid rgba(245,158,11,.2)}.b-pending::before{background:var(--warn)}
+  .b-overdue{background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.2)}.b-overdue::before{background:var(--err)}
 
-    /* ── MAIN AREA ── */
-    .main{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative}
+  /* FIRS sub-table */
+  .firs-sub{border-radius:8px;border:1px solid rgba(255,255,255,.07);overflow:hidden;background:rgba(0,0,0,.15);min-width:200px}
+  .firs-sub-head{display:grid;grid-template-columns:40px 90px 1fr;background:rgba(255,255,255,.04);border-bottom:1px solid rgba(255,255,255,.06)}
+  .firs-sub-head span,.firs-sub-row span{padding:.28rem .4rem;font-size:.62rem}
+  .firs-sub-head span{font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+  .firs-sub-row{display:grid;grid-template-columns:40px 90px 1fr;border-top:1px solid rgba(255,255,255,.04)}
+  .firs-sub-row:first-of-type{border-top:none}
+  .firs-sub-row span{color:var(--silver);font-size:.7rem;display:flex;align-items:center}
+  .fs-transmitted{color:var(--ok);font-weight:700;font-size:.63rem;background:rgba(16,185,129,.1);padding:1px 6px;border-radius:4px}
+  .fs-failed{color:var(--err);font-weight:700;font-size:.63rem;background:rgba(239,68,68,.1);padding:1px 6px;border-radius:4px}
+  .fs-validated{color:var(--info);font-weight:700;font-size:.63rem;background:rgba(59,130,246,.1);padding:1px 6px;border-radius:4px}
+  .fs-pending{color:var(--warn);font-weight:700;font-size:.63rem;background:rgba(245,158,11,.1);padding:1px 6px;border-radius:4px}
+  .fs-viewlink{color:var(--teal);font-size:.65rem;text-decoration:underline;cursor:pointer}
+  .no-sub{color:var(--muted);font-size:.7rem;font-style:italic}
+  .act-open{color:var(--teal);font-size:.75rem;font-weight:600;text-decoration:none;transition:color .2s}.act-open:hover{color:var(--teal2)}
+  .act-pdf{color:var(--muted);font-size:.75rem;text-decoration:none;transition:color .2s;margin-left:.5rem}.act-pdf:hover{color:var(--silver)}
 
-    /* ── TOPBAR ── */
-    .topbar{
-      height:68px;flex-shrink:0;
-      padding:0 1.75rem;
-      display:flex;align-items:center;justify-content:space-between;gap:1rem;
-      background:rgba(11,18,32,.9);
-      backdrop-filter:blur(16px);
-      border-bottom:1px solid var(--border2);
-      position:sticky;top:0;z-index:20;
-    }
-    .topbar-left{display:flex;align-items:center;gap:1rem}
-    .page-title{font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:800;color:var(--silver)}
-    .page-crumb{font-size:.75rem;color:var(--muted)}
-    .topbar-right{display:flex;align-items:center;gap:.6rem}
+  /* Section control buttons */
+  .scontrol-btn{display:flex;align-items:center;gap:.35rem;padding:.4rem .75rem;border-radius:9px;border:1px solid var(--bd2);background:rgba(255,255,255,.03);color:var(--muted);font-size:.78rem;font-family:inherit;cursor:pointer;transition:all .2s}
+  .scontrol-btn:hover{border-color:var(--teal);color:var(--teal);background:var(--tf)}
+  .scontrol-btn.primary{background:var(--teal);color:#041018;border-color:var(--teal);font-weight:600}
+  .scontrol-btn.primary:hover{background:var(--teal2)}
 
-    /* Search */
-    .search-box{
-      display:flex;align-items:center;gap:.5rem;
-      background:rgba(255,255,255,.04);border:1px solid var(--border2);
-      border-radius:10px;padding:.45rem .85rem;
-      transition:border-color .2s;
-    }
-    .search-box:focus-within{border-color:var(--teal);background:rgba(46,197,219,.04)}
-    .search-box input{
-      background:none;border:none;outline:none;color:var(--silver);font-size:.82rem;width:200px;font-family:inherit;
-    }
-    .search-box input::placeholder{color:var(--muted)}
-    .search-box i{color:var(--muted);font-size:.85rem}
+  /* Log modal extras */
+  .modal-log-body{font-size:.82rem;color:var(--silver);white-space:pre-wrap;line-height:1.7;background:rgba(0,0,0,.2);border-radius:9px;padding:1rem;border:1px solid var(--bd2)}
+  .modal-footer{margin-top:.85rem;font-size:.72rem;color:var(--muted);display:flex;align-items:center;justify-content:space-between}
+</style>
+{% endblock %}
 
-    /* Icon buttons */
-    .icon-btn{
-      width:36px;height:36px;border-radius:9px;border:1px solid var(--border2);
-      background:rgba(255,255,255,.03);display:flex;align-items:center;justify-content:center;
-      color:var(--muted);font-size:.9rem;cursor:pointer;transition:all .2s;position:relative;
-    }
-    .icon-btn:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-faint)}
-    .notif-dot{position:absolute;top:7px;right:7px;width:7px;height:7px;border-radius:50%;background:var(--danger);border:1.5px solid var(--bg)}
+{% block ticker %}
+<div class="ticker-strip">
+  <div class="ticker-label"><span class="live-pulse"></span>Live Logs</div>
+  <div class="ticker-scroll" id="tickerScroll"></div>
+  <div class="ticker-actions">
+    <button class="t-btn" id="tickerPauseBtn">Pause</button>
+    <button class="t-btn t-btn-primary" onclick="document.getElementById('logModal').classList.add('open')">Open Logs</button>
+  </div>
+</div>
+{% endblock %}
 
-    /* ── TICKER STRIP ── */
-    .ticker-strip{
-      background:rgba(46,197,219,.04);
-      border-bottom:1px solid var(--border);
-      padding:.45rem 1.75rem;
-      display:flex;align-items:center;gap:1rem;
-      min-height:44px;
-    }
-    .ticker-label{font-size:.62rem;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.1em;display:flex;align-items:center;gap:.35rem;flex-shrink:0}
-    .live-pulse{width:6px;height:6px;border-radius:50%;background:var(--teal);animation:livepulse 1.5s ease-in-out infinite}
-    @keyframes livepulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
-    .ticker-scroll{flex:1;overflow:hidden;display:flex;gap:.5rem;align-items:center}
-    .t-chip{
-      display:inline-flex;align-items:center;gap:.4rem;
-      padding:.22rem .65rem;border-radius:6px;border:1px solid;
-      font-size:.68rem;font-weight:600;white-space:nowrap;
-      animation:chipIn .35s ease-out;flex-shrink:0;cursor:default;
-    }
-    @keyframes chipIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
-    .t-success{background:#dcfce7;color:#15803d;border-color:#86efac}
-    .t-error{background:#fee2e2;color:#991b1b;border-color:#fca5a5}
-    .t-warning{background:#fef3c7;color:#92400e;border-color:#fde68a}
-    .t-info{background:#dbeafe;color:#1e40af;border-color:#93c5fd}
-    .t-view{font-size:.62rem;text-decoration:underline;opacity:.7;cursor:pointer}
-    .ticker-actions{display:flex;gap:.4rem;flex-shrink:0}
-    .t-btn{padding:.22rem .6rem;border-radius:6px;font-size:.68rem;font-weight:600;border:1px solid var(--border2);background:rgba(255,255,255,.04);color:var(--muted);cursor:pointer;transition:all .2s}
-    .t-btn:hover{border-color:var(--teal);color:var(--teal)}
-    .t-btn-primary{background:var(--teal);color:#041018;border-color:var(--teal)}
-    .t-btn-primary:hover{background:var(--teal2);color:#041018}
+{% block content %}
+<!-- KPI Cards -->
+<div class="kpi-grid">
+  <div class="kpi-card">
+    <div class="kpi-top"><div class="kpi-ico ki-teal"><i class="bi bi-file-earmark-text"></i></div><span class="kpi-trend trend-up"><i class="bi bi-arrow-up"></i> 8.3%</span></div>
+    <div class="kpi-label">Total Invoices</div>
+    <div class="kpi-value">{{ stats.total_invoices }}</div>
+    <div class="kpi-sub">All invoices in system</div>
+    <div class="sparkline" id="spark1"></div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-top"><div class="kpi-ico ki-green"><i class="bi bi-check-circle"></i></div><span class="kpi-trend trend-up"><i class="bi bi-arrow-up"></i> 4.1%</span></div>
+    <div class="kpi-label">Paid</div>
+    <div class="kpi-value" style="color:var(--ok)">{{ stats.paid_count }}</div>
+    <div class="kpi-sub">{{ stats.pct_paid }}% of total</div>
+    <div class="sparkline" id="spark2"></div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-top"><div class="kpi-ico ki-amber"><i class="bi bi-clock-history"></i></div><span class="kpi-trend trend-neutral"><i class="bi bi-dash"></i> Stable</span></div>
+    <div class="kpi-label">Pending</div>
+    <div class="kpi-value" style="color:var(--warn)">{{ stats.pending_count }}</div>
+    <div class="kpi-sub">{{ stats.pct_pending }}% of total</div>
+    <div class="sparkline" id="spark3"></div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-top"><div class="kpi-ico ki-gold"><i class="bi bi-currency-exchange"></i></div><span class="kpi-trend trend-up"><i class="bi bi-arrow-up"></i> 12.4%</span></div>
+    <div class="kpi-label">Total Revenue</div>
+    <div class="kpi-value">{{ stats.total_revenue }}</div>
+    <div class="kpi-sub">This month: {{ stats.recent_revenue }}</div>
+    <div class="sparkline" id="spark4"></div>
+  </div>
+</div>
 
-    /* ── CONTENT AREA ── */
-    .content{flex:1;overflow-y:auto;padding:1.75rem;scrollbar-width:thin;scrollbar-color:rgba(46,197,219,.3) transparent}
-    .content::-webkit-scrollbar{width:4px}
-    .content::-webkit-scrollbar-thumb{background:rgba(46,197,219,.25);border-radius:4px}
+<!-- FIRS Status Row -->
+<div class="firs-row">
+  <div class="firs-card">
+    <div class="firs-ico ki-green"><i class="bi bi-patch-check-fill"></i></div>
+    <div class="firs-body" style="flex:1">
+      <div class="fl"><i class="bi bi-broadcast"></i> FIRS Successful</div>
+      <div class="fv fv-ok">{{ stats.firs_success_count }}</div>
+      <div class="firs-progress"><div class="firs-progress-fill" style="width:98%;background:var(--ok)"></div></div>
+    </div>
+  </div>
+  <div class="firs-card">
+    <div class="firs-ico ki-red"><i class="bi bi-x-octagon-fill"></i></div>
+    <div class="firs-body" style="flex:1">
+      <div class="fl"><i class="bi bi-exclamation-triangle"></i> FIRS Failed</div>
+      <div class="fv fv-bad">{{ stats.firs_failed_count }}</div>
+      <div class="firs-progress"><div class="firs-progress-fill" style="width:1.3%;background:var(--err)"></div></div>
+    </div>
+  </div>
+  <div class="firs-card">
+    <div class="firs-ico ki-teal"><i class="bi bi-router-fill"></i></div>
+    <div class="firs-body" style="flex:1">
+      <div class="fl"><i class="bi bi-activity"></i> AP Status</div>
+      <div class="fv" style="color:var(--teal);font-size:1.1rem;font-weight:700;padding:.2rem 0">Operational</div>
+      <div class="firs-progress"><div class="firs-progress-fill" style="width:99.9%;background:var(--teal)"></div></div>
+    </div>
+  </div>
+</div>
 
-    /* ── KPI CARDS ── */
-    .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1rem}
-    @media(max-width:1100px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
-    .kpi-card{
-      border-radius:var(--r2);padding:1.25rem 1.4rem;
-      background:var(--card);border:1px solid var(--border2);
-      backdrop-filter:blur(10px);
-      position:relative;overflow:hidden;
-      transition:all .3s;
-      animation:kpiIn .5s ease-out both;
-    }
-    .kpi-card:nth-child(1){animation-delay:.05s}
-    .kpi-card:nth-child(2){animation-delay:.1s}
-    .kpi-card:nth-child(3){animation-delay:.15s}
-    .kpi-card:nth-child(4){animation-delay:.2s}
-    @keyframes kpiIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-    .kpi-card:hover{border-color:var(--teal);transform:translateY(-3px);box-shadow:0 16px 40px rgba(0,0,0,.3)}
-    .kpi-card::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 80% 20%,rgba(46,197,219,.05),transparent 60%);pointer-events:none;opacity:0;transition:opacity .3s}
-    .kpi-card:hover::after{opacity:1}
-    .kpi-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:.85rem}
-    .kpi-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem}
-    .ki-teal{background:rgba(46,197,219,.12);color:var(--teal)}
-    .ki-green{background:rgba(16,185,129,.1);color:var(--success)}
-    .ki-amber{background:rgba(245,158,11,.1);color:var(--warning)}
-    .ki-red{background:rgba(239,68,68,.1);color:var(--danger)}
-    .ki-blue{background:rgba(59,130,246,.1);color:var(--info)}
-    .ki-gold{background:rgba(212,175,55,.1);color:#d4af37}
-    .kpi-trend{font-size:.68rem;font-weight:600;padding:3px 8px;border-radius:999px;display:flex;align-items:center;gap:3px}
-    .trend-up{background:rgba(16,185,129,.1);color:var(--success)}
-    .trend-down{background:rgba(239,68,68,.1);color:var(--danger)}
-    .trend-neutral{background:rgba(255,255,255,.06);color:var(--muted)}
-    .kpi-label{font-size:.68rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.35rem}
-    .kpi-value{font-family:'Syne',sans-serif;font-size:1.7rem;font-weight:800;color:#fff;line-height:1;margin-bottom:.3rem}
-    .kpi-sub{font-size:.72rem;color:var(--muted)}
+<!-- Table Section -->
+<div class="section-hd">
+  <div>
+    <div class="section-title">Invoices <span class="pill-small" style="margin-left:.4rem">{{ stats.total_invoices }}</span></div>
+    <div class="section-sub">Manage and review invoice records &amp; FIRS submission status</div>
+  </div>
+  <div class="section-controls">
+    <div class="search-box" style="border-color:var(--bd2)">
+      <i class="bi bi-search" style="font-size:.75rem"></i>
+      <input type="search" id="tableSearch" placeholder="Search…" style="width:160px" autocomplete="off"/>
+    </div>
+    <select id="statusFilter" class="filter-select">
+      <option value="">All statuses</option>
+      <option value="pending" {% if request.args.get('status')=='pending' %}selected{% endif %}>Pending</option>
+      <option value="paid" {% if request.args.get('status')=='paid' %}selected{% endif %}>Paid</option>
+      <option value="overdue" {% if request.args.get('status')=='overdue' %}selected{% endif %}>Overdue</option>
+    </select>
+    <button class="scontrol-btn"><i class="bi bi-funnel"></i> Filter</button>
+    <button class="scontrol-btn"><i class="bi bi-arrow-down-up"></i> Sort</button>
+    <button class="scontrol-btn primary"><i class="bi bi-download"></i> Export</button>
+  </div>
+</div>
 
-    /* Sparkline */
-    .sparkline{height:32px;margin-top:.75rem}
-    .sparkline svg{width:100%;height:100%}
+<div class="table-wrap">
+  <table class="inv-table" id="invoiceTable">
+    <thead>
+      <tr>
+        <th><input type="checkbox" id="selectAll" title="Select all"/></th>
+        <th>Invoice / IRN</th><th>Issuer</th><th>Customer</th><th>Dates</th>
+        <th style="text-align:right">Amount</th><th>Status</th><th>FIRS API Logs</th>
+        <th style="text-align:right">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for invoice in invoices %}
+      <tr data-status="{{ (invoice.payment_status or 'pending') }}">
+        <td><input type="checkbox" class="row-cb" data-id="{{ invoice.id }}"/></td>
+        <td>
+          <div class="cell-irn">{{ invoice.irn|default('—') }}</div>
+          <div class="cell-note">{{ invoice.note|default('',true)|truncate(40) }}</div>
+        </td>
+        <td>
+          <div class="cell-cust">{{ invoice.accounting_supplier_party.party_name|default(invoice.buyer_reference|default('—')) }}</div>
+          <div class="cell-email">{{ invoice.accounting_supplier_party.email|default('') }}</div>
+        </td>
+        <td>
+          <div class="cell-cust">{{ invoice.accounting_customer_party.party_name|default(invoice.buyer_reference|default('—')) }}</div>
+          <div class="cell-email">{{ invoice.accounting_customer_party.email|default('') }}</div>
+        </td>
+        <td>
+          <div class="cell-date">{{ invoice.issue_date.isoformat() if invoice.issue_date else '—' }}</div>
+          <div class="cell-due">Due: {{ invoice.due_date.isoformat() if invoice.due_date else '—' }}</div>
+        </td>
+        <td>
+          <div class="cell-amount">{{ invoice.legal_monetary_total.payable_amount|default(0) }}</div>
+          <div class="cell-currency">{{ invoice.document_currency_code|default('NGN') }}</div>
+        </td>
+        <td>
+          {% set st = (invoice.payment_status or 'pending') %}
+          <span class="badge {% if st=='paid' %}b-paid{% elif st=='overdue' %}b-overdue{% else %}b-pending{% endif %}">{{ st|capitalize }}</span>
+        </td>
+        <td>
+          {% if invoice.submissions %}
+          <div class="firs-sub">
+            <div class="firs-sub-head"><span>#</span><span>Status</span><span>Logs</span></div>
+            {% for sub in invoice.submissions %}
+            <div class="firs-sub-row">
+              <span>#{{ sub.id }}</span>
+              <span><span class="{% if sub.status=='transmitted' %}fs-transmitted{% elif sub.status=='failed' %}fs-failed{% elif sub.status=='validated' %}fs-validated{% else %}fs-pending{% endif %}">{{ sub.status }}</span></span>
+              <span><a href="{{ url_for('view_submission_logs', submission_id=sub.id) }}" class="fs-viewlink">View</a></span>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}<span class="no-sub">No submissions</span>{% endif %}
+        </td>
+        <td style="text-align:right;white-space:nowrap">
+          <a href="{{ url_for('invoice_detail', invoice_id=invoice.id) }}" target="_blank" rel="noopener" class="act-open">Open</a>
+          <a href="{{ url_for('invoice_pdf', invoice_id=invoice.id) }}" class="act-pdf"><i class="bi bi-filetype-pdf"></i> PDF</a>
+        </td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="9" style="text-align:center;padding:3rem;color:var(--muted);font-size:.85rem">
+          <i class="bi bi-inbox" style="font-size:2rem;display:block;margin-bottom:.5rem;opacity:.4"></i>No invoices found.
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 
-    /* ── FIRS ROW ── */
-    .firs-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1rem}
-    @media(max-width:900px){.firs-row{grid-template-columns:1fr 1fr}}
-    .firs-card{
-      border-radius:var(--r2);padding:1.1rem 1.3rem;
-      background:var(--card);border:1px solid var(--border2);
-      display:flex;align-items:center;gap:1rem;
-      transition:all .3s;cursor:default;
-      animation:kpiIn .5s ease-out both;
-    }
-    .firs-card:nth-child(1){animation-delay:.25s}
-    .firs-card:nth-child(2){animation-delay:.3s}
-    .firs-card:nth-child(3){animation-delay:.35s}
-    .firs-card:hover{border-color:var(--teal);box-shadow:0 10px 30px rgba(0,0,0,.25)}
-    .firs-ico{width:44px;height:44px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
-    .firs-body .fl{font-size:.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.2rem}
-    .firs-body .fv{font-family:'Syne',sans-serif;font-size:1.55rem;font-weight:800;line-height:1}
-    .fv-ok{color:var(--success)}
-    .fv-bad{color:var(--danger)}
-    .fv-warn{color:var(--warning)}
-    .firs-progress{margin-top:.4rem;height:3px;border-radius:999px;background:rgba(255,255,255,.06);overflow:hidden}
-    .firs-progress-fill{height:100%;border-radius:999px;transition:width .8s ease}
-
-    /* ── SECTION HEADER ── */
-    .section-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;gap:1rem;flex-wrap:wrap}
-    .section-title{font-family:'Syne',sans-serif;font-size:1rem;font-weight:800;color:#fff}
-    .section-sub{font-size:.75rem;color:var(--muted);margin-top:1px}
-    .section-controls{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
-
-    /* Filter buttons */
-    .filter-select{
-      background:rgba(255,255,255,.04);border:1px solid var(--border2);
-      border-radius:9px;padding:.4rem .75rem;font-size:.78rem;color:var(--silver);
-      font-family:inherit;outline:none;cursor:pointer;transition:border-color .2s;
-    }
-    .filter-select:focus{border-color:var(--teal)}
-    .filter-select option{background:var(--bg3);color:var(--silver)}
-    .scontrol-btn{
-      display:flex;align-items:center;gap:.35rem;
-      padding:.4rem .75rem;border-radius:9px;border:1px solid var(--border2);
-      background:rgba(255,255,255,.03);color:var(--muted);font-size:.78rem;
-      font-family:inherit;cursor:pointer;transition:all .2s;
-    }
-    .scontrol-btn:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-faint)}
-    .scontrol-btn.primary{background:var(--teal);color:#041018;border-color:var(--teal);font-weight:600}
-    .scontrol-btn.primary:hover{background:var(--teal2)}
-
-    /* ── TABLE ── */
-    .table-wrap{
-      border-radius:var(--r2);overflow:hidden;
-      background:var(--card);border:1px solid var(--border2);
-      backdrop-filter:blur(10px);
-      animation:kpiIn .5s .3s ease-out both;
-    }
-    .inv-table{width:100%;border-collapse:collapse}
-    .inv-table thead{background:rgba(255,255,255,.03);border-bottom:1px solid var(--border2)}
-    .inv-table th{
-      padding:.7rem .9rem;font-size:.63rem;font-weight:700;
-      text-transform:uppercase;letter-spacing:.07em;color:var(--muted);
-      text-align:left;white-space:nowrap;
-    }
-    .inv-table th:first-child{padding-left:1rem}
-    .inv-table th:last-child{padding-right:1rem;text-align:right}
-    .inv-table td{
-      padding:.7rem .9rem;font-size:.8rem;
-      border-bottom:1px solid rgba(255,255,255,.03);
-      vertical-align:top;
-    }
-    .inv-table td:first-child{padding-left:1rem}
-    .inv-table td:last-child{padding-right:1rem}
-    .inv-table tbody tr{transition:background .15s}
-    .inv-table tbody tr:hover{background:rgba(46,197,219,.03)}
-    .inv-table tbody tr:last-child td{border-bottom:none}
-
-    /* Cell content */
-    .cell-irn{font-weight:600;color:#fff;font-size:.8rem;font-family:'DM Mono','Courier New',monospace;letter-spacing:-.01em}
-    .cell-note{font-size:.67rem;color:var(--muted);margin-top:2px}
-    .cell-cust{font-weight:600;color:var(--silver);font-size:.8rem}
-    .cell-email{font-size:.67rem;color:var(--muted);margin-top:2px}
-    .cell-date{font-size:.78rem;color:var(--silver)}
-    .cell-due{font-size:.67rem;color:var(--muted);margin-top:2px}
-    .cell-amount{font-weight:700;color:#fff;font-size:.85rem;text-align:right}
-    .cell-currency{font-size:.67rem;color:var(--muted);text-align:right;margin-top:2px}
-
-    /* Status badges */
-    .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px;font-size:.65rem;font-weight:700}
-    .badge::before{content:'';width:5px;height:5px;border-radius:50%;animation:bdot 2s ease-in-out infinite}
-    .b-paid{background:rgba(16,185,129,.12);color:#34d399;border:1px solid rgba(16,185,129,.2)}
-    .b-paid::before{background:var(--success)}
-    .b-pending{background:rgba(245,158,11,.1);color:#fbbf24;border:1px solid rgba(245,158,11,.2)}
-    .b-pending::before{background:var(--warning)}
-    .b-overdue{background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.2)}
-    .b-overdue::before{background:var(--danger)}
-    @keyframes bdot{0%,100%{opacity:1}50%{opacity:.3}}
-
-    /* FIRS sub-table in cell */
-    .firs-sub{border-radius:8px;border:1px solid rgba(255,255,255,.07);overflow:hidden;background:rgba(0,0,0,.15);min-width:200px}
-    .firs-sub-head{display:grid;grid-template-columns:40px 90px 1fr;background:rgba(255,255,255,.04);border-bottom:1px solid rgba(255,255,255,.06)}
-    .firs-sub-head span,.firs-sub-row span{padding:.28rem .4rem;font-size:.62rem}
-    .firs-sub-head span{font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
-    .firs-sub-row{display:grid;grid-template-columns:40px 90px 1fr;border-top:1px solid rgba(255,255,255,.04)}
-    .firs-sub-row:first-of-type{border-top:none}
-    .firs-sub-row span{color:var(--silver);font-size:.7rem;display:flex;align-items:center}
-    .fs-transmitted{color:var(--success);font-weight:700;font-size:.63rem;background:rgba(16,185,129,.1);padding:1px 6px;border-radius:4px}
-    .fs-failed{color:var(--danger);font-weight:700;font-size:.63rem;background:rgba(239,68,68,.1);padding:1px 6px;border-radius:4px}
-    .fs-validated{color:var(--info);font-weight:700;font-size:.63rem;background:rgba(59,130,246,.1);padding:1px 6px;border-radius:4px}
-    .fs-pending{color:var(--warning);font-weight:700;font-size:.63rem;background:rgba(245,158,11,.1);padding:1px 6px;border-radius:4px}
-    .fs-viewlink{color:var(--teal);font-size:.65rem;text-decoration:underline;cursor:pointer}
-    .no-sub{color:var(--muted);font-size:.7rem;font-style:italic}
-
-    /* Action links */
-    .act-open{color:var(--teal);font-size:.75rem;font-weight:600;text-decoration:none;transition:color .2s}
-    .act-open:hover{color:var(--teal2)}
-    .act-pdf{color:var(--muted);font-size:.75rem;text-decoration:none;transition:color .2s;margin-left:.5rem}
-    .act-pdf:hover{color:var(--silver)}
-
-    /* ── PAGINATION ── */
-    .pagination{display:flex;align-items:center;justify-content:space-between;padding:1rem .9rem;border-top:1px solid var(--border2)}
-    .pg-info{font-size:.75rem;color:var(--muted)}
-    .pg-btns{display:flex;gap:.35rem}
-    .pg-btn{
-      padding:.3rem .65rem;border-radius:7px;font-size:.72rem;font-weight:500;
-      border:1px solid var(--border2);background:rgba(255,255,255,.03);
-      color:var(--muted);text-decoration:none;transition:all .2s;cursor:pointer;
-      display:inline-flex;align-items:center;
-    }
-    .pg-btn:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-faint)}
-    .pg-btn.active{background:var(--teal);color:#041018;border-color:var(--teal);font-weight:700}
-    .pg-btn.disabled{opacity:.35;pointer-events:none}
-
-    /* ── LOG MODAL ── */
-    .modal-back{position:fixed;inset:0;background:rgba(5,10,20,.8);z-index:500;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity .3s}
-    .modal-back.open{opacity:1;pointer-events:all}
-    .modal-box{
-      background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);
-      width:90%;max-width:540px;padding:1.75rem;position:relative;
-      transform:translateY(25px);transition:transform .35s;
-      max-height:85vh;overflow-y:auto;
-    }
-    .modal-back.open .modal-box{transform:translateY(0)}
-    .modal-close{position:absolute;top:1rem;right:1rem;background:none;border:none;cursor:pointer;color:var(--muted);font-size:1.4rem;transition:color .2s}
-    .modal-close:hover{color:var(--teal)}
-    .modal-title{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;color:#fff;margin-bottom:.35rem}
-    .modal-sub{font-size:.78rem;color:var(--muted);margin-bottom:1.25rem}
-    .modal-log-body{font-size:.82rem;color:var(--silver);white-space:pre-wrap;line-height:1.7;background:rgba(0,0,0,.2);border-radius:9px;padding:1rem;border:1px solid var(--border2)}
-    .modal-footer{margin-top:.85rem;font-size:.72rem;color:var(--muted);display:flex;align-items:center;justify-content:space-between}
-
-    /* ── MANAGEMENT DROPDOWN ── */
-    .dropdown-wrap{position:relative}
-    .dropdown-menu{
-      position:absolute;top:calc(100% + .4rem);right:0;
-      background:var(--bg3);border:1px solid var(--border);border-radius:11px;
-      padding:.4rem;min-width:160px;z-index:200;
-      box-shadow:0 20px 50px rgba(0,0,0,.5);
-      opacity:0;transform:translateY(-8px);pointer-events:none;transition:all .2s;
-    }
-    .dropdown-menu.open{opacity:1;transform:translateY(0);pointer-events:all}
-    .dropdown-item{
-      display:flex;align-items:center;gap:.55rem;
-      padding:.5rem .75rem;border-radius:8px;font-size:.8rem;color:var(--muted);
-      text-decoration:none;transition:all .15s;cursor:pointer;
-    }
-    .dropdown-item:hover{background:var(--teal-faint);color:var(--teal)}
-    .dropdown-item i{font-size:.85rem}
-
-    /* ── FLASH MESSAGES ── */
-    #flash-container{position:fixed;top:1.25rem;right:1.25rem;z-index:9999;display:flex;flex-direction:column;gap:.5rem;max-width:320px}
-    .flash-msg{
-      display:flex;align-items:center;justify-content:space-between;gap:.75rem;
-      padding:.75rem 1rem;border-radius:11px;font-size:.8rem;font-weight:500;
-      box-shadow:0 8px 24px rgba(0,0,0,.3);animation:flashIn .3s ease-out;
-      border:1px solid;
-    }
-    @keyframes flashIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
-    .flash-success{background:#052e16;color:#86efac;border-color:rgba(134,239,172,.2)}
-    .flash-error,.flash-danger{background:#2d0606;color:#fca5a5;border-color:rgba(252,165,165,.2)}
-    .flash-warning{background:#2d1b00;color:#fde68a;border-color:rgba(253,230,138,.2)}
-    .flash-info{background:#082040;color:#93c5fd;border-color:rgba(147,197,253,.2)}
-    .flash-close{background:none;border:none;cursor:pointer;color:inherit;opacity:.6;font-size:1rem;padding:0;line-height:1}
-    .flash-close:hover{opacity:1}
-
-    /* ── MOBILE TOPBAR HAM ── */
-    .ham-btn{display:none;background:none;border:none;cursor:pointer;color:var(--silver);font-size:1.3rem;padding:.3rem}
-    @media(max-width:900px){
-      .ham-btn{display:flex}
-      aside.sidebar{position:fixed;left:0;top:0;height:100%;z-index:100;transform:translateX(-100%);transition:transform .3s}
-      aside.sidebar.mob-open{transform:translateX(0)}
-      .mob-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99;display:none}
-      .mob-overlay.open{display:block}
-    }
-
-    /* ── UTILITY ── */
-    .pill-small{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:.62rem;font-weight:700;border:1px solid var(--teal);color:var(--teal);background:rgba(46,197,219,.07)}
-    .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
-  </style>
-</head>
-<body>
-
-<!-- Flash container -->
-<div id="flash-container"></div>
-
-<!-- Mobile overlay -->
-<div class="mob-overlay" id="mobOverlay" onclick="closeSidebar()"></div>
-
-<div class="shell">
-
-  <!-- ══════════ SIDEBAR ══════════ -->
-  <aside class="sidebar" id="sidebar">
-    <a href="/" class="sb-brand">
-      <div class="sb-brand-text">
-        <div class="name">LAYER21</div>
-        <div class="sub">IT Services</div>
-      </div>
-    </a>
-
-    <nav class="sb-nav">
-      <div class="sb-section-label">Main</div>
-
-      <a href="{{ url_for('dashboard') }}" class="sb-link active">
-        <i class="bi bi-grid-1x2 sb-icon"></i>
-        <span class="sb-label">Dashboard</span>
-      </a>
-
-      <a href="#" class="sb-link">
-        <i class="bi bi-file-earmark-text sb-icon"></i>
-        <span class="sb-label">Invoices</span>
-        <span class="sb-badge">4,287</span>
-      </a>
-
-      <div class="sb-section-label">FIRS &amp; Compliance</div>
-
-      <a href="#" class="sb-link">
-        <i class="bi bi-router sb-icon"></i>
-        <span class="sb-label">Access Point</span>
-        <span class="sb-badge">Live</span>
-      </a>
-
-      <a href="#" class="sb-link">
-        <i class="bi bi-activity sb-icon"></i>
-        <span class="sb-label">Submission Logs</span>
-      </a>
-
-      <a href="#" class="sb-link">
-        <i class="bi bi-patch-check sb-icon"></i>
-        <span class="sb-label">NRS Status</span>
-      </a>
-
-      <div class="sb-section-label">Management</div>
-
-      <a href="{{ url_for('list_users') }}" class="sb-link">
-        <i class="bi bi-people sb-icon"></i>
-        <span class="sb-label">Users</span>
-      </a>
-
-      <a href="{{ url_for('list_businesses') }}" class="sb-link">
-        <i class="bi bi-building sb-icon"></i>
-        <span class="sb-label">Businesses</span>
-      </a>
-
-      <a href="#" class="sb-link">
-        <i class="bi bi-key sb-icon"></i>
-        <span class="sb-label">API Keys</span>
-      </a>
-
-      <div class="sb-section-label">Support</div>
-
-      <a href="{{ url_for('list_complaints') }}" class="sb-link">
-        <i class="bi bi-headset sb-icon"></i>
-        <span class="sb-label">HelpDesk</span>
-        <span class="sb-badge red" id="sbComplaintBadge"></span>
-      </a>
-
-      <a href="{{ url_for('documentation.list_documents') }}" class="sb-link">
-        <i class="bi bi-file-code sb-icon"></i>
-        <span class="sb-label">Documents</span>
-      </a>
-
-      <a href="#" class="sb-link"><i class="bi bi-bar-chart-line sb-icon"></i><span class="sb-label">Reports</span><span class="badge bg-warning text-dark ms-2">Coming Soon</span></a>
+  <div class="pagination">
+    <div class="pg-info">Showing <strong style="color:var(--silver)">{{ (page-1)*per_page + 1 }}</strong> – <strong style="color:var(--silver)">{{ (page-1)*per_page + invoices|length }}</strong> of <strong style="color:var(--silver)">{{ total_count }}</strong></div>
+    <nav class="pg-btns">
+      <a href="{{ url_for('dashboard', page=1, q=request.args.get('q')) }}" class="pg-btn {% if page==1 %}disabled{% endif %}"><i class="bi bi-chevron-double-left"></i></a>
+      <a href="{{ url_for('dashboard', page=page-1 if page>1 else 1, q=request.args.get('q')) }}" class="pg-btn {% if page==1 %}disabled{% endif %}"><i class="bi bi-chevron-left"></i></a>
+      {% for p in range([1,page-2]|max,[total_pages+1,page+3]|min) %}<a href="{{ url_for('dashboard', page=p, q=request.args.get('q')) }}" class="pg-btn {% if p==page %}active{% endif %}">{{ p }}</a>{% endfor %}
+      <a href="{{ url_for('dashboard', page=page+1 if page<total_pages else total_pages, q=request.args.get('q')) }}" class="pg-btn {% if page==total_pages %}disabled{% endif %}"><i class="bi bi-chevron-right"></i></a>
+      <a href="{{ url_for('dashboard', page=total_pages, q=request.args.get('q')) }}" class="pg-btn {% if page==total_pages %}disabled{% endif %}"><i class="bi bi-chevron-double-right"></i></a>
     </nav>
+  </div>
+</div>
+{% endblock %}
 
-    <div class="sb-bottom">
-      <button class="sb-collapse-btn" id="collapseBtn" onclick="toggleSidebar()">
-        <i class="bi bi-layout-sidebar-reverse" style="font-size:.85rem"></i>
-        <span class="sb-label">Collapse</span>
-      </button>
-      <div class="sb-bottom-info">
-        <div class="sb-avatar">AD</div>
-        <div>
-          <div class="sb-user-name">Admin</div>
-          <div class="sb-user-role">System Admin</div>
-        </div>
-      </div>
-    </div>
-  </aside>
-
-  <!-- ══════════ MAIN ══════════ -->
-  <div class="main">
-
-    <!-- Top Bar -->
-    <header class="topbar">
-      <div class="topbar-left">
-        <button class="ham-btn" onclick="openSidebar()"><i class="bi bi-list"></i></button>
-        <div>
-          <div class="page-title">Invoice Command Centre</div>
-          <div class="page-crumb">Dashboard › Invoices</div>
-        </div>
-      </div>
-      <div class="topbar-right">
-        <div class="search-box">
-          <i class="bi bi-search"></i>
-          <input type="search" id="globalSearch" placeholder="Search invoices…" autocomplete="off"/>
-        </div>
-        <button class="icon-btn" title="Notifications">
-          <i class="bi bi-bell"></i>
-          <span class="notif-dot"></span>
-        </button>
-        <button class="icon-btn" title="Settings"><i class="bi bi-gear"></i></button>
-        <a href="/logout">
-          <button class="icon-btn" title="Logout"><i class="bi bi-box-arrow-right"></i></button>
-        </a>
-      </div>
-    </header>
-
-    <!-- Live Submission Ticker -->
-    <div class="ticker-strip">
-      <div class="ticker-label">
-        <span class="live-pulse"></span>
-        Live Logs
-      </div>
-      <div class="ticker-scroll" id="tickerScroll"></div>
-      <div class="ticker-actions">
-        <button class="t-btn" id="tickerPauseBtn">Pause</button>
-        <button class="t-btn t-btn-primary" onclick="document.getElementById('logModal').classList.add('open')">Open Logs</button>
-      </div>
-    </div>
-
-    <!-- ══════════ CONTENT ══════════ -->
-    <div class="content" id="mainContent">
-
-      <!-- KPI Cards -->
-      <div class="kpi-grid">
-        <div class="kpi-card">
-          <div class="kpi-top">
-            <div class="kpi-icon ki-teal"><i class="bi bi-file-earmark-text"></i></div>
-            <span class="kpi-trend trend-up"><i class="bi bi-arrow-up"></i> 8.3%</span>
-          </div>
-          <div class="kpi-label">Total Invoices</div>
-          <div class="kpi-value">{{ stats.total_invoices }}</div>
-          <div class="kpi-sub">All invoices in system</div>
-          <div class="sparkline" id="spark1"></div>
-        </div>
-
-        <div class="kpi-card">
-          <div class="kpi-top">
-            <div class="kpi-icon ki-green"><i class="bi bi-check-circle"></i></div>
-            <span class="kpi-trend trend-up"><i class="bi bi-arrow-up"></i> 4.1%</span>
-          </div>
-          <div class="kpi-label">Paid</div>
-          <div class="kpi-value" style="color:var(--success)">{{ stats.paid_count }}</div>
-          <div class="kpi-sub">{{ stats.pct_paid }}% of total</div>
-          <div class="sparkline" id="spark2"></div>
-        </div>
-
-        <div class="kpi-card">
-          <div class="kpi-top">
-            <div class="kpi-icon ki-amber"><i class="bi bi-clock-history"></i></div>
-            <span class="kpi-trend trend-neutral"><i class="bi bi-dash"></i> Stable</span>
-          </div>
-          <div class="kpi-label">Pending</div>
-          <div class="kpi-value" style="color:var(--warning)">{{ stats.pending_count }}</div>
-          <div class="kpi-sub">{{ stats.pct_pending }}% of total</div>
-          <div class="sparkline" id="spark3"></div>
-        </div>
-
-        <div class="kpi-card">
-          <div class="kpi-top">
-            <div class="kpi-icon ki-gold"><i class="bi bi-currency-exchange"></i></div>
-            <span class="kpi-trend trend-up"><i class="bi bi-arrow-up"></i> 12.4%</span>
-          </div>
-          <div class="kpi-label">Total Revenue</div>
-          <div class="kpi-value">{{ stats.total_revenue }}</div>
-          <div class="kpi-sub">This month: {{ stats.recent_revenue }}</div>
-          <div class="sparkline" id="spark4"></div>
-        </div>
-      </div>
-
-      <!-- FIRS Status Row -->
-      <div class="firs-row">
-        <div class="firs-card">
-          <div class="firs-ico ki-green"><i class="bi bi-patch-check-fill"></i></div>
-          <div class="firs-body" style="flex:1">
-            <div class="fl"><i class="bi bi-broadcast"></i> FIRS Successful</div>
-            <div class="fv fv-ok">{{ stats.firs_success_count }}</div>
-            <div class="firs-progress"><div class="firs-progress-fill" style="width:98%;background:var(--success)"></div></div>
-          </div>
-        </div>
-        <div class="firs-card">
-          <div class="firs-ico ki-red"><i class="bi bi-x-octagon-fill"></i></div>
-          <div class="firs-body" style="flex:1">
-            <div class="fl"><i class="bi bi-exclamation-triangle"></i> FIRS Failed</div>
-            <div class="fv fv-bad">{{ stats.firs_failed_count }}</div>
-            <div class="firs-progress"><div class="firs-progress-fill" style="width:1.3%;background:var(--danger)"></div></div>
-          </div>
-        </div>
-        <div class="firs-card">
-          <div class="firs-ico ki-teal"><i class="bi bi-router-fill"></i></div>
-          <div class="firs-body" style="flex:1">
-            <div class="fl"><i class="bi bi-activity"></i> AP Status</div>
-            <div class="fv" style="color:var(--teal);font-size:1.1rem;font-weight:700;padding:.2rem 0">Operational</div>
-            <div class="firs-progress"><div class="firs-progress-fill" style="width:99.9%;background:var(--teal)"></div></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Table Section -->
-      <div class="section-hd">
-        <div>
-          <div class="section-title">Invoices <span class="pill-small" style="font-size:.6rem;margin-left:.4rem">{{ stats.total_invoices }}</span></div>
-          <div class="section-sub">Manage and review invoice records &amp; FIRS submission status</div>
-        </div>
-        <div class="section-controls">
-          <div class="search-box" style="border-color:var(--border2)">
-            <i class="bi bi-search" style="font-size:.75rem"></i>
-            <input type="search" id="tableSearch" placeholder="Search…" style="width:160px" autocomplete="off"/>
-          </div>
-          <select id="statusFilter" class="filter-select">
-            <option value="">All statuses</option>
-            <option value="pending" {% if request.args.get('status')=='pending' %}selected{% endif %}>Pending</option>
-            <option value="paid"    {% if request.args.get('status')=='paid'    %}selected{% endif %}>Paid</option>
-            <option value="overdue" {% if request.args.get('status')=='overdue' %}selected{% endif %}>Overdue</option>
-          </select>
-          <button class="scontrol-btn"><i class="bi bi-funnel"></i> Filter</button>
-          <button class="scontrol-btn"><i class="bi bi-arrow-down-up"></i> Sort</button>
-          <button class="scontrol-btn primary"><i class="bi bi-download"></i> Export</button>
-        </div>
-      </div>
-
-      <div class="table-wrap">
-        <table class="inv-table" id="invoiceTable">
-          <thead>
-            <tr>
-              <th><input type="checkbox" id="selectAll" title="Select all"/></th>
-              <th>Invoice / IRN</th>
-              <th>Issuer</th>
-              <th>Customer</th>
-              <th>Dates</th>
-              <th style="text-align:right">Amount</th>
-              <th>Status</th>
-              <th>FIRS API Logs</th>
-              <th style="text-align:right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for invoice in invoices %}
-            <tr data-status="{{ (invoice.payment_status or 'pending') }}">
-              <td><input type="checkbox" class="row-cb" data-id="{{ invoice.id }}"/></td>
-              <td>
-                <div class="cell-irn">{{ invoice.irn|default('—') }}</div>
-                <div class="cell-note">{{ invoice.note|default('', true)|truncate(40) }}</div>
-              </td>
-              <td>
-                <div class="cell-cust">{{ invoice.accounting_supplier_party.party_name|default(invoice.buyer_reference|default('—')) }}</div>
-                <div class="cell-email">{{ invoice.accounting_supplier_party.email|default('') }}</div>
-              </td>
-              <td>
-                <div class="cell-cust">{{ invoice.accounting_customer_party.party_name|default(invoice.buyer_reference|default('—')) }}</div>
-                <div class="cell-email">{{ invoice.accounting_customer_party.email|default('') }}</div>
-              </td>
-              <td>
-                <div class="cell-date">{{ invoice.issue_date.isoformat() if invoice.issue_date else '—' }}</div>
-                <div class="cell-due">Due: {{ invoice.due_date.isoformat() if invoice.due_date else '—' }}</div>
-              </td>
-              <td>
-                <div class="cell-amount">{{ invoice.legal_monetary_total.payable_amount|default(0) }}</div>
-                <div class="cell-currency">{{ invoice.document_currency_code|default('NGN') }}</div>
-              </td>
-              <td>
-                {% set st = (invoice.payment_status or 'pending') %}
-                <span class="badge {% if st == 'paid' %}b-paid{% elif st == 'overdue' %}b-overdue{% else %}b-pending{% endif %}">
-                  {{ st|capitalize }}
-                </span>
-              </td>
-              <td>
-                {% if invoice.submissions %}
-                <div class="firs-sub">
-                  <div class="firs-sub-head">
-                    <span>#</span><span>Status</span><span>Logs</span>
-                  </div>
-                  {% for sub in invoice.submissions %}
-                  <div class="firs-sub-row">
-                    <span>#{{ sub.id }}</span>
-                    <span>
-                      <span class="
-                        {% if sub.status == 'transmitted' %}fs-transmitted
-                        {% elif sub.status == 'failed' %}fs-failed
-                        {% elif sub.status == 'validated' %}fs-validated
-                        {% else %}fs-pending{% endif %}">
-                        {{ sub.status }}
-                      </span>
-                    </span>
-                    <span>
-                      <a href="{{ url_for('view_submission_logs', submission_id=sub.id) }}" class="fs-viewlink">View</a>
-                    </span>
-                  </div>
-                  {% endfor %}
-                </div>
-                {% else %}
-                <span class="no-sub">No submissions</span>
-                {% endif %}
-              </td>
-              <td style="text-align:right;white-space:nowrap">
-                <a href="{{ url_for('invoice_detail', invoice_id=invoice.id) }}" target="_blank" rel="noopener" class="act-open">Open</a>
-                <a href="{{ url_for('invoice_pdf', invoice_id=invoice.id) }}" class="act-pdf"><i class="bi bi-filetype-pdf"></i> PDF</a>
-              </td>
-            </tr>
-            {% else %}
-            <tr>
-              <td colspan="8" style="text-align:center;padding:3rem;color:var(--muted);font-size:.85rem">
-                <i class="bi bi-inbox" style="font-size:2rem;display:block;margin-bottom:.5rem;opacity:.4"></i>
-                No invoices found.
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-
-        <!-- Pagination -->
-        <div class="pagination">
-          <div class="pg-info">
-            Showing <strong style="color:var(--silver)">{{ (page-1)*per_page + 1 }}</strong> –
-            <strong style="color:var(--silver)">{{ (page-1)*per_page + invoices|length }}</strong> of
-            <strong style="color:var(--silver)">{{ total_count }}</strong>
-          </div>
-          <nav class="pg-btns" aria-label="Pagination">
-            <a href="{{ url_for('dashboard', page=1, q=request.args.get('q')) }}"
-               class="pg-btn {% if page==1 %}disabled{% endif %}">
-              <i class="bi bi-chevron-double-left"></i>
-            </a>
-            <a href="{{ url_for('dashboard', page=page-1 if page>1 else 1, q=request.args.get('q')) }}"
-               class="pg-btn {% if page==1 %}disabled{% endif %}">
-              <i class="bi bi-chevron-left"></i>
-            </a>
-
-            {% for p in range([1, page-2]|max, [total_pages+1, page+3]|min) %}
-            <a href="{{ url_for('dashboard', page=p, q=request.args.get('q')) }}"
-               class="pg-btn {% if p==page %}active{% endif %}">{{ p }}</a>
-            {% endfor %}
-
-            <a href="{{ url_for('dashboard', page=page+1 if page<total_pages else total_pages, q=request.args.get('q')) }}"
-               class="pg-btn {% if page==total_pages %}disabled{% endif %}">
-              <i class="bi bi-chevron-right"></i>
-            </a>
-            <a href="{{ url_for('dashboard', page=total_pages, q=request.args.get('q')) }}"
-               class="pg-btn {% if page==total_pages %}disabled{% endif %}">
-              <i class="bi bi-chevron-double-right"></i>
-            </a>
-          </nav>
-        </div>
-      </div><!-- /table-wrap -->
-
-    </div><!-- /content -->
-  </div><!-- /main -->
-</div><!-- /shell -->
-
-<!-- ══ LOG MODAL ══ -->
+{% block modals %}
 <div class="modal-back" id="logModal">
-  <div class="modal-box">
+  <div class="modal-box" style="max-width:540px">
     <button class="modal-close" id="closeLogModal">&times;</button>
     <div class="modal-title" id="logModalTitle">Submission Log</div>
     <div class="modal-sub">Full FIRS API response for this submission</div>
@@ -817,67 +298,17 @@
     </div>
   </div>
 </div>
+{% endblock %}
 
-<!-- ══════════════ SCRIPTS ══════════════ -->
-
-<!-- Flash messages -->
-<script>
-(function(){
-  const messages=[];
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      {% for category, message in messages %}
-        messages.push({type:"{{ category }}",text:{{ message|tojson }}});
-      {% endfor %}
-    {% endif %}
-  {% endwith %}
-  const c=document.getElementById('flash-container');
-  messages.forEach(m=>{
-    const d=document.createElement('div');
-    d.className=`flash-msg flash-${m.type}`;
-    d.innerHTML=`<span>${m.text}</span><button class="flash-close" onclick="this.parentElement.remove()">&times;</button>`;
-    c.appendChild(d);
-    setTimeout(()=>d.remove(),5000);
-  });
-})();
-</script>
-
-<!-- Sidebar toggle -->
-<script>
-const sidebar=document.getElementById('sidebar');
-let collapsed=false;
-function toggleSidebar(){
-  collapsed=!collapsed;
-  sidebar.classList.toggle('collapsed',collapsed);
-  document.getElementById('collapseBtn').querySelector('.sb-label').textContent=collapsed?'Expand':'Collapse';
-}
-function openSidebar(){sidebar.classList.add('mob-open');document.getElementById('mobOverlay').classList.add('open')}
-function closeSidebar(){sidebar.classList.remove('mob-open');document.getElementById('mobOverlay').classList.remove('open')}
-</script>
-
-<!-- Sparklines (pure SVG, no deps) -->
+{% block extra_js %}
 <script>
 (function(){
   function spark(id,vals,color){
     const el=document.getElementById(id);if(!el)return;
     const w=el.offsetWidth||200,h=32,max=Math.max(...vals),min=Math.min(...vals);
-    const pts=vals.map((v,i)=>{
-      const x=(i/(vals.length-1))*w;
-      const y=h-((v-min)/(max-min||1))*(h-4)-2;
-      return `${x},${y}`;
-    }).join(' ');
-    const area='M '+pts.split(' ').map((p,i,a)=>i===0?p:`L ${p}`).join(' ')+
-               ` L ${w},${h} L 0,${h} Z`;
-    el.innerHTML=`<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
-      <defs>
-        <linearGradient id="sg_${id}" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="${color}" stop-opacity=".25"/>
-          <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
-        </linearGradient>
-      </defs>
-      <path d="${area}" fill="url(#sg_${id})"/>
-      <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>`;
+    const pts=vals.map((v,i)=>{const x=(i/(vals.length-1))*w;const y=h-((v-min)/(max-min||1))*(h-4)-2;return `${x},${y}`}).join(' ');
+    const area='M '+pts.split(' ').map((p,i)=>i===0?p:`L ${p}`).join(' ')+` L ${w},${h} L 0,${h} Z`;
+    el.innerHTML=`<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><defs><linearGradient id="sg_${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${color}" stop-opacity=".25"/><stop offset="100%" stop-color="${color}" stop-opacity="0"/></linearGradient></defs><path d="${area}" fill="url(#sg_${id})"/><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   }
   spark('spark1',[110,125,140,132,148,155,162,158,170,182],'#2ec5db');
   spark('spark2',[90,110,118,114,130,128,140,135,148,157],'#10b981');
@@ -886,12 +317,10 @@ function closeSidebar(){sidebar.classList.remove('mob-open');document.getElement
 })();
 </script>
 
-<!-- Live Submission Ticker (SSE + polling) -->
 <script>
-const SSE_STREAM_URL = {{ url_for('firs.api_submission_logs_stream') | tojson }};
-const GET_LOG_URL_TEMPLATE = {{ url_for('firs.api_submission_log_get', log_id=0) | tojson }};
-const GET_LOG_URL = id => GET_LOG_URL_TEMPLATE.replace('/0','/'+id);
-
+const SSE_STREAM_URL={{ url_for('firs.api_submission_logs_stream')|tojson }};
+const GET_LOG_URL_TEMPLATE={{ url_for('firs.api_submission_log_get',log_id=0)|tojson }};
+const GET_LOG_URL=id=>GET_LOG_URL_TEMPLATE.replace('/0','/'+id);
 (function(){
   const scroll=document.getElementById('tickerScroll');
   const pauseBtn=document.getElementById('tickerPauseBtn');
@@ -900,108 +329,50 @@ const GET_LOG_URL = id => GET_LOG_URL_TEMPLATE.replace('/0','/'+id);
   const logTitle=document.getElementById('logModalTitle');
   const logFooter=document.getElementById('logModalFooter');
   let lastId=0,paused=false,pollTimer=null;
-
-  function levelCls(l){
-    switch((l||'').toLowerCase()){
-      case 'success': return 't-success';
-      case 'error': case 'critical': case 'fail': case 'failed': return 't-error';
-      case 'warning': case 'warn': return 't-warning';
-      default: return 't-info';
-    }
-  }
-
+  function levelCls(l){switch((l||'').toLowerCase()){case 'success':return 't-success';case 'error':case 'critical':case 'fail':case 'failed':return 't-error';case 'warning':case 'warn':return 't-warning';default:return 't-info'}}
+  function escHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
   function addChip(log){
     if(!log?.id||document.getElementById('chip-'+log.id))return;
     const short=log.message.length>60?log.message.substring(0,60)+'…':log.message;
-    const chip=document.createElement('div');
-    chip.className=`t-chip ${levelCls(log.level)}`;
-    chip.id='chip-'+log.id;
+    const chip=document.createElement('div');chip.className=`t-chip ${levelCls(log.level)}`;chip.id='chip-'+log.id;
     chip.innerHTML=`<strong style="text-transform:uppercase;font-size:.6rem">${log.level}</strong> ${escHtml(short)} <span class="t-view" data-id="${log.id}">View</span>`;
     chip.querySelector('.t-view').addEventListener('click',()=>openLog(log.id));
-    scroll.prepend(chip);
-    while(scroll.children.length>5)scroll.removeChild(scroll.lastChild);
+    scroll.prepend(chip);while(scroll.children.length>5)scroll.removeChild(scroll.lastChild);
     lastId=Math.max(lastId||0,log.id||0);
   }
-
-  function escHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
-
   async function openLog(id){
-    logBody.textContent='Loading…';
-    logTitle.textContent='Submission Log #'+id;
-    logModal.classList.add('open');
-    try{
-      const r=await fetch(GET_LOG_URL(id),{credentials:'same-origin'});
-      const j=await r.json();
-      if(j.ok){logBody.textContent=j.message;logFooter.textContent=`Level: ${j.level} · ${j.created_at||''}`;} 
-      else logBody.textContent=j.error||'Unknown error';
-    }catch(e){logBody.textContent='Network error — could not fetch log.'}
+    logBody.textContent='Loading…';logTitle.textContent='Submission Log #'+id;logModal.classList.add('open');
+    try{const r=await fetch(GET_LOG_URL(id),{credentials:'same-origin'});const j=await r.json();if(j.ok){logBody.textContent=j.message;logFooter.textContent=`Level: ${j.level} · ${j.created_at||''}`;}else logBody.textContent=j.error||'Unknown error'}
+    catch(e){logBody.textContent='Network error.'}
   }
-
-  // SSE
   function startSSE(){
     if(typeof EventSource==='undefined'){startPolling();return}
     const es=new EventSource(SSE_STREAM_URL+(lastId?`?last_id=${lastId}`:''),{withCredentials:true});
-    let ok=false;
-    es.addEventListener('open',()=>ok=true);
+    let ok=false;es.addEventListener('open',()=>ok=true);
     es.addEventListener('error',()=>{if(!ok){es.close();startPolling()}});
     es.addEventListener('submission_log',ev=>{try{if(!paused)addChip(JSON.parse(ev.data))}catch(e){}});
     window.addEventListener('beforeunload',()=>{try{es.close()}catch(e){}});
   }
-  async function poll(){
-    if(paused)return;
-    try{
-      const r=await fetch(`{{ url_for('firs.api_submission_logs_recent_simple') }}?last_id=${lastId}&limit=10`,{credentials:'same-origin'});
-      if(r.status===401)return stopPoll();
-      const j=await r.json();
-      if(j?.ok)j.logs.forEach(addChip);
-    }catch(e){}
-  }
+  async function poll(){if(paused)return;try{const r=await fetch(`{{ url_for('firs.api_submission_logs_recent_simple') }}?last_id=${lastId}&limit=10`,{credentials:'same-origin'});if(r.status===401)return stopPoll();const j=await r.json();if(j?.ok)j.logs.forEach(addChip)}catch(e){}}
   function startPolling(){pollTimer=setInterval(poll,4000);poll()}
   function stopPoll(){clearInterval(pollTimer);pollTimer=null}
-
   try{startSSE()}catch(e){startPolling()}
-
-  pauseBtn.addEventListener('click',()=>{
-    paused=!paused;pauseBtn.textContent=paused?'Resume':'Pause';
-    if(!paused&&!pollTimer)startPolling();
-    if(paused&&pollTimer)stopPoll();
-  });
-
+  pauseBtn.addEventListener('click',()=>{paused=!paused;pauseBtn.textContent=paused?'Resume':'Pause';if(!paused&&!pollTimer)startPolling();if(paused&&pollTimer)stopPoll()});
   document.getElementById('closeLogModal').addEventListener('click',()=>logModal.classList.remove('open'));
   logModal.addEventListener('click',e=>{if(e.target===logModal)logModal.classList.remove('open')});
 })();
 </script>
 
-<!-- Select all checkboxes -->
 <script>
-document.getElementById('selectAll').addEventListener('change',function(){
-  document.querySelectorAll('.row-cb').forEach(cb=>cb.checked=this.checked);
-});
-</script>
-
-<!-- Status filter -->
-<script>
+document.getElementById('selectAll').addEventListener('change',function(){document.querySelectorAll('.row-cb').forEach(cb=>cb.checked=this.checked)});
 document.getElementById('statusFilter').addEventListener('change',function(){
-  const v=this.value;
-  document.querySelectorAll('#invoiceTable tbody tr[data-status]').forEach(tr=>{
-    tr.style.display=(!v||tr.dataset.status===v)?'':'none';
-  });
+  const v=this.value;document.querySelectorAll('#invoiceTable tbody tr[data-status]').forEach(tr=>{tr.style.display=(!v||tr.dataset.status===v)?'':'none'});
 });
-</script>
-
-<!-- Table search (client-side on top of server-side) -->
-<script>
 document.getElementById('tableSearch').addEventListener('input',function(){
-  const q=this.value.toLowerCase();
-  document.querySelectorAll('#invoiceTable tbody tr[data-status]').forEach(tr=>{
-    tr.style.display=tr.textContent.toLowerCase().includes(q)?'':'none';
-  });
+  const q=this.value.toLowerCase();document.querySelectorAll('#invoiceTable tbody tr[data-status]').forEach(tr=>{tr.style.display=tr.textContent.toLowerCase().includes(q)?'':'none'});
 });
 document.getElementById('globalSearch').addEventListener('input',function(){
-  document.getElementById('tableSearch').value=this.value;
-  document.getElementById('tableSearch').dispatchEvent(new Event('input'));
+  document.getElementById('tableSearch').value=this.value;document.getElementById('tableSearch').dispatchEvent(new Event('input'));
 });
 </script>
-
-</body>
-</html>
+{% endblock %}

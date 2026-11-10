@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>400 — Bad Request · Layer21</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+  <style>
+    :root{--bg:#0b1220;--bg2:#0f1a2e;--teal:#2ec5db;--teal2:#36b9d1;--silver:#e6eef2;--muted:rgba(230,238,242,.45);--bd:rgba(46,197,219,.12);--err:#ef4444}
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%;background:var(--bg);font-family:'DM Sans',system-ui,sans-serif;color:var(--silver)}
+    body{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem 1rem;overflow:hidden;position:relative}
+
+    /* ── animated background glows ── */
+    .glow{position:fixed;border-radius:50%;filter:blur(120px);pointer-events:none;animation:drift 18s ease-in-out infinite alternate}
+    .glow-1{width:600px;height:600px;background:radial-gradient(circle,rgba(239,68,68,.08),transparent 70%);top:-200px;left:-200px;animation-delay:0s}
+    .glow-2{width:500px;height:500px;background:radial-gradient(circle,rgba(46,197,219,.05),transparent 70%);bottom:-150px;right:-150px;animation-delay:-9s}
+    @keyframes drift{from{transform:translate(0,0) scale(1)}to{transform:translate(40px,30px) scale(1.08)}}
+
+    /* noise overlay */
+    body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.5}
+
+    /* ── card ── */
+    .card{position:relative;z-index:1;width:100%;max-width:480px;background:linear-gradient(160deg,rgba(15,26,46,.97),rgba(11,18,32,.99));border:1px solid rgba(239,68,68,.18);border-radius:20px;padding:2.5rem 2.25rem;text-align:center;box-shadow:0 0 0 1px rgba(239,68,68,.06),0 32px 80px rgba(0,0,0,.55),0 0 60px rgba(239,68,68,.04)}
+
+    /* ── logo ── */
+    .logo{display:inline-flex;align-items:center;gap:.65rem;margin-bottom:2.25rem;text-decoration:none}
+    .logo-sq{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--teal),var(--teal2));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:.72rem;font-weight:800;color:#041018;box-shadow:0 0 18px rgba(46,197,219,.28);flex-shrink:0}
+    .logo-text .name{font-family:'Syne',sans-serif;font-size:.92rem;font-weight:800;color:var(--silver);line-height:1.1;text-align:left}
+    .logo-text .sub{font-size:.58rem;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.12em;text-align:left}
+
+    /* ── icon ring ── */
+    .icon-ring{position:relative;width:88px;height:88px;margin:0 auto 1.75rem;display:flex;align-items:center;justify-content:center}
+    .ring-bg{position:absolute;inset:0;border-radius:50%;background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.18)}
+    .ring-bg::before{content:'';position:absolute;inset:-8px;border-radius:50%;border:1px solid rgba(239,68,68,.08)}
+    .ring-bg::after{content:'';position:absolute;inset:-16px;border-radius:50%;border:1px solid rgba(239,68,68,.04)}
+    .icon-ring i{font-size:2.2rem;color:#f87171;position:relative;z-index:1;animation:iconpulse 3s ease-in-out infinite}
+    @keyframes iconpulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(.93);opacity:.8}}
+
+    /* ── code + heading ── */
+    .err-code{font-family:'Syne',sans-serif;font-size:5rem;font-weight:800;line-height:1;background:linear-gradient(135deg,#f87171,#ef4444 40%,rgba(239,68,68,.45));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.25rem;letter-spacing:-.03em}
+    .err-title{font-family:'Syne',sans-serif;font-size:1.35rem;font-weight:800;color:#fff;margin-bottom:.6rem}
+    .err-desc{font-size:.86rem;color:var(--muted);line-height:1.65;max-width:360px;margin:0 auto 2rem}
+
+    /* ── detail pill ── */
+    .detail-pill{display:inline-flex;align-items:center;gap:.5rem;padding:.45rem 1rem;border-radius:999px;background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.15);font-size:.72rem;font-weight:600;color:#f87171;margin-bottom:2rem}
+
+    /* ── actions ── */
+    .actions{display:flex;flex-wrap:wrap;gap:.65rem;justify-content:center;margin-bottom:1.75rem}
+    .btn{display:inline-flex;align-items:center;gap:.4rem;padding:.52rem 1.15rem;border-radius:10px;font-size:.82rem;font-weight:700;cursor:pointer;border:none;transition:all .2s;font-family:inherit;text-decoration:none;white-space:nowrap}
+    .btn-primary{background:linear-gradient(135deg,var(--teal),var(--teal2));color:#041018;box-shadow:0 0 20px rgba(46,197,219,.18)}
+    .btn-primary:hover{transform:translateY(-1px);box-shadow:0 0 30px rgba(46,197,219,.32)}
+    .btn-ghost{background:rgba(255,255,255,.04);color:var(--muted);border:1px solid rgba(255,255,255,.08)}
+    .btn-ghost:hover{border-color:var(--teal);color:var(--teal);background:rgba(46,197,219,.05)}
+
+    /* ── help strip ── */
+    .help-strip{padding:.85rem 1rem;border-radius:11px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:.65rem;text-align:left}
+    .help-icon{width:32px;height:32px;border-radius:8px;background:rgba(46,197,219,.08);border:1px solid rgba(46,197,219,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--teal);font-size:.85rem}
+    .help-text{font-size:.76rem;color:var(--muted);line-height:1.45}
+    .help-text a{color:var(--teal);text-decoration:none;font-weight:600}
+    .help-text a:hover{text-decoration:underline}
+
+    /* ── footer timestamp ── */
+    .err-footer{margin-top:2rem;font-size:.68rem;color:rgba(230,238,242,.2);font-family:'DM Mono',monospace}
+  </style>
+</head>
+<body>
+  <div class="glow glow-1"></div>
+  <div class="glow glow-2"></div>
+
+  <div class="card">
+    <!-- Logo -->
+    <a href="{{ url_for('dashboard') if current_user and current_user.is_authenticated else url_for('login') }}" class="logo">
+      <img src="/static/img/layer21light.png" alt="Layer21" style="width:38px;height:38px;border-radius:10px;object-fit:cover"/>
+    </a>
+
+    <!-- Icon -->
+    <div class="icon-ring">
+      <div class="ring-bg"></div>
+      <i class="bi bi-shield-lock-fill"></i>
+    </div>
+
+    <!-- Code + message -->
+    <div class="err-code">400</div>
+    <div class="err-title">Invalid Request</div>
+    <p class="err-desc">You cannot perform this action</p>
+
+    <!-- Actions -->
+    <div class="actions">
+      {% if current_user and current_user.is_authenticated %}
+        <a href="{{ url_for('dashboard') }}" class="btn btn-primary"><i class="bi bi-grid-1x2"></i> Go to Dashboard</a>
+        <a href="javascript:history.back()" class="btn btn-ghost"><i class="bi bi-arrow-left"></i> Go Back</a>
+      {% else %}
+        <a href="{{ url_for('login') }}" class="btn btn-primary"><i class="bi bi-box-arrow-in-right"></i> Sign In</a>
+        <a href="{{ url_for('login') }}" class="btn btn-ghost"><i class="bi bi-arrow-left"></i> Back to Login</a>
+      {% endif %}
+    </div>
+
+    <!-- Help strip -->
+    <div class="help-strip">
+      <div class="help-icon"><i class="bi bi-headset"></i></div>
+      <div class="help-text">
+        If you believe this is a mistake, contact your system administrator or
+        <a href="{{ url_for('list_complaints') if current_user and current_user.is_authenticated else 'mailto:support@layer21.com' }}">open a support ticket</a>.
+      </div>
+    </div>
+
+    <div class="err-footer" id="errTs"></div>
+  </div>
+
+  <script>
+    document.getElementById('errTs').textContent =
+      'Timestamp: ' + new Date().toISOString().replace('T',' ').slice(0,19) + ' UTC';
+  </script>
+</body>
+</html>

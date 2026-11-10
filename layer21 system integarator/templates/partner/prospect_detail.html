@@ -1,0 +1,425 @@
+{% extends "partner/base_partner.html" %}
+
+{% block title %}{{ prospect.company_name }}{% endblock %}
+{% block page_title %}{{ prospect.company_name }}{% endblock %}
+{% block page_crumb %}Partner Portal › Prospects › {{ prospect.company_name }}{% endblock %}
+
+{% block extra_css %}
+/* ── LAYOUT ─────────────────────────────────────── */
+.detail-layout {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 1.1rem;
+  align-items: start;
+}
+@media (max-width: 920px) { .detail-layout { grid-template-columns: 1fr; } }
+
+/* ── PROSPECT HERO ──────────────────────────────── */
+.prospect-hero {
+  background: var(--ink2);
+  border: 1px solid var(--line);
+  border-radius: var(--r3);
+  padding: 1.5rem 1.6rem;
+  margin-bottom: 1.1rem;
+  display: flex; flex-wrap: wrap; gap: 1.2rem; align-items: flex-start;
+  position: relative; overflow: hidden;
+}
+.prospect-hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 0% 50%, rgba(46,197,219,.05), transparent 60%);
+  pointer-events: none;
+}
+.ph-ava {
+  width: 56px; height: 56px; border-radius: 14px; flex-shrink: 0;
+  background: linear-gradient(135deg, rgba(46,197,219,.15), rgba(46,197,219,.04));
+  border: 1px solid var(--teal-b);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 800; color: var(--teal);
+  position: relative; z-index: 1;
+}
+.ph-body { flex: 1; min-width: 180px; position: relative; z-index: 1; }
+.ph-name { font-family: 'Syne', sans-serif; font-size: 1.25rem; font-weight: 800; color: #fff; margin-bottom: .3rem; }
+.ph-meta { font-size: .78rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: .35rem .7rem; margin-bottom: .75rem; }
+.ph-meta span { display: flex; align-items: center; gap: .3rem; }
+.ph-actions { display: flex; flex-wrap: wrap; gap: .45rem; }
+
+/* ── STAGE BAR ──────────────────────────────────── */
+.stage-bar {
+  display: flex; align-items: center; gap: .35rem;
+  background: var(--ink2); border: 1px solid var(--line);
+  border-radius: var(--r2); padding: 1rem 1.2rem;
+  margin-bottom: 1.1rem; flex-wrap: wrap;
+}
+.stage-bar-label { font-size: .72rem; font-weight: 600; color: var(--muted); margin-right: .25rem; }
+.stage-btn {
+  padding: .3rem .75rem; border-radius: 999px;
+  font-size: .72rem; font-weight: 700; cursor: pointer;
+  border: 1px solid var(--line); background: rgba(255,255,255,.03);
+  color: var(--muted); transition: all .18s; font-family: inherit;
+}
+.stage-btn:hover { background: var(--teal-t); border-color: var(--teal-b); color: var(--teal); }
+.stage-btn.active-new      { background: var(--teal-t);    border-color: var(--teal-b);              color: var(--teal); }
+.stage-btn.active-inprogress{ background: var(--purple-t); border-color: rgba(139,92,246,.25);        color: #c4b5fd; }
+.stage-btn.active-completed { background: var(--ok-t);     border-color: rgba(34,197,94,.25);         color: #4ade80; }
+.stage-btn.active-lost      { background: rgba(255,255,255,.04); border-color: var(--line);           color: var(--muted); }
+
+/* ── TIMELINE ───────────────────────────────────── */
+.timeline { display: flex; flex-direction: column; gap: 0; }
+.tl-item  { display: grid; grid-template-columns: 32px 1fr; gap: 0 .9rem; position: relative; }
+.tl-item:not(:last-child) .tl-line { display: block; }
+.tl-line  {
+  display: none; position: absolute;
+  left: 15px; top: 38px; bottom: -8px;
+  width: 1px; background: var(--line);
+}
+.tl-dot {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--teal-t); border: 1px solid var(--teal-b);
+  display: flex; align-items: center; justify-content: center;
+  font-size: .72rem; font-weight: 700; color: var(--teal);
+  font-family: 'Syne', sans-serif; flex-shrink: 0;
+  margin-top: .15rem; position: relative; z-index: 1;
+}
+.tl-content {
+  background: var(--ink3); border: 1px solid var(--line);
+  border-radius: var(--r2); padding: 1rem 1.1rem;
+  margin-bottom: .75rem; transition: border-color .18s;
+}
+.tl-content:hover { border-color: rgba(255,255,255,.1); }
+.tl-header { display: flex; align-items: flex-start; justify-content: space-between; gap: .5rem; margin-bottom: .5rem; }
+.tl-author { font-size: .78rem; font-weight: 600; color: var(--silver); }
+.tl-time   { font-size: .67rem; color: var(--muted); white-space: nowrap; }
+.tl-message{ font-size: .82rem; color: var(--silver2); line-height: 1.65; white-space: pre-wrap; }
+.tl-attachments { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .65rem; }
+.tl-file {
+  display: inline-flex; align-items: center; gap: .35rem;
+  padding: .25rem .65rem; border-radius: 7px;
+  background: rgba(255,255,255,.04); border: 1px solid var(--line);
+  font-size: .68rem; color: var(--muted); text-decoration: none; transition: all .18s;
+}
+.tl-file:hover { border-color: var(--teal-b); color: var(--teal); }
+
+/* ── COMMENT BOX ────────────────────────────────── */
+.comment-box {
+  background: var(--ink2); border: 1px solid var(--line);
+  border-radius: var(--r3); overflow: hidden; margin-bottom: 1.1rem;
+}
+.comment-box-hd {
+  padding: .8rem 1.1rem; border-bottom: 1px solid var(--line);
+  font-size: .72rem; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .08em;
+  display: flex; align-items: center; gap: .4rem;
+}
+.comment-form { padding: 1rem; }
+.attach-area {
+  display: flex; align-items: center; gap: .5rem;
+  padding: .5rem .75rem; border: 1px dashed var(--line);
+  border-radius: var(--r); cursor: pointer;
+  font-size: .74rem; color: var(--muted); transition: all .18s;
+}
+.attach-area:hover { border-color: var(--teal-b); color: var(--teal); }
+.attach-area input[type="file"] { display: none; }
+
+/* ── SIDEBAR CARDS ──────────────────────────────── */
+.meta-card { background: var(--ink2); border: 1px solid var(--line); border-radius: var(--r3); overflow: hidden; margin-bottom: 1rem; }
+.meta-card-hd {
+  padding: .75rem 1rem; border-bottom: 1px solid var(--line2);
+  font-size: .65rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .08em; color: var(--muted);
+  display: flex; align-items: center; gap: .4rem;
+}
+.meta-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: .65rem 1rem; border-bottom: 1px solid var(--line2);
+  font-size: .78rem;
+}
+.meta-row:last-child { border-bottom: none; }
+.meta-key { color: var(--muted); }
+.meta-val { color: var(--silver); font-weight: 500; text-align: right; word-break: break-all; }
+
+/* Agent assignment select */
+.assign-form { padding: .75rem 1rem; }
+.assign-form select {
+  width: 100%; background: rgba(255,255,255,.04); border: 1px solid var(--line);
+  border-radius: var(--r); padding: .5rem .75rem;
+  color: var(--silver); font-family: inherit; font-size: .8rem;
+  outline: none; transition: all .18s; margin-bottom: .55rem;
+}
+.assign-form select:focus { border-color: var(--teal); background: var(--teal-t); }
+.assign-form select option { background: var(--ink3); }
+{% endblock %}
+
+{% block topbar_actions %}
+<a href="{{ url_for('partner_portal.list_prospects') }}" class="btn btn-ghost btn-sm">
+  <i class="bi bi-arrow-left"></i> Back
+</a>
+{% endblock %}
+
+{% block content %}
+
+<!-- PROSPECT HERO -->
+<div class="prospect-hero anim-up">
+  <div class="ph-ava">{{ prospect.company_name[:2]|upper }}</div>
+  <div class="ph-body">
+    <div class="ph-name">{{ prospect.company_name }}</div>
+    <div class="ph-meta">
+      <span><i class="bi bi-person"></i> {{ prospect.contact_name }}</span>
+      <span><i class="bi bi-envelope"></i> {{ prospect.email }}</span>
+      {% if prospect.phone %}<span><i class="bi bi-phone"></i> {{ prospect.phone }}</span>{% endif %}
+      <span><i class="bi bi-grid"></i> {{ prospect.service_type }}</span>
+    </div>
+    <div class="ph-actions">
+      <span class="pill
+        {% if prospect.stage == 'new' %}pill-teal
+        {% elif prospect.stage == 'inprogress' %}pill-purple
+        {% elif prospect.stage == 'completed' %}pill-green
+        {% else %}pill-muted{% endif %}"
+        style="font-size:.7rem;padding:3px 11px">
+        {{ prospect.stage|title }}
+      </span>
+      {% if prospect.assigned_agent %}
+      <span style="font-size:.75rem;color:var(--muted);display:flex;align-items:center;gap:.35rem">
+        <i class="bi bi-person-badge"></i>
+        {{ prospect.assigned_agent.first_name }} {{ prospect.assigned_agent.last_name }}
+      </span>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- STAGE UPDATE BAR -->
+<form method="post" action="{{ url_for('partner_portal.update_stage', prospect_id=prospect.id) }}">
+  <input type="hidden" name="stage" id="stageInput" value="{{ prospect.stage }}"/>
+  <div class="stage-bar anim-up">
+    <span class="stage-bar-label">Move to:</span>
+    {% for stage, label in [('new','New'),('inprogress','In Progress'),('completed','Completed'),('lost','Lost')] %}
+    <button type="button"
+            class="stage-btn {% if prospect.stage == stage %}active-{{ stage }}{% endif %}"
+            onclick="setStage('{{ stage }}', this)">{{ label }}</button>
+    {% endfor %}
+    <button type="submit" id="stageSubmitBtn"
+            style="margin-left:auto;display:none"
+            class="btn btn-primary btn-sm">
+      <i class="bi bi-check-lg"></i> Confirm
+    </button>
+  </div>
+</form>
+
+<!-- MAIN LAYOUT -->
+<div class="detail-layout">
+
+  <!-- LEFT: Timeline + Comment box -->
+  <div>
+
+    <!-- ADD UPDATE FORM -->
+    <div class="comment-box anim-up">
+      <div class="comment-box-hd">
+        <i class="bi bi-chat-left-text" style="color:var(--teal)"></i> Add Update
+      </div>
+      <form class="comment-form" method="post"
+            action="{{ url_for('partner_portal.prospect_detail', prospect_id=prospect.id) }}"
+            enctype="multipart/form-data">
+        <div class="field" style="margin-bottom:.65rem">
+          <textarea name="message"
+                    placeholder="Log a call note, update, or action taken…"
+                    rows="3" required></textarea>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem">
+          <label class="attach-area" id="attachLabel">
+            <i class="bi bi-paperclip"></i> Attach files
+            <input type="file" name="attachments" multiple
+                   accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
+                   onchange="updateAttachLabel(this)"/>
+          </label>
+          <button type="submit" class="btn btn-primary btn-sm">
+            <i class="bi bi-send"></i> Post Update
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- ACTIVITY TIMELINE -->
+    <div class="sec-hd" style="margin-bottom:.85rem">
+      <div class="sec-title" style="font-size:.85rem">
+        <i class="bi bi-clock-history" style="color:var(--teal);margin-right:.35rem"></i>
+        Activity Timeline
+        <span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;
+                     font-size:.58rem;font-weight:700;background:var(--teal-t);color:var(--teal);
+                     border:1px solid var(--teal-b);margin-left:.4rem">{{ comments|length }}</span>
+      </div>
+    </div>
+
+    {% if comments %}
+    <div class="timeline">
+      {% for comment in comments %}
+      <div class="tl-item anim-up">
+        <div class="tl-line"></div>
+        <div class="tl-dot">
+          {{ comment.author.first_name[0]|upper if comment.author else '?' }}
+        </div>
+        <div class="tl-content">
+          <div class="tl-header">
+            <div>
+              <div class="tl-author">
+                {{ comment.author.first_name ~ ' ' ~ comment.author.last_name if comment.author else 'Unknown' }}
+              </div>
+            </div>
+            <div class="tl-time">
+              {{ comment.created_at.strftime('%d %b %Y, %H:%M') if comment.created_at else '' }}
+            </div>
+          </div>
+          <div class="tl-message">{{ comment.message }}</div>
+          {% if comment.attachments %}
+          <div class="tl-attachments">
+            {% for att in comment.attachments %}
+            <a href="#" class="tl-file">
+              <i class="bi bi-paperclip"></i> {{ att.original_filename }}
+            </a>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="meta-card">
+      <div class="empty-state">
+        <i class="bi bi-chat-left"></i>
+        <h3>No updates yet</h3>
+        <p>Post the first update above to start the timeline</p>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- RIGHT: Meta sidebar -->
+  <div>
+
+    <!-- Contact info -->
+    <div class="meta-card anim-up">
+      <div class="meta-card-hd">
+        <i class="bi bi-person-lines-fill" style="color:var(--teal)"></i> Contact Details
+      </div>
+      <div class="meta-row"><span class="meta-key">Company</span><span class="meta-val">{{ prospect.company_name }}</span></div>
+      <div class="meta-row"><span class="meta-key">Contact</span><span class="meta-val">{{ prospect.contact_name }}</span></div>
+      <div class="meta-row"><span class="meta-key">Email</span><span class="meta-val" style="font-size:.73rem">{{ prospect.email }}</span></div>
+      <div class="meta-row"><span class="meta-key">Phone</span><span class="meta-val">{{ prospect.phone or '—' }}</span></div>
+    </div>
+
+    <!-- Deal info -->
+    <div class="meta-card anim-up">
+      <div class="meta-card-hd">
+        <i class="bi bi-briefcase" style="color:var(--teal)"></i> Deal Info
+      </div>
+      <div class="meta-row">
+        <span class="meta-key">Service</span>
+        <span class="meta-val"><span class="pill pill-teal">{{ prospect.service_type }}</span></span>
+      </div>
+      <div class="meta-row">
+        <span class="meta-key">Stage</span>
+        <span class="meta-val">
+          <span class="pill
+            {% if prospect.stage=='new' %}pill-teal
+            {% elif prospect.stage=='inprogress' %}pill-purple
+            {% elif prospect.stage=='completed' %}pill-green
+            {% else %}pill-muted{% endif %}">
+            {{ prospect.stage|title }}
+          </span>
+        </span>
+      </div>
+      <div class="meta-row">
+        <span class="meta-key">Added</span>
+        <span class="meta-val" style="font-size:.72rem;font-family:monospace">
+          {{ prospect.created_at.strftime('%d %b %Y') if prospect.created_at else '—' }}
+        </span>
+      </div>
+      <div class="meta-row">
+        <span class="meta-key">Last update</span>
+        <span class="meta-val" style="font-size:.72rem;font-family:monospace">
+          {{ prospect.updated_at.strftime('%d %b %Y') if prospect.updated_at else '—' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Assign Agent -->
+    <div class="meta-card anim-up">
+      <div class="meta-card-hd">
+        <i class="bi bi-person-badge" style="color:var(--teal)"></i> Assigned Agent
+      </div>
+      {% if prospect.assigned_agent %}
+      <div class="meta-row">
+        <div style="display:flex;align-items:center;gap:.6rem">
+          <div style="width:28px;height:28px;border-radius:8px;background:var(--teal-t);
+                      border:1px solid var(--teal-b);display:flex;align-items:center;
+                      justify-content:center;font-family:'Syne',sans-serif;font-size:.65rem;
+                      font-weight:800;color:var(--teal);flex-shrink:0">
+            {{ prospect.assigned_agent.first_name[0]|upper }}{{ prospect.assigned_agent.last_name[0]|upper if prospect.assigned_agent.last_name else '' }}
+          </div>
+          <div>
+            <div style="font-size:.78rem;font-weight:600;color:#fff">
+              {{ prospect.assigned_agent.first_name }} {{ prospect.assigned_agent.last_name }}
+            </div>
+            <div style="font-size:.66rem;color:var(--muted)">{{ prospect.assigned_agent.email }}</div>
+          </div>
+        </div>
+      </div>
+      {% else %}
+      <div style="padding:.75rem 1rem;font-size:.76rem;color:var(--muted)">No agent assigned</div>
+      {% endif %}
+
+      <!-- Reassign form -->
+      <form class="assign-form"
+            method="post"
+            action="{{ url_for('partner_portal.assign_agent', prospect_id=prospect.id) }}">
+        <select name="agent_user_id">
+          <option value="">— Unassign —</option>
+          {% for pa in company_agents %}
+          <option value="{{ pa.user.id }}"
+            {% if prospect.assigned_agent_id == pa.user.id %}selected{% endif %}>
+            {{ pa.user.first_name }} {{ pa.user.last_name }}
+            {% if pa.role == 'admin' %}(Admin){% endif %}
+          </option>
+          {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-ghost btn-sm" style="width:100%">
+          <i class="bi bi-person-check"></i>
+          {% if prospect.assigned_agent %}Reassign Agent{% else %}Assign Agent{% endif %}
+        </button>
+      </form>
+    </div>
+
+  </div><!-- /right -->
+</div><!-- /detail-layout -->
+
+{% endblock %}
+
+{% block extra_js %}
+function setStage(stage, btn) {
+  document.getElementById('stageInput').value = stage;
+
+  document.querySelectorAll('.stage-btn').forEach(b => {
+    b.className = 'stage-btn';
+  });
+
+  // Map stage value → CSS class suffix
+  const classMap = { new: 'new', inprogress: 'inprogress', completed: 'completed', lost: 'lost' };
+  btn.classList.add('active-' + classMap[stage]);
+
+  // Show confirm button
+  document.getElementById('stageSubmitBtn').style.display = 'inline-flex';
+}
+
+function updateAttachLabel(input) {
+  const label = input.closest('.attach-area');
+  const count = input.files.length;
+  // Remove text nodes, keep the input
+  [...label.childNodes].forEach(n => { if (n.nodeType === 3) n.remove(); });
+  label.querySelector('i').className = 'bi bi-check-circle';
+  label.insertBefore(
+    document.createTextNode(` ${count} file${count !== 1 ? 's' : ''} selected`),
+    input
+  );
+}
+{% endblock %}

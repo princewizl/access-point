@@ -4,7 +4,7 @@ from flask import Flask, render_template, request, redirect, flash, url_for, cur
 from flask_mail import Mail, Message
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from dotenv import load_dotenv
-from models import  db, bcrypt, User, Invoices, Business, InvoiceSubmission, Complaint, SubmissionLog
+from models import  db, bcrypt, User, Invoices, Business, InvoiceSubmission, Complaint, SubmissionLog, get_token_serializer, TierConfig, TIER_DEFAULTS
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy import or_, func, desc
 from datetime import datetime, timedelta,date,time, timezone
@@ -21,6 +21,7 @@ from typing import Union
 import re
 import xml.etree.ElementTree as ET
 import secrets, hmac, hashlib
+from models_partner import PartnerCompany, PartnerAgent, PartnerTicket
 from routes_firs import firs_bp
 from webhook_receiver import webhook_bp 
 from documents_routes import bp
@@ -45,6 +46,10 @@ from flask_limiter.util import get_remote_address
 from flask_talisman import Talisman
 from functools import wraps
 from email_templates import NEW_TICKET_TEMPLATE, NEW_TICKET_CUSTOMER_TEMPLATE
+from routes_partner import partner_bp
+from routes_admin_partner import admin_partner_bp
+from routes_odoo import odoo_bp
+from routes_sage_evolution import sage_evolution_bp
 
 logger = logging.getLogger(__name__)
 base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -87,11 +92,14 @@ app.config['FIRS_REQUEST_TIMEOUT'] = int(os.environ.get('FIRS_REQUEST_TIMEOUT', 
 app.config['FIRS_DEFAULT_SUPPLIER_ADDRESS'] = os.environ.get('FIRS_DEFAULT_SUPPLIER_ADDRESS') 
 app.config['FIRS_QR_ENCRYPTED'] = os.environ.get('FIRS_QR_ENCRYPTED')
 app.config['FIRS_AUTO_ACK'] = True
-app.config['PREFERRED_URL_SCHEME'] = 'https'
 mail = Mail(app)
 app.register_blueprint(firs_bp, url_prefix='/api/v1')
 app.register_blueprint(webhook_bp)
 app.register_blueprint(bp)
+app.register_blueprint(partner_bp)
+app.register_blueprint(admin_partner_bp)
+app.register_blueprint(odoo_bp, url_prefix='/api/v1/odoo')
+app.register_blueprint(sage_evolution_bp, url_prefix='/api/v1/sage-evolution')
     # Login manager
 login_manager = LoginManager()
 login_manager.login_view = 'login'
@@ -112,7 +120,7 @@ limiter = Limiter(
 )
 
 Talisman(app,
-    force_https=True,
+    force_https=False,
     strict_transport_security=True,
     strict_transport_security_max_age=31536000,
     content_security_policy={
@@ -205,7 +213,7 @@ def load_user(user_id):
 @app.before_request
 def validate_host():
     """Validate Host header to prevent host header injection"""
-    allowed_hosts = ['app.layer21.com', 'layer21.com', 'localhost', '127.0.0.1:5000']
+    allowed_hosts = ['app.layer21.com', 'appstaging.layer21.com', 'layer21.com', 'localhost', '127.0.0.1:5000', '127.0.0.1:8000']
     if request.host not in allowed_hosts:
         abort(400, 'Invalid Host header')
 
@@ -563,7 +571,7 @@ def register():
         except Exception:
             current_app.logger.exception("Failed to send confirmation email")
             flash("Account created — but we couldn't send a confirmation email. Contact support.", "warning")
-        return redirect(url_for("login"))
+        return redirect(url_for("list_users"))
     # GET
     return render_template("register.html", form={})
     
@@ -619,12 +627,141 @@ def login():
                 return redirect(url_for('dashboard'))
             elif user.user_type == 'client':
                 return redirect(url_for('client_dashboard'))
+            elif user.user_type == 'partner':
+                return redirect(url_for('partner_portal.dashboard'))
         else:
             user.record_failed_login()
             flash('Incorrect login Information', 'danger')
             return redirect(url_for('login'))
 
     return render_template('login.html')
+
+
+def _send_reset_email(user, reset_url):
+    cfg = current_app.config
+    MAIL_SERVER   = cfg.get('MAIL_SERVER', 'smtp.gmail.com')
+    MAIL_PORT     = int(cfg.get('MAIL_PORT', 587))
+    MAIL_USE_SSL  = str(cfg.get('MAIL_USE_SSL', 'false')).lower() == 'true'
+    MAIL_USE_TLS  = str(cfg.get('MAIL_USE_TLS', 'true')).lower() == 'true'
+    MAIL_USERNAME = cfg.get('MAIL_USERNAME', '')
+    MAIL_PASSWORD = cfg.get('MAIL_PASSWORD', '')
+    MAIL_SENDER   = cfg.get('MAIL_DEFAULT_SENDER', MAIL_USERNAME)
+
+    msg = EmailMessage()
+    msg['Subject'] = 'Layer21 — Reset your password'
+    msg['From']    = MAIL_SENDER
+    msg['To']      = user.email
+    msg.set_content(
+        f"Hi {user.first_name or user.username},\n\n"
+        f"We received a request to reset your Layer21 account password.\n\n"
+        f"Click the link below to set a new password (expires in 30 minutes):\n\n"
+        f"  {reset_url}\n\n"
+        f"If you did not request a password reset, you can ignore this email.\n\n"
+        f"— Layer21 Support\n"
+        f"  info@layer21.com\n"
+    )
+    html = f"""<!doctype html>
+<html><body style="font-family:Arial,sans-serif;background:#f0f4f8;padding:2rem">
+<div style="max-width:520px;margin:auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.08)">
+  <div style="background:#0b1220;padding:1.5rem 2rem;display:flex;align-items:center;gap:.75rem">
+    <span style="font-family:Arial,sans-serif;font-weight:900;font-size:1rem;color:#2ec5db;letter-spacing:.05em">LAYER21</span>
+  </div>
+  <div style="padding:2rem">
+    <h2 style="margin:0 0 .75rem;font-size:1.25rem;color:#0b1220">Password Reset Request</h2>
+    <p style="color:#4b5563;line-height:1.6">Hi {user.first_name or user.username},</p>
+    <p style="color:#4b5563;line-height:1.6">We received a request to reset your Layer21 account password. Click the button below to choose a new one. This link expires in <strong>30 minutes</strong>.</p>
+    <div style="text-align:center;margin:2rem 0">
+      <a href="{reset_url}" style="display:inline-block;padding:.85rem 2.5rem;background:#2ec5db;color:#041018;font-weight:700;font-size:.95rem;border-radius:10px;text-decoration:none">Reset My Password</a>
+    </div>
+    <p style="color:#9ca3af;font-size:.82rem;line-height:1.5">If you did not request a password reset, you can safely ignore this email — your password will remain unchanged.</p>
+    <hr style="border:none;border-top:1px solid #e5e7eb;margin:1.5rem 0"/>
+    <p style="color:#9ca3af;font-size:.75rem">Layer21 IT Services &nbsp;·&nbsp; <a href="mailto:info@layer21.com" style="color:#2ec5db">info@layer21.com</a></p>
+  </div>
+</div>
+</body></html>"""
+    msg.add_alternative(html, subtype='html')
+
+    ssl_ctx = ssl.create_default_context()
+    try:
+        if MAIL_USE_SSL:
+            with smtplib.SMTP_SSL(MAIL_SERVER, MAIL_PORT, timeout=30, context=ssl_ctx) as smtp:
+                if MAIL_USERNAME and MAIL_PASSWORD:
+                    smtp.login(MAIL_USERNAME, MAIL_PASSWORD)
+                smtp.send_message(msg)
+        else:
+            with smtplib.SMTP(MAIL_SERVER, MAIL_PORT, timeout=30) as smtp:
+                smtp.ehlo()
+                if MAIL_USE_TLS:
+                    smtp.starttls(context=ssl_ctx)
+                    smtp.ehlo()
+                if MAIL_USERNAME and MAIL_PASSWORD:
+                    smtp.login(MAIL_USERNAME, MAIL_PASSWORD)
+                smtp.send_message(msg)
+        current_app.logger.info('Password reset email sent to %s', user.email)
+    except Exception:
+        current_app.logger.exception('Failed to send password reset email to %s', user.email)
+
+
+@app.route('/forgot-password', methods=['POST'])
+@limiter.limit("5 per hour")
+def forgot_password():
+    data       = request.get_json(silent=True) or request.form
+    identifier = data.get('identifier', '').strip().lower()
+    if not identifier:
+        return jsonify(ok=False, error='Email or username is required.'), 400
+
+    user = User.query.filter(
+        or_(
+            db.func.lower(User.email) == identifier,
+            db.func.lower(User.username) == identifier
+        )
+    ).first()
+
+    if user and user.is_active:
+        token     = user.generate_token('password-reset', expires_sec=1800)
+        reset_url = url_for('reset_password', token=token, _external=True)
+        _send_reset_email(user, reset_url)
+
+    # Always return success — prevents user enumeration
+    return jsonify(ok=True), 202
+
+
+@app.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    try:
+        payload = get_token_serializer().loads(token, max_age=1800)
+    except Exception:
+        payload = None
+
+    if not payload or payload.get('purpose') != 'password-reset':
+        flash('This password reset link is invalid or has expired.', 'danger')
+        return redirect(url_for('login'))
+
+    user = User.query.get(payload['user_id'])
+    if not user or not user.is_active:
+        flash('Account not found or inactive.', 'danger')
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        pw  = request.form.get('password', '')
+        pw2 = request.form.get('confirm_password', '')
+        if pw != pw2:
+            flash('Passwords do not match.', 'danger')
+            return render_template('reset_password.html', token=token)
+        try:
+            user.set_password(pw)
+            user.failed_login_count = 0
+            user.locked_until       = None
+            db.session.commit()
+            current_app.logger.info('Password reset completed for user %s', user.id)
+            flash('Password updated — you can now sign in.', 'success')
+            return redirect(url_for('login'))
+        except ValueError as exc:
+            flash(str(exc), 'danger')
+            return render_template('reset_password.html', token=token)
+
+    return render_template('reset_password.html', token=token)
+
 
 @app.route("/portal/dashboard")
 @login_required
@@ -985,8 +1122,8 @@ def client_dashboard():
 @login_required
 def logout():
     logout_user()
-    flash('Logged out', 'info')
-    return redirect(url_for('index'))
+    flash('You have been signed out.', 'info')
+    return redirect(url_for('login'))
 
     
 def _is_safe_header(s: str) -> bool:
@@ -1540,6 +1677,7 @@ def list_businesses():
     total = pagination.total
     total_pages = pagination.pages
 
+    all_partners = PartnerCompany.query.order_by(PartnerCompany.name).all()
     return render_template(
         "businesses.html",
         businesses=businesses,
@@ -1548,6 +1686,7 @@ def list_businesses():
         total=total,
         total_pages=total_pages,
         q=q,
+        all_partners=all_partners,
     )
 
 
@@ -1571,6 +1710,10 @@ def create_business():
     certificate_pem = (form.get("certificate_pem") or "").strip() or None
     private_key_enc = (form.get("private_key") or "").strip() or None
     is_active = True if form.get("is_active") == "on" else False
+    raw_pid = (form.get("referred_by_partner_id") or "").strip()
+    referred_by_partner_id = int(raw_pid) if raw_pid.isdigit() else None
+    new_tier = (form.get("tier") or "starter").strip()
+    biz_tier = new_tier if new_tier in ('starter', 'professional', 'enterprise') else 'starter'
 
     if not name:
         flash("Business name is required.", "danger")
@@ -1601,6 +1744,8 @@ def create_business():
             certificate_pem=certificate_pem,
             private_key_enc=private_key_enc,
             is_active=is_active,
+            referred_by_partner_id=referred_by_partner_id,
+            tier=biz_tier,
         )
         db.session.add(b)
         db.session.commit()
@@ -1613,6 +1758,181 @@ def create_business():
     # IMPORTANT: show secret once (admin should copy it). Keep message short.
     flash(f"Business created. API key: {api_key}. Secret (copy now): {raw_secret}", "success")
     return redirect(url_for("list_businesses"))
+
+# ── Schema migration (idempotent, runs on gunicorn startup) ──────────────────
+def _migrate_schema():
+    from sqlalchemy import inspect, text
+    insp = inspect(db.engine)
+    table_names = set(insp.get_table_names())
+
+    with db.engine.connect() as conn:
+        if 'businesses' in table_names:
+            cols = {c['name'] for c in insp.get_columns('businesses')}
+            if 'referred_by_partner_id' not in cols:
+                conn.execute(text('ALTER TABLE businesses ADD COLUMN referred_by_partner_id INTEGER'))
+        if 'complaints' in table_names:
+            cols = {c['name'] for c in insp.get_columns('complaints')}
+            for col, typedef in [
+                ('business_id',          'INTEGER'),
+                ('routed_to_partner_id', 'INTEGER'),
+                ('updated_at',           'DATETIME'),
+            ]:
+                if col not in cols:
+                    conn.execute(text(f'ALTER TABLE complaints ADD COLUMN {col} {typedef}'))
+        if 'partner_tickets' in table_names:
+            cols = {c['name'] for c in insp.get_columns('partner_tickets')}
+            if 'source' not in cols:
+                conn.execute(text("ALTER TABLE partner_tickets ADD COLUMN source VARCHAR(16) DEFAULT 'raised'"))
+            if 'updated_at' not in cols:
+                conn.execute(text('ALTER TABLE partner_tickets ADD COLUMN updated_at DATETIME'))
+        if 'businesses' in table_names:
+            cols = {c['name'] for c in insp.get_columns('businesses')}
+            if 'tier' not in cols:
+                conn.execute(text("ALTER TABLE businesses ADD COLUMN tier VARCHAR(16) DEFAULT 'starter'"))
+        if 'partner_companies' in table_names:
+            cols = {c['name'] for c in insp.get_columns('partner_companies')}
+            if 'tier' not in cols:
+                conn.execute(text("ALTER TABLE partner_companies ADD COLUMN tier VARCHAR(16) DEFAULT 'registered'"))
+            if 'nrs_certified' not in cols:
+                conn.execute(text('ALTER TABLE partner_companies ADD COLUMN nrs_certified BOOLEAN DEFAULT 0'))
+        conn.commit()
+
+    # ── Seed default tier configs if the table is empty ──────────────────────
+    db.create_all()   # creates tier_configs table if it doesn't exist yet
+    if TierConfig.query.count() == 0:
+        for row in TIER_DEFAULTS:
+            db.session.add(TierConfig(**row))
+        db.session.commit()
+
+
+with app.app_context():
+    _migrate_schema()
+
+
+# ── Helpdesk email helpers ────────────────────────────────────────────────────
+def _partner_agent_emails(partner_company_id):
+    """Return list of email addresses for all agents of a partner company."""
+    agents = (PartnerAgent.query
+              .filter_by(company_id=partner_company_id)
+              .join(PartnerAgent.user)
+              .all())
+    return [a.user.email for a in agents if a.user and a.user.email]
+
+
+def _send_helpdesk_mail(recipients, subject, html):
+    if not recipients:
+        return
+    try:
+        msg = Message(subject=subject,
+                      recipients=recipients,
+                      sender=current_app.config.get('MAIL_DEFAULT_SENDER'))
+        msg.html = html
+        mail.send(msg)
+    except Exception:
+        current_app.logger.exception('Helpdesk email failed to %s', recipients)
+
+
+def _ticket_html(heading, complaint, submitter_name, business_name=None, extra_note=None):
+    priority_color = {'critical': '#ef4444', 'high': '#f59e0b',
+                      'normal': '#2ec5db', 'low': '#6b7280'}.get(complaint.priority, '#2ec5db')
+    rows = f"""
+    <tr><td style="padding:6px 0;color:#6b7280;font-size:13px">Ticket #</td>
+        <td style="padding:6px 0;font-weight:600">#{complaint.id}</td></tr>
+    <tr><td style="padding:6px 0;color:#6b7280;font-size:13px">Raised by</td>
+        <td style="padding:6px 0">{submitter_name}</td></tr>
+    {'<tr><td style="padding:6px 0;color:#6b7280;font-size:13px">Business</td><td style="padding:6px 0">' + business_name + '</td></tr>' if business_name else ''}
+    <tr><td style="padding:6px 0;color:#6b7280;font-size:13px">Category</td>
+        <td style="padding:6px 0">{complaint.category}</td></tr>
+    <tr><td style="padding:6px 0;color:#6b7280;font-size:13px">Priority</td>
+        <td style="padding:6px 0"><span style="color:{priority_color};font-weight:700">{complaint.priority.upper()}</span></td></tr>
+    """
+    extra = f'<p style="background:#fffbeb;border-left:3px solid #f59e0b;padding:.75rem 1rem;border-radius:6px;font-size:13px;color:#78350f;margin-top:1rem">{extra_note}</p>' if extra_note else ''
+    return f"""<!doctype html><html><body style="font-family:Arial,sans-serif;background:#f0f4f8;padding:2rem">
+<div style="max-width:560px;margin:auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.08)">
+  <div style="background:#0b1220;padding:1.25rem 2rem">
+    <span style="font-family:Arial,sans-serif;font-weight:900;font-size:1rem;color:#2ec5db;letter-spacing:.05em">LAYER21</span>
+  </div>
+  <div style="padding:1.75rem 2rem">
+    <h2 style="margin:0 0 .5rem;font-size:1.1rem;color:#0b1220">{heading}</h2>
+    <h3 style="margin:0 0 1.25rem;font-size:1.25rem;color:#111">{complaint.title}</h3>
+    <table style="width:100%;border-collapse:collapse">{rows}</table>
+    {('<p style="margin-top:1rem;font-size:13px;color:#374151;line-height:1.6"><strong>Description:</strong><br/>' + complaint.description + '</p>') if complaint.description else ''}
+    {extra}
+  </div>
+  <div style="padding:.75rem 2rem;background:#f9fafb;font-size:11px;color:#9ca3af">
+    Layer21 IT Services &nbsp;·&nbsp; <a href="mailto:support@layer21.com" style="color:#2ec5db">support@layer21.com</a>
+  </div>
+</div></body></html>"""
+
+
+def _notify_partner_new_ticket(partner_id, complaint, submitter, business):
+    """Email partner agents when a client ticket is auto-routed to them."""
+    partner = PartnerCompany.query.get(partner_id)
+    if not partner:
+        return
+    recipients = _partner_agent_emails(partner_id)
+    html = _ticket_html(
+        f'New client ticket routed to {partner.name}',
+        complaint,
+        f'{submitter.first_name or ""} {submitter.last_name or ""}'.strip() or submitter.username,
+        business_name=business.name,
+        extra_note='This ticket was raised by a client in your portfolio. Handle it in your partner helpdesk portal. Escalate to Layer21 if you need our support.'
+    )
+    _send_helpdesk_mail(
+        recipients,
+        f'[Partner Helpdesk #{complaint.id}] New ticket — {business.name}',
+        html
+    )
+
+
+def _notify_l21_new_ticket(complaint, submitter):
+    """Email Layer21 support when a ticket is NOT partner-routed."""
+    name = f'{submitter.first_name or ""} {submitter.last_name or ""}'.strip() or submitter.username
+    html = _ticket_html('New support ticket', complaint, name)
+    _send_helpdesk_mail(
+        ['support@layer21.com', 'bilikisu.muhammed@layer21.com'],
+        f'[IT Ticket #{complaint.id}] New Support Request — {complaint.priority} Priority',
+        html
+    )
+    if submitter.email:
+        ack = _ticket_html('We received your support request', complaint, name,
+                           extra_note='Our team will review your ticket and be in touch shortly.')
+        _send_helpdesk_mail([submitter.email], 'We received your complaint', ack)
+
+
+def _notify_partner_status_update(complaint):
+    """Email partner agents when Layer21 updates a routed ticket's status."""
+    if not complaint.routed_to_partner_id:
+        return
+    partner = PartnerCompany.query.get(complaint.routed_to_partner_id)
+    if not partner:
+        return
+    recipients = _partner_agent_emails(complaint.routed_to_partner_id)
+    html = _ticket_html(
+        f'Ticket #{complaint.id} status updated by Layer21',
+        complaint,
+        complaint.created_by or 'Client',
+        extra_note=f'Status is now: <strong>{complaint.status.replace("_", " ").title()}</strong>'
+    )
+    _send_helpdesk_mail(recipients,
+                        f'[Partner Helpdesk #{complaint.id}] Status updated — {complaint.status}',
+                        html)
+
+
+def _notify_l21_escalation(complaint, partner_name):
+    """Email Layer21 support when a partner escalates a routed ticket."""
+    html = _ticket_html(
+        f'[ESCALATED] Partner {partner_name} escalated a ticket',
+        complaint,
+        complaint.created_by or 'Client',
+        extra_note=f'Partner <strong>{partner_name}</strong> could not resolve this ticket and has escalated it to Layer21 support.'
+    )
+    _send_helpdesk_mail(
+        ['support@layer21.com', 'bilikisu.muhammed@layer21.com'],
+        f'[ESCALATED #{complaint.id}] Partner escalation — {complaint.priority} Priority',
+        html
+    )
+
 
 # Complaints routes
 @app.route('/complaints', methods=['GET', 'POST'])
@@ -1655,6 +1975,11 @@ def list_complaints():
             flash('Title and category are required.', 'danger')
             return redirect(url_for('list_complaints', page=page, q=q))
 
+        # Resolve the business record for the current user
+        biz_record = None
+        if current_user.business_id:
+            biz_record = Business.query.filter_by(buisness_id=current_user.business_id).first()
+
         new_complaint = Complaint(
             title=title,
             priority=priority,
@@ -1662,66 +1987,45 @@ def list_complaints():
             description=description,
             user_id=current_user.id,
             status='new',
-            created_by=f'{current_user.first_name} {current_user.last_name}'
+            created_by=f'{current_user.first_name} {current_user.last_name}',
+            business_id=biz_record.id if biz_record else None,
         )
 
         try:
             db.session.add(new_complaint)
-            db.session.commit()
-        except Exception as e:
+            db.session.flush()  # get new_complaint.id before routing
+
+            # ── Partner routing ───────────────────────────────────────────
+            if biz_record and biz_record.referred_by_partner_id:
+                partner_id = biz_record.referred_by_partner_id
+                new_complaint.routed_to_partner_id = partner_id
+                # Auto-create a PartnerTicket so the partner sees it in their portal
+                pt = PartnerTicket(
+                    title=title,
+                    description=description or '(no description)',
+                    status='open',
+                    source='routed',
+                    company_id=partner_id,
+                    opened_by_id=current_user.id,
+                    internal_complaint_id=new_complaint.id,
+                )
+                db.session.add(pt)
+                db.session.commit()
+                current_app.logger.info(
+                    'Ticket #%s routed to partner company %s', new_complaint.id, partner_id)
+                _notify_partner_new_ticket(partner_id, new_complaint, current_user, biz_record)
+            else:
+                # No partner attribution — goes straight to Layer21 support
+                db.session.commit()
+                _notify_l21_new_ticket(new_complaint, current_user)
+
+        except Exception:
             db.session.rollback()
             current_app.logger.exception("Failed to create complaint")
             flash('Failed to save complaint. Try again.', 'danger')
             return redirect(url_for('list_complaints', page=page, q=q))
 
-        # prepare email
-        html_content = render_template_string(
-            NEW_TICKET_TEMPLATE,
-            title=title,
-            name=f'{current_user.first_name} {current_user.last_name}',
-            category=category,
-            priority=priority,
-            description=description,
-        )
-
-        msg = Message(
-            subject=f'[IT Ticket #{new_complaint.id}] New Support Request — {priority} Priority',
-            recipients=['support@layer21.com','bilikisu.muhammed@layer21.com'],  # must be a list
-            sender=current_app.config.get('MAIL_DEFAULT_SENDER')  # configured below
-        )
-        msg.html = html_content
-
-        try:
-            mail.send(msg)
-        except Exception:
-            current_app.logger.exception("Failed to send complaint notification email")
-            # email sending failed but complaint was saved. notify user but don't rollback DB.
-            flash('Complaint saved but failed to send notification email.', 'warning')
-            return redirect(url_for('list_complaints', page=page, q=q))
-        
-        if current_user.email:
-            html_content = render_template_string(
-                NEW_TICKET_TEMPLATE,
-                title=title,
-                name=f'{current_user.first_name} {current_user.last_name}',
-                category=category,
-                priority=priority,
-                description=description,
-                )
-            msg = Message(
-                subject=f' We Recieved Your Complaint',
-                recipients=[current_user.email],  # must be a list
-                sender=current_app.config.get('MAIL_DEFAULT_SENDER')  # configured below
-                )
-            msg.html = html_content
-            try:
-                mail.send(msg)
-            except Exception:
-                current_app.logger.exception("Failed to send customer notification email")
-                flash('Complaint saved but failed to send customer notification email.', 'warning')
-                return redirect(url_for('list_complaints', page=page, q=q))
         flash('Complaint logged successfully.', 'success')
-        # redirect to avoid duplicate form submissions (PRG)
         return redirect(url_for('list_complaints', page=1, q=''))
 
     return render_template(
@@ -1991,7 +2295,16 @@ def business_detail(business_id):
             business.private_key_enc = private_key
  
         business.is_active = bool(request.form.get('is_active'))
- 
+
+        # Partner attribution
+        raw_pid = request.form.get('referred_by_partner_id', '').strip()
+        business.referred_by_partner_id = int(raw_pid) if raw_pid.isdigit() else None
+
+        # Billing tier
+        new_tier = request.form.get('tier', '').strip()
+        if new_tier in ('starter', 'professional', 'enterprise'):
+            business.tier = new_tier
+
         db.session.commit()
         flash('Business updated successfully.', 'success')
         return redirect(url_for('business_detail', business_id=business.id))
@@ -2001,15 +2314,50 @@ def business_detail(business_id):
     submissions_today = 0
     last_activity     = None
  
+    all_partners = PartnerCompany.query.order_by(PartnerCompany.name).all()
     return render_template(
         'business_detail.html',
         business=business,
         invoice_count=invoice_count,
         submissions_today=submissions_today,
         last_activity=last_activity,
+        all_partners=all_partners,
     )
  
  
+@app.route('/admin/tier-config', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def admin_tier_config():
+    if request.method == 'POST':
+        updated = 0
+        for cfg in TierConfig.query.all():
+            key_rpm   = f'rate_per_min_{cfg.id}'
+            key_cap   = f'daily_invoice_cap_{cfg.id}'
+            key_max   = f'max_businesses_{cfg.id}'
+            key_sla   = f'sla_hours_{cfg.id}'
+            key_label = f'display_name_{cfg.id}'
+            if key_rpm in request.form:
+                try:
+                    cfg.rate_per_min      = int(request.form[key_rpm])
+                    cfg.daily_invoice_cap = int(request.form[key_cap])
+                    cfg.max_businesses    = int(request.form[key_max])
+                    cfg.sla_hours         = int(request.form[key_sla])
+                    cfg.display_name      = request.form[key_label].strip() or cfg.display_name
+                    updated += 1
+                except (ValueError, KeyError):
+                    pass
+        db.session.commit()
+        flash(f'Tier configuration saved ({updated} tiers updated).', 'success')
+        return redirect(url_for('admin_tier_config'))
+
+    biz_tiers     = TierConfig.query.filter_by(tier_type='business').order_by(TierConfig.id).all()
+    partner_tiers = TierConfig.query.filter_by(tier_type='partner').order_by(TierConfig.id).all()
+    return render_template('admin_tier_config.html',
+                           biz_tiers=biz_tiers,
+                           partner_tiers=partner_tiers)
+
+
 @app.route('/businesses/<int:business_id>/toggle', methods=['POST'])
 @login_required
 def toggle_business_active(business_id):
@@ -2077,11 +2425,12 @@ def update_complaint_status(complaint_id):
     complaint = Complaint.query.get_or_404(complaint_id)
  
     new_status = request.form.get('status', '').strip()
-    if new_status in ('open', 'in_progress', 'resolved', 'closed'):
+    if new_status in ('open', 'in_progress', 'resolved', 'closed', 'escalated'):
         complaint.status = new_status
         db.session.commit()
         flash(f'Ticket status updated to "{new_status.replace("_", " ").title()}".', 'success')
- 
+        _notify_partner_status_update(complaint)
+
     return redirect(url_for('complaint_detail', complaint_id=complaint.id))
  
  
@@ -2096,7 +2445,7 @@ def add_complaint_note(complaint_id):
  
     changed = False
  
-    if new_status and new_status in ('open', 'in_progress', 'resolved', 'closed'):
+    if new_status and new_status in ('open', 'in_progress', 'resolved', 'closed', 'escalated'):
         complaint.status = new_status
         changed = True
  
@@ -2106,7 +2455,9 @@ def add_complaint_note(complaint_id):
  
     if changed or note_text:
         db.session.commit()
- 
+        if changed:
+            _notify_partner_status_update(complaint)
+
         # Optional: persist the note to a log table
         # log = ComplaintLog(
         #     complaint_id = complaint.id,

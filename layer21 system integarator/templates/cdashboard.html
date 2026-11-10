@@ -76,21 +76,8 @@
     aside.sidebar.collapsed .sb-link{justify-content:center;padding:.7rem}
     aside.sidebar.collapsed .sb-icon{margin:0}
 
-    .sb-brand{
-      padding:1.25rem 1rem;
-      display:flex;align-items:center;gap:.75rem;
-      border-bottom:1px solid var(--border2);
-      text-decoration:none;
-      min-height:68px;
-    }
-    .sb-logo{
-      width:38px;height:38px;border-radius:10px;
-      background:linear-gradient(135deg,var(--teal),var(--teal2));
-      display:flex;align-items:center;justify-content:center;
-      font-family:'Syne',sans-serif;font-size:.75rem;font-weight:800;
-      color:#041018;flex-shrink:0;
-      box-shadow:0 0 20px rgba(46,197,219,.3);
-    }
+    .sb-brand{padding:.6rem 1rem;display:flex;align-items:center;border-bottom:1px solid var(--border2);text-decoration:none}
+    .sb-logo{height:38px;width:auto;max-width:100%;display:block}
     .sb-brand-text .name{font-family:'Syne',sans-serif;font-size:.95rem;font-weight:800;color:var(--silver);line-height:1.1}
     .sb-brand-text .sub{font-size:.6rem;font-weight:600;color:var(--teal);text-transform:uppercase;letter-spacing:.1em}
 
@@ -449,10 +436,7 @@
   <!-- ══════════ SIDEBAR ══════════ -->
   <aside class="sidebar" id="sidebar">
     <a href="/" class="sb-brand">
-      <div class="sb-brand-text">
-        <div class="name">LAYER21 / {{bus.name}}</div>
-        <div class="sub">IT Services</div>
-      </div>
+      <img src="/static/img/layer21light.png" alt="Layer21" class="sb-logo"/>
     </a>
 
     <nav class="sb-nav">

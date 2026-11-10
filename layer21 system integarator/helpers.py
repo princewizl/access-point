@@ -18,6 +18,39 @@ import qrcode as _qrcode
 from io import BytesIO as _BytesIO
 import ssl
 import smtplib
+import threading
+import time
+from collections import defaultdict, deque
+
+# ── In-process sliding-window rate limiter ────────────────────────────────────
+# Keyed by business.id; each entry is a deque of monotonic timestamps.
+# NOTE: not shared across gunicorn workers — use Redis in production for that.
+_rl_lock    = threading.Lock()
+_rl_windows: dict = defaultdict(deque)
+
+def _check_tier_rate_limit(business) -> tuple:
+    """Return (allowed: bool, retry_after_seconds: int)."""
+    try:
+        from models import TierConfig
+        tier = (getattr(business, 'tier', None) or 'starter').lower()
+        cfg  = TierConfig.query.filter_by(tier_type='business', tier_name=tier).first()
+        limit = cfg.rate_per_min if cfg else 60
+    except Exception:
+        return True, 0   # fail open — don't block if config is unavailable
+
+    biz_id      = business.id
+    now         = time.monotonic()
+    window_start = now - 60.0
+
+    with _rl_lock:
+        dq = _rl_windows[biz_id]
+        while dq and dq[0] < window_start:
+            dq.popleft()
+        if len(dq) >= limit:
+            retry_after = max(1, int(61 - (now - dq[0])))
+            return False, retry_after
+        dq.append(now)
+        return True, 0
 from email.message import EmailMessage
 from email.utils import parseaddr
 from typing import Iterable, Optional, Tuple
@@ -173,6 +206,12 @@ def require_api_auth(f):
         if key_match and secret_match:
             # Attach the DB business to g for downstream handlers
             g.business = business
+            # Tier-based rate limiting (in-process sliding window per business)
+            ok, retry_after = _check_tier_rate_limit(business)
+            if not ok:
+                resp = jsonify({"ok": False, "error": "Rate limit exceeded for your tier"})
+                resp.headers['Retry-After'] = str(retry_after)
+                return resp, 429
             # (Optional) also attach a safe serializable subset if you need:
             g.business_meta = SimpleNamespace(
                 id=business.id,
@@ -428,6 +467,108 @@ def _ensure_plus_telephone(tel: str) -> str:
     return tel
 
 
+# invoice_line.price.price_unit is the UBL BaseQuantity/@unitCode, i.e. a
+# UN/ECE Recommendation 20 unit-of-measure code, which the standard caps at 3
+# characters -- hence "invoiceline.price_unit cannot be greater than length 3".
+# The "NGN per 1" value in the FIRS sample payload contradicts their own
+# validator: it is 9 characters and it is a currency, not a unit of measure.
+FIRS_PRICE_UNIT_MAX_LEN = 3
+
+# UN/ECE Rec 20 code for "one" -- the conventional UBL/PEPPOL default for a line
+# that is just a labelled thing with a quantity and no stated unit.
+FIRS_DEFAULT_PRICE_UNIT = "C62"
+
+# Free-text units that ERPs emit (Odoo ships "Units", "Dozens", "hour", ...)
+# mapped to their Rec 20 codes, so a real unit is not thrown away for being
+# spelled out. Keys are compared lowercased with surrounding whitespace and a
+# trailing "." or "s" removed.
+_PRICE_UNIT_ALIASES = {
+    "unit": "C62", "one": "C62", "each": "EA", "ea": "EA", "pc": "H87",
+    "pce": "H87", "piece": "H87", "item": "C62", "article": "NAR",
+    "no": "C62", "num": "C62", "number": "C62", "qty": "C62", "count": "C62",
+    "dozen": "DZN", "pair": "PR", "set": "SET", "pack": "PK", "packet": "PK",
+    "box": "BX", "carton": "CT", "case": "CS", "bag": "BG", "roll": "ROL",
+    "kg": "KGM", "kilo": "KGM", "kilogram": "KGM", "kilogramme": "KGM",
+    "g": "GRM", "gram": "GRM", "gramme": "GRM", "mg": "MGM",
+    "t": "TNE", "ton": "TNE", "tonne": "TNE", "lb": "LBR", "pound": "LBR",
+    "l": "LTR", "ltr": "LTR", "litre": "LTR", "liter": "LTR", "ml": "MLT",
+    "gal": "GLL", "gallon": "GLL",
+    "m": "MTR", "metre": "MTR", "meter": "MTR", "cm": "CMT", "mm": "MMT",
+    "km": "KMT", "ft": "FOT", "foot": "FOT", "feet": "FOT", "inch": "INH",
+    "sqm": "MTK", "m2": "MTK", "cbm": "MTQ", "m3": "MTQ",
+    "sec": "SEC", "second": "SEC", "min": "MIN", "minute": "MIN",
+    "hr": "HUR", "hour": "HUR", "day": "DAY", "week": "WEE",
+    "month": "MON", "year": "ANN", "annum": "ANN",
+    "kwh": "KWH", "mwh": "MWH",
+    # service lines have no physical unit; Rec 20 has no "service" code, so
+    # they fall back to the generic unit like any other countable line
+    "service": "C62", "services": "C62", "job": "C62", "lot": "LOT",
+}
+
+
+def _line_unit_of_measure(ln) -> str:
+    """Find a unit of measure on an invoice line, wherever the sender put it.
+
+    Odoo and similar systems carry it as product_uom / uom on the line, not
+    inside a UBL-style price block, so check the common spellings before
+    falling back to the default.
+    """
+    if not isinstance(ln, dict):
+        return ""
+    item = ln.get("item") if isinstance(ln.get("item"), dict) else {}
+    for src in (ln, item):
+        for key in ("price_unit", "priceUnit", "unit_code", "unitCode",
+                    "product_uom", "productUom", "uom", "unit",
+                    "unit_of_measure", "unitOfMeasure"):
+            val = src.get(key)
+            if isinstance(val, dict):          # Odoo sends {"id":.., "name":".."}
+                val = val.get("name") or val.get("code")
+            if val:
+                return str(val)
+    return ""
+
+
+def _default_price_unit() -> str:
+    """Site-wide default unit, overridable with FIRS_PRICE_UNIT."""
+    try:
+        override = current_app.config.get("FIRS_PRICE_UNIT")
+    except Exception:
+        override = None
+    return str(override or os.environ.get("FIRS_PRICE_UNIT")
+               or FIRS_DEFAULT_PRICE_UNIT).strip()
+
+
+def _normalize_price_unit(value) -> str:
+    """Coerce a unit of measure into a UN/ECE Rec 20 code FIRS will accept.
+
+    Returns a non-empty string of at most FIRS_PRICE_UNIT_MAX_LEN characters.
+    Already-valid short codes pass through untouched; recognised free-text units
+    ("Units", "hour", "kg") are mapped; anything unrecognised or absent falls
+    back to the configured default rather than being truncated into nonsense.
+    """
+    raw = str(value).strip() if value else ""
+    if not raw:
+        return _default_price_unit().upper()[:FIRS_PRICE_UNIT_MAX_LEN]
+
+    alias_key = raw.lower().rstrip(".")
+    mapped = _PRICE_UNIT_ALIASES.get(alias_key) or _PRICE_UNIT_ALIASES.get(alias_key.rstrip("s"))
+    if mapped:
+        return mapped
+
+    if len(raw) <= FIRS_PRICE_UNIT_MAX_LEN:
+        # already a short code (C62, EA, KGM, ...)
+        return raw.upper()
+
+    # Truncating an unknown unit would invent a different, wrong code, so use
+    # the default and leave a trail for whoever is reconciling the submission.
+    fallback = _default_price_unit().upper()[:FIRS_PRICE_UNIT_MAX_LEN]
+    logger.warning(
+        "price_unit %r is not a UN/ECE Rec 20 code and exceeds %s chars; sending %r",
+        raw, FIRS_PRICE_UNIT_MAX_LEN, fallback,
+    )
+    return fallback
+
+
 def build_firs_validate_payload_from_invoice(inv, biz=None) -> Dict[str, Any]:
     """
     Build the flat snake_case payload expected by the sandbox's /invoice/validate endpoint.
@@ -637,15 +778,21 @@ def build_firs_validate_payload_from_invoice(inv, biz=None) -> Dict[str, Any]:
                 base_qty = float(base_qty)
             except Exception:
                 base_qty = 1.0
-            price_unit = raw_price.get("priceUnit") or raw_price.get("price_unit") or "NGN per 1"
+            price_unit = _normalize_price_unit(
+                raw_price.get("priceUnit") or raw_price.get("price_unit")
+                or _line_unit_of_measure(ln)
+            )
         else:
             # primitive: could be int/float/string; try to coerce to float
             try:
                 price_amount = float(raw_price) if raw_price is not None and raw_price != "" else 0.0
             except Exception:
                 price_amount = 0.0
-            base_qty = 1.0
-            price_unit = "NGN per 1"
+            try:
+                base_qty = float(ln.get("base_quantity") or ln.get("baseQuantity") or 1)
+            except Exception:
+                base_qty = 1.0
+            price_unit = _normalize_price_unit(_line_unit_of_measure(ln))
 
         l = {
             "hsn_code": ln.get("hsn_code") or ln.get("hsnCode"),
@@ -953,7 +1100,7 @@ def _process_invoice_irn_request(invoice_id) -> dict:
 
         # 2) Build FIRS payload
         try:
-            biz = Business.query.filter_by(id=inv.business_id).first() if inv.business_id else None
+            biz = Business.query.filter(Business.buisness_id == inv.business_id).first() if inv.business_id else None
             firs_payload = build_firs_validate_payload_from_invoice(inv, biz=biz)
             if not firs_payload:
                 _upd(submission, "validate_failed", error="empty payload")
@@ -1196,9 +1343,8 @@ def _process_invoice_irn_request(invoice_id) -> dict:
             inv.irn_status = sign_resp.get("status") or "issued"
             inv.submitted_at = datetime.utcnow()
             db.session.add(inv)
-            _upd(submission, "signed", error=None)
             if submission:
-                submission.status = "transmitted" if (sign_resp.get("irn") or sign_resp.get("csid")) else "issued"
+                submission.status = "signed"
                 submission.error = None
                 submission.firs_irn = returned_irn
                 submission.firs_csid = returned_csid
@@ -1257,8 +1403,8 @@ def _process_invoice_irn_request(invoice_id) -> dict:
 
         if not customer_tin:
             # No TIN on the invoice — log and block transmit
-            logger.warning("TIN lookup skipped for invoice %s: supplier TIN missing", inv.id)
-            log_submission(submission, "TIN lookup skipped — supplier TIN missing", level="ERROR")
+            logger.warning("TIN lookup skipped for invoice %s: customer TIN missing", inv.id)
+            log_submission(submission, "TIN lookup skipped — customer TIN missing", level="ERROR")
             _upd(submission, "tin_lookup_failed", error="supplier TIN missing")
             return {
                 "ok": False,
@@ -1348,10 +1494,12 @@ def _process_invoice_irn_request(invoice_id) -> dict:
                 )
                 log_submission(submission, f"Transmit failed: {exc}", level="ERROR")
                 _upd(submission, "transmit_failed", error=str(exc))
+                return {"ok": False, "error": "transmit failed", "details": str(exc), "invoice_id": inv.id}
         else:
             # Should not reach here — return above handles it — but belt-and-braces
             logger.warning("Transmit skipped for invoice %s: TIN lookup did not succeed", inv.id)
             log_submission(submission, "Transmit skipped — TIN lookup did not succeed", level="ERROR")
+            return {"ok": False, "error": "transmit skipped — tin lookup failed", "invoice_id": inv.id}
 
         return {
             "ok": True,
@@ -1994,7 +2142,10 @@ def _invoice_wrapper_to_flat_snake(firs_payload: dict) -> dict:
             line["price"] = {
                 "price_amount": price.get("priceAmount") or price.get("price_amount") or 0,
                 "base_quantity": price.get("baseQuantity") or price.get("base_quantity") or 1,
-                "price_unit": price.get("priceUnit") or price.get("price_unit") or "NGN per 1"
+                "price_unit": _normalize_price_unit(
+                    price.get("priceUnit") or price.get("price_unit")
+                    or _line_unit_of_measure(ln)
+                )
             }
             item = ln.get("item") or {}
             line["item"] = {

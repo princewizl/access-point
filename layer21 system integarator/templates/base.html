@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>{% block title %}Layer21{% endblock %} — Layer21</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+  <style>
+    :root{
+      --bg:#0b1220;--bg2:#0f1a2e;--bg3:#152236;
+      --sw:230px;--sidebar-w:230px;
+      --teal:#2ec5db;--teal2:#36b9d1;
+      --teal-glow:rgba(46,197,219,.18);
+      --tf:rgba(46,197,219,.06);--teal-faint:rgba(46,197,219,.06);
+      --tb:rgba(46,197,219,.1);
+      --silver:#e6eef2;--muted:rgba(230,238,242,.5);
+      --bd:rgba(46,197,219,.1);--border:rgba(46,197,219,.1);
+      --bd2:rgba(255,255,255,.06);--border2:rgba(255,255,255,.06);
+      --card:rgba(21,34,54,.8);
+      --ok:#10b981;--success:#10b981;
+      --warn:#f59e0b;--warning:#f59e0b;
+      --err:#ef4444;--danger:#ef4444;
+      --info:#3b82f6;
+      --r:12px;--r2:16px;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%;scroll-behavior:smooth}
+    body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--silver);overflow-x:hidden;line-height:1.6}
+    body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");pointer-events:none;z-index:1000;opacity:.4}
+
+    /* LAYOUT */
+    .shell{display:flex;height:100vh;overflow:hidden}
+
+    /* SIDEBAR */
+    aside.sidebar{width:var(--sw);flex-shrink:0;background:linear-gradient(180deg,var(--bg2),var(--bg3));border-right:1px solid var(--bd);display:flex;flex-direction:column;z-index:10;transition:width .3s ease}
+    aside.sidebar.collapsed{width:64px}
+    aside.sidebar.collapsed .sb-label,aside.sidebar.collapsed .sb-brand-text,aside.sidebar.collapsed .sb-section-label,aside.sidebar.collapsed .sb-badge,aside.sidebar.collapsed .sb-bottom-info{display:none}
+    aside.sidebar.collapsed .sb-link{justify-content:center;padding:.7rem}
+    aside.sidebar.collapsed .sb-icon{margin:0}
+    .sb-brand{padding:.6rem 1rem;display:flex;align-items:center;border-bottom:1px solid var(--bd2);text-decoration:none}
+    .sb-logo{height:38px;width:auto;max-width:100%;display:block}
+    .sb-brand-text .name{font-family:'Syne',sans-serif;font-size:.95rem;font-weight:800;color:var(--silver);line-height:1.1}
+    .sb-brand-text .sub{font-size:.6rem;font-weight:600;color:var(--teal);text-transform:uppercase;letter-spacing:.1em}
+    .sb-nav{flex:1;overflow-y:auto;padding:.75rem 0;scrollbar-width:none}
+    .sb-nav::-webkit-scrollbar{display:none}
+    .sb-section-label{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);padding:.5rem 1rem .25rem;margin-top:.5rem}
+    .sb-link{display:flex;align-items:center;gap:.7rem;padding:.65rem 1rem;margin:.1rem .5rem;border-radius:9px;text-decoration:none;color:var(--muted);font-size:.85rem;font-weight:500;transition:all .2s;position:relative;cursor:pointer;border:none;background:none;width:calc(100% - 1rem);text-align:left}
+    .sb-link:hover{background:var(--tf);color:var(--silver)}
+    .sb-link.active{background:rgba(46,197,219,.1);color:var(--teal)}
+    .sb-link.active::before{content:'';position:absolute;left:-4px;top:50%;transform:translateY(-50%);width:3px;height:60%;background:var(--teal);border-radius:0 3px 3px 0}
+    .sb-icon{font-size:1rem;flex-shrink:0;width:20px;text-align:center}
+    .sb-badge{margin-left:auto;font-size:.6rem;font-weight:700;padding:2px 7px;border-radius:999px;background:var(--tb);color:var(--teal)}
+    .sb-badge.red{background:rgba(239,68,68,.15);color:var(--err)}
+    .sb-bottom{border-top:1px solid var(--bd2);padding:.75rem}
+    .sb-bottom-info{display:flex;align-items:center;gap:.6rem;padding:.5rem .25rem}
+    .sb-avatar{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--teal),var(--teal2));display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:#041018;flex-shrink:0}
+    .sb-user-name{font-size:.8rem;font-weight:600;color:var(--silver)}
+    .sb-user-role{font-size:.65rem;color:var(--muted)}
+    .sb-collapse-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:.5rem;padding:.5rem;border:1px solid var(--bd);border-radius:9px;background:none;color:var(--muted);font-size:.75rem;cursor:pointer;transition:all .2s;margin-bottom:.5rem}
+    .sb-collapse-btn:hover{color:var(--teal);border-color:var(--teal)}
+
+    /* MAIN */
+    .main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+
+    /* TOPBAR */
+    .topbar{height:68px;flex-shrink:0;padding:0 1.75rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;background:rgba(11,18,32,.9);backdrop-filter:blur(16px);border-bottom:1px solid var(--bd2);z-index:20}
+    .topbar-left{display:flex;align-items:center;gap:1rem}
+    .page-title{font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:800;color:var(--silver)}
+    .page-crumb{font-size:.75rem;color:var(--muted)}
+    .topbar-right{display:flex;align-items:center;gap:.6rem}
+    .search-box{display:flex;align-items:center;gap:.5rem;background:rgba(255,255,255,.04);border:1px solid var(--bd2);border-radius:10px;padding:.45rem .85rem;transition:border-color .2s}
+    .search-box:focus-within{border-color:var(--teal);background:rgba(46,197,219,.04)}
+    .search-box input{background:none;border:none;outline:none;color:var(--silver);font-size:.82rem;width:200px;font-family:inherit}
+    .search-box input::placeholder{color:var(--muted)}
+    .search-box i{color:var(--muted);font-size:.85rem}
+    .icon-btn{width:36px;height:36px;border-radius:9px;border:1px solid var(--bd2);background:rgba(255,255,255,.03);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.9rem;cursor:pointer;transition:all .2s;text-decoration:none;position:relative}
+    .icon-btn:hover{border-color:var(--teal);color:var(--teal);background:var(--tf)}
+    .notif-dot{position:absolute;top:7px;right:7px;width:7px;height:7px;border-radius:50%;background:var(--err);border:1.5px solid var(--bg)}
+
+    /* CONTENT */
+    .content{flex:1;overflow-y:auto;padding:1.75rem;scrollbar-width:thin;scrollbar-color:rgba(46,197,219,.3) transparent}
+    .content::-webkit-scrollbar{width:4px}
+    .content::-webkit-scrollbar-thumb{background:rgba(46,197,219,.25);border-radius:4px}
+
+    /* KPI CARDS */
+    .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem}
+    @media(max-width:1100px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+    .kpi-card{border-radius:var(--r2);padding:1.2rem 1.4rem;background:var(--card);border:1px solid var(--bd2);backdrop-filter:blur(10px);transition:all .3s;animation:kpiIn .5s ease-out both;position:relative;overflow:hidden}
+    .kpi-card:nth-child(1){animation-delay:.05s}.kpi-card:nth-child(2){animation-delay:.1s}.kpi-card:nth-child(3){animation-delay:.15s}.kpi-card:nth-child(4){animation-delay:.2s}
+    @keyframes kpiIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+    .kpi-card:hover{border-color:var(--teal);transform:translateY(-3px);box-shadow:0 16px 40px rgba(0,0,0,.3)}
+    .kpi-card::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 80% 20%,rgba(46,197,219,.05),transparent 60%);pointer-events:none;opacity:0;transition:opacity .3s}
+    .kpi-card:hover::after{opacity:1}
+    .kpi-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem}
+    .kpi-ico,.kpi-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem}
+    .ki-teal{background:rgba(46,197,219,.12);color:var(--teal)}
+    .ki-green{background:rgba(16,185,129,.1);color:var(--ok)}
+    .ki-red{background:rgba(239,68,68,.1);color:var(--err)}
+    .ki-amber{background:rgba(245,158,11,.1);color:var(--warn)}
+    .ki-blue{background:rgba(59,130,246,.1);color:var(--info)}
+    .ki-gold{background:rgba(212,175,55,.1);color:#d4af37}
+    .ki-purple{background:rgba(139,92,246,.1);color:#a78bfa}
+    .kpi-tag{font-size:.62rem;font-weight:700;padding:2px 8px;border-radius:6px}
+    .kpi-label{font-size:.67rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.3rem}
+    .kpi-value{font-family:'Syne',sans-serif;font-size:1.75rem;font-weight:800;color:#fff;line-height:1}
+    .kpi-sub{font-size:.72rem;color:var(--muted);margin-top:.3rem}
+
+    /* SECTION HEADER */
+    .section-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;gap:1rem;flex-wrap:wrap}
+    .section-title{font-family:'Syne',sans-serif;font-size:1rem;font-weight:800;color:#fff}
+    .section-sub{font-size:.75rem;color:var(--muted);margin-top:1px}
+    .section-controls{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+
+    /* BUTTONS */
+    .btn{display:inline-flex;align-items:center;gap:.4rem;padding:.45rem .9rem;border-radius:9px;font-size:.8rem;font-weight:600;cursor:pointer;border:none;transition:all .2s;font-family:inherit;text-decoration:none;white-space:nowrap}
+    .btn-primary{background:linear-gradient(135deg,var(--teal),var(--teal2));color:#041018;box-shadow:0 0 20px rgba(46,197,219,.18)}
+    .btn-primary:hover{transform:translateY(-1px);box-shadow:0 0 30px rgba(46,197,219,.32)}
+    .btn-ghost{background:rgba(255,255,255,.04);color:var(--muted);border:1px solid var(--bd2)}
+    .btn-ghost:hover{border-color:var(--teal);color:var(--teal);background:var(--tf)}
+    .btn-danger{background:rgba(239,68,68,.08);color:#f87171;border:1px solid rgba(239,68,68,.18)}
+    .btn-danger:hover{background:rgba(239,68,68,.15)}
+    .btn-success{background:rgba(16,185,129,.08);color:#34d399;border:1px solid rgba(16,185,129,.18)}
+    .btn-success:hover{background:rgba(16,185,129,.15)}
+    .btn-sm{padding:.28rem .65rem;font-size:.72rem;border-radius:7px}
+    .btn-xs{padding:.18rem .45rem;font-size:.67rem;border-radius:6px}
+    .filter-select{background:rgba(255,255,255,.04);border:1px solid var(--bd2);border-radius:9px;padding:.4rem .75rem;font-size:.78rem;color:var(--silver);font-family:inherit;outline:none;cursor:pointer;transition:border-color .2s}
+    .filter-select:focus{border-color:var(--teal)}
+    .filter-select option{background:var(--bg3);color:var(--silver)}
+    .inline-search{display:flex;align-items:center;gap:.4rem;background:rgba(255,255,255,.04);border:1px solid var(--bd2);border-radius:9px;padding:.38rem .75rem;transition:border-color .2s}
+    .inline-search:focus-within{border-color:var(--teal)}
+    .inline-search input{background:none;border:none;outline:none;color:var(--silver);font-size:.8rem;font-family:inherit;width:160px}
+    .inline-search input::placeholder{color:var(--muted)}
+
+    /* TABLE */
+    .table-wrap{border-radius:var(--r2);overflow:hidden;background:var(--card);border:1px solid var(--bd2);backdrop-filter:blur(10px);animation:kpiIn .5s .25s ease-out both}
+    .data-table{width:100%;border-collapse:collapse}
+    .data-table thead{background:rgba(255,255,255,.03);border-bottom:1px solid var(--bd2)}
+    .data-table th{padding:.65rem 1rem;font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);text-align:left;white-space:nowrap}
+    .data-table th:last-child{text-align:right}
+    .data-table td{padding:.7rem 1rem;font-size:.8rem;border-bottom:1px solid rgba(255,255,255,.025);vertical-align:middle}
+    .data-table td:last-child{text-align:right}
+    .data-table tbody tr:hover{background:rgba(46,197,219,.025)}
+    .data-table tbody tr:last-child td{border-bottom:none}
+
+    /* PAGINATION */
+    .pagination{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.1rem;border-top:1px solid var(--bd2);flex-wrap:wrap;gap:.5rem}
+    .pg-info{font-size:.75rem;color:var(--muted)}
+    .pg-btns{display:flex;gap:.3rem}
+    .pg-btn{padding:.3rem .6rem;border-radius:7px;font-size:.72rem;font-weight:500;border:1px solid var(--bd2);background:rgba(255,255,255,.03);color:var(--muted);text-decoration:none;transition:all .2s;display:inline-flex;align-items:center}
+    .pg-btn:hover{border-color:var(--teal);color:var(--teal);background:var(--tf)}
+    .pg-btn.active{background:var(--teal);color:#041018;border-color:var(--teal);font-weight:700}
+    .pg-btn.disabled{opacity:.3;pointer-events:none}
+
+    /* MODAL */
+    .modal-back{position:fixed;inset:0;background:rgba(4,9,18,.85);z-index:500;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);opacity:0;pointer-events:none;transition:opacity .3s}
+    .modal-back.open{opacity:1;pointer-events:all}
+    .modal-box{background:linear-gradient(180deg,#111e33,#0f1a2e);border:1px solid var(--bd);border-radius:20px;width:92%;max-width:700px;padding:2rem;position:relative;transform:translateY(30px);transition:transform .35s;max-height:90vh;overflow-y:auto}
+    .modal-back.open .modal-box{transform:translateY(0)}
+    .modal-close{position:absolute;top:1rem;right:1rem;background:rgba(255,255,255,.05);border:1px solid var(--bd2);border-radius:8px;padding:.25rem .55rem;cursor:pointer;color:var(--muted);font-size:1.2rem;transition:all .2s;line-height:1}
+    .modal-close:hover{color:var(--teal);border-color:var(--teal)}
+    .modal-title{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;color:#fff;margin-bottom:.3rem}
+    .modal-sub{font-size:.8rem;color:var(--muted);margin-bottom:1.5rem}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:.85rem}
+    .form-full{grid-column:1/-1}
+    .field{display:flex;flex-direction:column;gap:.32rem}
+    .field label{font-size:.67rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+    .field label .req{color:var(--err)}
+    .field input,.field select,.field textarea{background:rgba(255,255,255,.04);border:1px solid var(--bd2);border-radius:9px;padding:.58rem .85rem;color:var(--silver);font-family:inherit;font-size:.84rem;outline:none;transition:all .2s;width:100%}
+    .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--teal);background:rgba(46,197,219,.04);box-shadow:0 0 0 3px rgba(46,197,219,.06)}
+    .field input::placeholder,.field textarea::placeholder{color:var(--muted)}
+    .field select option{background:var(--bg3)}
+    .field textarea{resize:vertical;min-height:100px}
+    .form-actions{display:flex;align-items:center;justify-content:flex-end;gap:.65rem;margin-top:1.25rem;padding-top:1.1rem;border-top:1px solid var(--bd2)}
+    .form-err{display:none;padding:.5rem .85rem;border-radius:8px;background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.18);color:#f87171;font-size:.78rem;margin-top:.75rem;gap:.4rem;align-items:flex-start}
+    .form-err.show{display:flex}
+
+    /* FLASH */
+    #flash-container{position:fixed;top:1.25rem;right:1.25rem;z-index:9999;display:flex;flex-direction:column;gap:.5rem;max-width:340px}
+    .fmsg{display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem;padding:.75rem 1rem;border-radius:11px;font-size:.8rem;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,.4);animation:fslide .3s ease-out;border:1px solid}
+    @keyframes fslide{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+    .f-success,.flash-success{background:#031a0d;color:#86efac;border-color:rgba(134,239,172,.2)}
+    .f-error,.f-danger,.flash-error,.flash-danger{background:#1a0303;color:#fca5a5;border-color:rgba(252,165,165,.2)}
+    .f-warning,.flash-warning{background:#1a1000;color:#fde68a;border-color:rgba(253,230,138,.2)}
+    .f-info,.flash-info{background:#082040;color:#93c5fd;border-color:rgba(147,197,253,.2)}
+    .f-close,.flash-close{background:none;border:none;cursor:pointer;color:inherit;opacity:.55;font-size:1rem;padding:0;line-height:1;flex-shrink:0}
+
+    /* BADGES & UTILITIES */
+    .mono{font-family:'DM Mono','Courier New',monospace;font-size:.76rem;letter-spacing:-.01em;color:var(--silver)}
+    .sbadge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px;font-size:.63rem;font-weight:700}
+    .sbadge::before{content:'';width:5px;height:5px;border-radius:50%;animation:bpulse 2s ease-in-out infinite}
+    .sb-on{background:rgba(16,185,129,.1);color:#34d399;border:1px solid rgba(16,185,129,.2)}
+    .sb-on::before{background:var(--ok)}
+    .sb-off{background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.2)}
+    .sb-off::before{background:var(--err);animation:none}
+    @keyframes bpulse{0%,100%{opacity:1}50%{opacity:.3}}
+    .pill-small{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:.62rem;font-weight:700;border:1px solid var(--teal);color:var(--teal);background:rgba(46,197,219,.07)}
+
+    /* EMPTY STATE */
+    .empty{text-align:center;padding:4rem 1.5rem}
+    .empty i{font-size:2.5rem;display:block;margin-bottom:.75rem;opacity:.2;color:var(--teal)}
+    .empty-title{font-size:.95rem;font-weight:600;color:var(--silver);margin-bottom:.3rem}
+    .empty-sub{font-size:.8rem;color:var(--muted)}
+
+    /* MOBILE */
+    .ham,.ham-btn{display:none;background:none;border:none;cursor:pointer;color:var(--silver);font-size:1.3rem;padding:.3rem}
+    .mob-veil{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:99;display:none}
+    .mob-veil.on{display:block}
+    @media(max-width:900px){
+      .ham,.ham-btn{display:flex}
+      aside.sidebar{position:fixed;left:0;top:0;height:100%;z-index:100;transform:translateX(-100%);transition:transform .3s}
+      aside.sidebar.mob-open{transform:translateX(0)}
+      .kpi-grid{grid-template-columns:1fr 1fr!important}
+      .form-grid{grid-template-columns:1fr}
+      .form-full{grid-column:auto}
+    }
+  </style>
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+<div id="flash-container"></div>
+<div class="mob-veil" id="veil" onclick="closeSB()"></div>
+<div class="shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <a href="/" class="sb-brand">
+      <img src="/static/img/layer21light.png" alt="Layer21" class="sb-logo"/>
+    </a>
+    <nav class="sb-nav">
+      <div class="sb-section-label">Main</div>
+      {% if current_user.user_type == 'client' %}
+      <a href="{{ url_for('client_dashboard') }}" class="sb-link {% if request.endpoint == 'client_dashboard' %}active{% endif %}">
+      {% else %}
+      <a href="{{ url_for('dashboard') }}" class="sb-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
+      {% endif %}
+        <i class="bi bi-grid-1x2 sb-icon"></i><span class="sb-label">Dashboard</span>
+      </a>
+
+      {% if current_user.user_type == 'admin' %}
+      <a href="#" class="sb-link"><i class="bi bi-file-earmark-text sb-icon"></i><span class="sb-label">Invoices</span></a>
+
+      <div class="sb-section-label">FIRS &amp; Compliance</div>
+      <a href="#" class="sb-link"><i class="bi bi-router sb-icon"></i><span class="sb-label">Access Point</span><span class="sb-badge">Live</span></a>
+      <a href="#" class="sb-link"><i class="bi bi-activity sb-icon"></i><span class="sb-label">Submission Logs</span></a>
+      <a href="#" class="sb-link"><i class="bi bi-patch-check sb-icon"></i><span class="sb-label">NRS Status</span></a>
+
+      <div class="sb-section-label">Management</div>
+      <a href="{{ url_for('list_users') }}" class="sb-link {% if request.endpoint in ('list_users','user_detail','register') %}active{% endif %}">
+        <i class="bi bi-people sb-icon"></i><span class="sb-label">Users</span>
+      </a>
+      <a href="{{ url_for('list_businesses') }}" class="sb-link {% if request.endpoint in ('list_businesses','business_detail','create_business') %}active{% endif %}">
+        <i class="bi bi-building sb-icon"></i><span class="sb-label">Businesses</span>
+      </a>
+      <a href="{{ url_for('admin_partner.list_partners') }}" class="sb-link {% if request.endpoint and request.endpoint.startswith('admin_partner.') %}active{% endif %}">
+        <i class="bi bi-diagram-3 sb-icon"></i><span class="sb-label">Partners</span>
+      </a>
+      <a href="#" class="sb-link"><i class="bi bi-key sb-icon"></i><span class="sb-label">API Keys</span></a>
+      <a href="{{ url_for('admin_tier_config') }}" class="sb-link {% if request.endpoint == 'admin_tier_config' %}active{% endif %}">
+        <i class="bi bi-sliders sb-icon"></i><span class="sb-label">Tier Config</span>
+      </a>
+      {% endif %}
+
+      <div class="sb-section-label">Support</div>
+      <a href="{{ url_for('list_complaints') }}" class="sb-link {% if request.endpoint in ('list_complaints','complaint_detail') %}active{% endif %}">
+        <i class="bi bi-headset sb-icon"></i><span class="sb-label">HelpDesk</span>
+        <span class="sb-badge red" id="sbComplaintBadge"></span>
+      </a>
+      <a href="{{ url_for('documentation.list_documents') }}" class="sb-link {% if request.endpoint and request.endpoint.startswith('documentation.') %}active{% endif %}">
+        <i class="bi bi-file-code sb-icon"></i><span class="sb-label">Documents</span>
+      </a>
+      {% if current_user.user_type == 'admin' %}
+      <a href="#" class="sb-link">
+        <i class="bi bi-bar-chart-line sb-icon"></i><span class="sb-label">Reports</span>
+        <span class="sb-badge" style="background:rgba(245,158,11,.12);color:#fbbf24">Soon</span>
+      </a>
+      {% endif %}
+    </nav>
+
+    <div class="sb-bottom">
+      <button class="sb-collapse-btn" onclick="toggleSB()">
+        <i class="bi bi-layout-sidebar-reverse" style="font-size:.85rem"></i>
+        <span class="sb-label">Collapse</span>
+      </button>
+      <div class="sb-bottom-info">
+        <div class="sb-avatar">{{ (current_user.first_name[0] if current_user.first_name else current_user.username[0])|upper }}</div>
+        <div>
+          <div class="sb-user-name">{{ current_user.first_name or current_user.username }}</div>
+          <div class="sb-user-role">{{ 'System Admin' if current_user.user_type == 'admin' else (current_user.user_type|title if current_user.user_type else 'User') }}</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="ham-btn" onclick="openSB()"><i class="bi bi-list"></i></button>
+        <div>
+          <div class="page-title">{% block page_title %}{% endblock %}</div>
+          <div class="page-crumb">{% block page_crumb %}{% endblock %}</div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        {% block topbar_search %}{% endblock %}
+        <div class="icon-btn"><i class="bi bi-bell"></i><span class="notif-dot"></span></div>
+        {% block topbar_extras %}{% endblock %}
+        <a href="/logout" class="icon-btn" title="Sign out"><i class="bi bi-box-arrow-right"></i></a>
+      </div>
+    </header>
+
+    {% block ticker %}{% endblock %}
+
+    <div class="content">
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+</div>
+
+{% block modals %}{% endblock %}
+
+<script>
+(function(){
+  const msgs=[];
+  {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}{% for c,m in messages %}msgs.push({type:"{{c}}",text:{{m|tojson}}});{% endfor %}{% endif %}{% endwith %}
+  const fc=document.getElementById('flash-container');
+  msgs.forEach(m=>{const d=document.createElement('div');d.className=`fmsg f-${m.type}`;d.innerHTML=`<span>${m.text}</span><button class="f-close" onclick="this.parentElement.remove()">&times;</button>`;fc.appendChild(d);setTimeout(()=>d.remove(),5500)});
+})();
+let sbC=false;const sb=document.getElementById('sidebar'),veil=document.getElementById('veil');
+function toggleSB(){sbC=!sbC;sb.classList.toggle('collapsed',sbC)}
+function openSB(){sb.classList.add('mob-open');veil.classList.add('on')}
+function closeSB(){sb.classList.remove('mob-open');veil.classList.remove('on')}
+function toggleSidebar(){toggleSB()}
+function openSidebar(){openSB()}
+function closeSidebar(){closeSB()}
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>
