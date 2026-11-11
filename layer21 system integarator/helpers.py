@@ -794,6 +794,31 @@ def build_firs_validate_payload_from_invoice(inv, biz=None) -> Dict[str, Any]:
                 base_qty = 1.0
             price_unit = _normalize_price_unit(_line_unit_of_measure(ln))
 
+        # FIRS treats 0 as missing ("invoiceline[0].lineextensionamount is required"),
+        # and senders often give only quantity + price, which /invoice/receive stores
+        # as quantity / line_extension_amount 0. Fill both from what the line has.
+        try:
+            invoiced_qty = float(ln.get("invoiced_quantity") or ln.get("invoicedQuantity")
+                                 or ln.get("quantity") or ln.get("qty") or 0)
+        except (TypeError, ValueError):
+            invoiced_qty = 0.0
+        try:
+            line_ext = float(ln.get("line_extension_amount") or ln.get("lineExtensionAmount") or 0)
+        except (TypeError, ValueError):
+            line_ext = 0.0
+        if not line_ext and invoiced_qty and price_amount:
+            def _num(v):
+                try:
+                    return float(v or 0)
+                except (TypeError, ValueError):
+                    return 0.0
+            line_ext = round(
+                invoiced_qty * price_amount / (base_qty or 1.0)
+                - _num(ln.get("discount_amount") or ln.get("discountAmount"))
+                + _num(ln.get("fee_amount") or ln.get("feeAmount")),
+                2,
+            )
+
         l = {
             "hsn_code": ln.get("hsn_code") or ln.get("hsnCode"),
             "product_category": ln.get("product_category") or ln.get("productCategory"),
@@ -801,8 +826,8 @@ def build_firs_validate_payload_from_invoice(inv, biz=None) -> Dict[str, Any]:
             "discount_amount": ln.get("discount_amount") or ln.get("discountAmount"),
             "fee_rate": ln.get("fee_rate") or ln.get("feeRate"),
             "fee_amount": ln.get("fee_amount") or ln.get("feeAmount"),
-            "invoiced_quantity": ln.get("invoiced_quantity") or ln.get("invoicedQuantity") or 0,
-            "line_extension_amount": ln.get("line_extension_amount") or ln.get("lineExtensionAmount") or 0,
+            "invoiced_quantity": invoiced_qty,
+            "line_extension_amount": line_ext,
             "item": {
                 "name": item.get("name") or ln.get("item_name") or "",
                 "description": item.get("description") or ln.get("item_description") or "",
