@@ -38,6 +38,7 @@ from helpers import (
 )
 import logging
 from collections import defaultdict
+from contextlib import contextmanager
 from math import ceil
 from typing import Optional
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -1760,6 +1761,39 @@ def create_business():
     return redirect(url_for("list_businesses"))
 
 # ── Schema migration (idempotent, runs on gunicorn startup) ──────────────────
+@contextmanager
+def _schema_migration_lock():
+    """
+    Gunicorn starts all workers at once and each one imports this module, so
+    without a lock two workers inspect the schema together, both see a column
+    missing and the second ALTER TABLE fails with "duplicate column name".
+    An exclusive lock on a file in the instance folder runs them one at a time.
+    """
+    os.makedirs(app.instance_path, exist_ok=True)
+    with open(os.path.join(app.instance_path, ".schema_migration.lock"), "a+") as fh:
+        try:
+            import fcntl
+            fcntl.flock(fh, fcntl.LOCK_EX)
+        except ImportError:  # Windows (local dev)
+            import msvcrt
+            while True:
+                try:
+                    msvcrt.locking(fh.fileno(), msvcrt.LK_LOCK, 1)
+                    break
+                except OSError:
+                    continue
+        try:
+            yield
+        finally:
+            try:
+                import fcntl
+                fcntl.flock(fh, fcntl.LOCK_UN)
+            except ImportError:
+                import msvcrt
+                fh.seek(0)
+                msvcrt.locking(fh.fileno(), msvcrt.LK_UNLCK, 1)
+
+
 def _migrate_schema():
     from sqlalchemy import inspect, text
     insp = inspect(db.engine)
@@ -1805,7 +1839,7 @@ def _migrate_schema():
         db.session.commit()
 
 
-with app.app_context():
+with app.app_context(), _schema_migration_lock():
     _migrate_schema()
 
 
