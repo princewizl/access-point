@@ -585,11 +585,14 @@ def build_firs_validate_payload_from_invoice(inv, biz=None) -> Dict[str, Any]:
     if biz is None and getattr(inv, "business_id", None):
         try:
             from models import Business  # local import
-            biz = Business.query.filter_by(business_id=inv.business_id).first() or Business.query.filter_by(service_id=inv.service_id).first()
+            biz = Business.query.filter_by(buisness_id=inv.business_id).first()
         except Exception:
             biz = None
     if biz:
-        business_id_val = getattr(biz, "business_id", None) or current_app.config.get("FIRS_BUSINESS_ID")
+        # the Business column is spelled "buisness_id"; reading "business_id" returned
+        # None and fell through to the global FIRS_BUSINESS_ID, so FIRS answered
+        # "this business does not exist" for every other business
+        business_id_val = getattr(biz, "buisness_id", None) or getattr(biz, "business_id", None)
         service_id_val = getattr(biz, "service_id", None)
 
     # env fallback
