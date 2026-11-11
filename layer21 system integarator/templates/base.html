@@ -133,7 +133,9 @@
     .inline-search input::placeholder{color:var(--muted)}
 
     /* TABLE */
-    .table-wrap{border-radius:var(--r2);overflow:hidden;background:var(--card);border:1px solid var(--bd2);backdrop-filter:blur(10px);animation:kpiIn .5s .25s ease-out both}
+    .table-wrap{border-radius:var(--r2);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:rgba(46,197,219,.3) transparent;background:var(--card);border:1px solid var(--bd2);backdrop-filter:blur(10px);animation:kpiIn .5s .25s ease-out both}
+    .table-wrap::-webkit-scrollbar{height:6px}
+    .table-wrap::-webkit-scrollbar-thumb{background:rgba(46,197,219,.3);border-radius:4px}
     .data-table{width:100%;border-collapse:collapse}
     .data-table thead{background:rgba(255,255,255,.03);border-bottom:1px solid var(--bd2)}
     .data-table th{padding:.65rem 1rem;font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);text-align:left;white-space:nowrap}
