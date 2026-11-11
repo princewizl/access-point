@@ -34,6 +34,14 @@
     .log-row:hover {
       transform: translateX(4px);
     }
+    /* same as portal.css — this page doesn't load the site stylesheets,
+       so without it the logo renders at its full 1536px size */
+    .logo-badge {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      object-fit: cover;
+    }
   </style>
 </head>
 <body class="bg-gradient-to-br from-slate-950 via-brand-dark to-slate-900 font-sans text-gray-100 min-h-screen">
