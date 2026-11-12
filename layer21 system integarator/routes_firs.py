@@ -18,7 +18,7 @@ from helpers import (
     build_firs_validate_payload_from_invoice, firs_validate_invoice,
     sign_payload_with_app_key, make_invoice_xml, sign_payload_rsa_b64,
     firs_sign_invoice, transmit_to_firs, generate_irn, log_submission,
-    _process_invoice_irn_request, _process_invoice_transmit_only
+    _process_invoice_irn_request, _process_invoice_transmit_only, POST_SIGN_STATUSES
 )
 from models import InvoiceSubmission,SubmissionLog
 
@@ -327,7 +327,7 @@ def api_receive_invoice():
                 f"Duplicate receive request — resuming pipeline from status={existing_status!r}",
                 )
             try:
-                if existing_invoice.irn_status in ("issued", "signed") or getattr(existing_submission, "status", None) in ("signed", "issued", "transmit_failed"):
+                if existing_invoice.irn_status in ("issued", "signed") or getattr(existing_submission, "status", None) in POST_SIGN_STATUSES:
                     incoming_customer = data.get("accounting_customer_party")
                     if incoming_customer and incoming_customer.get("tin"):
                         existing_invoice.accounting_customer_party = dict(incoming_customer)

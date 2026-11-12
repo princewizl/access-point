@@ -1455,39 +1455,15 @@ def _process_invoice_irn_request(invoice_id) -> dict:
                 raise ValueError(f"TIN lookup returned ok=False: {tin_resp}")
 
         except Exception as exc:
-            logger.exception("FIRS TIN lookup failed for invoice %s (TIN %s): %s", inv.id, customer_tin, exc)
-            safe_exc = str(exc)
-            if len(safe_exc) > 1000:
-                safe_exc = safe_exc[:1000] + " ... (truncated)"
-            send_alert_email(
-                subject=f"[ALERT] FIRS TIN lookup failed for invoice {inv.id}",
-                body=(
-                    f"Environment: {app.config.get('ENV')}\n"
-                    f"Invoice ID: {inv.id}\n"
-                    f"Customer TIN: {customer_tin}\n"
-                    f"Submission ID: {getattr(submission, 'id', 'n/a')}\n"
-                    f"Status (pre-except): {getattr(submission, 'status', 'n/a')}\n\n"
-                    f"Error: {safe_exc}\n\nThis is an automated alert. Do not reply."
-                ),
-                recipients=["support@layer21.com"],
-                reply_to=None,
-                logger=logger,
-            )
-            log_submission(submission, f"FIRS TIN lookup failed: {exc}", level="ERROR")
-            _upd(submission, "tin_lookup_failed", error=str(exc))
+            # The customer's TIN is the invoice owner's responsibility, not ours:
+            # record that FIRS could not confirm it and go on to transmit. If FIRS
+            # really cannot deliver, the transmit step reports that itself.
+            logger.warning("FIRS TIN lookup not confirmed for invoice %s (TIN %s): %s", inv.id, customer_tin, exc)
+            log_submission(submission, f"FIRS TIN lookup not confirmed (continuing to transmit): {exc}", level="WARNING")
+            _upd(submission, "tin_lookup_unconfirmed", error=str(exc))
+            tin_lookup_ok = True
 
-            if current_app.config.get("FIRS_TEST_MODE"):
-                logger.warning("TIN lookup failed but continuing in TEST MODE: %s", exc)
-                tin_lookup_ok = True   # allow transmit to proceed in test mode
-            else:
-                return {
-                    "ok": False,
-                    "error": "tin lookup failed",
-                    "details": str(exc),
-                    "invoice_id": inv.id,
-                }
-
-        # 8) Transmit to FIRS — only if TIN lookup succeeded
+        # 8) Transmit to FIRS
         if tin_lookup_ok:
             try:
                 tx_resp = transmit_to_firs(inv.irn)
@@ -1710,19 +1686,13 @@ def _process_invoice_transmit_only(invoice_id: int) -> dict:
         else:
             raise ValueError(f"TIN lookup returned ok=False: {tin_resp}")
     except Exception as exc:
-        safe = str(exc)[:1000]
-        _alert(
-            f"[ALERT] TIN lookup failed for invoice {inv.id}",
-            f"Customer TIN: {customer_tin}\nError: {safe}",
-        )
-        log_submission(submission, f"FIRS TIN lookup failed: {exc}", level="ERROR")
-        _upd(submission, "tin_lookup_failed", error=str(exc))
-        if current_app.config.get("FIRS_TEST_MODE"):
-            logger.warning("TIN lookup failed — continuing in TEST MODE")
-            tin_lookup_ok = True
-        else:
-            return {"ok": False, "error": "tin lookup failed",
-                    "details": safe, "invoice_id": inv.id}
+        # The customer's TIN is the invoice owner's responsibility, not ours:
+        # record that FIRS could not confirm it and go on to transmit.
+        logger.warning("  TIN lookup not confirmed (TIN %s): %s", customer_tin, exc)
+        log_submission(submission, f"FIRS TIN lookup not confirmed (continuing to transmit): {exc}",
+                       level="WARNING")
+        _upd(submission, "tin_lookup_unconfirmed", error=str(exc))
+        tin_lookup_ok = True
 
     # ═══════════════════════════════════════════════════════════════════
     # STEP 8 — Transmit (only if TIN lookup passed)
@@ -2638,6 +2608,12 @@ def make_invoice_xml(inv) -> str:
 # ---------------------------
 # Fiirs submissions Logger
 # ---------------------------
+# Submission statuses that can only be reached after the invoice was signed;
+# resuming from any of them must only retry transmit, never re-validate/re-sign.
+POST_SIGN_STATUSES = ("signed", "issued", "transmit_failed", "health_check_failed",
+                      "tin_lookup_failed", "tin_lookup_unconfirmed")
+
+
 def log_submission(submission: "InvoiceSubmission", message: str, level="INFO"):
     from models import db, SubmissionLog
     try:

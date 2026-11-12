@@ -19,6 +19,7 @@ from helpers import (
     log_submission,
     _process_invoice_irn_request,
     _process_invoice_transmit_only,
+    POST_SIGN_STATUSES,
 )
 from models import InvoiceSubmission, SubmissionLog
 
@@ -106,7 +107,7 @@ def run_erp_invoice_pipeline(data, source, received_message):
             if incoming_customer and incoming_customer.get("tin"):
                 existing_invoice.accounting_customer_party = dict(incoming_customer)
                 db.session.commit()
-            if existing_invoice.irn_status in ("issued", "signed") or existing_status in ("signed", "issued", "transmit_failed"):
+            if existing_invoice.irn_status in ("issued", "signed") or existing_status in POST_SIGN_STATUSES:
                 pipeline_result = _process_invoice_transmit_only(existing_invoice.id)
             else:
                 pipeline_result = _process_invoice_irn_request(existing_invoice.id)
