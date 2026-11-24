@@ -290,6 +290,13 @@
                   <button class="copy-btn" onclick="toggleSecret('{{ business.firs_api_secret }}',this)"><i class="bi bi-eye"></i> Show</button>
                   {% endif %}
                 </div>
+                <div class="cred-row">
+                  <div class="cred-icon"><i class="bi bi-person-badge"></i></div>
+                  <div style="flex:1">
+                    <div class="cred-label">NRS Portal Login</div>
+                    <div class="cred-val">{% if business.nrs_email %}{{ business.nrs_email }}{% if business.nrs_password %} · password set{% else %} · <span style="color:var(--muted);font-style:italic">no password</span>{% endif %}{% else %}<span style="color:var(--muted);font-style:italic">Not configured (needed for Sage/Odoo invoices)</span>{% endif %}</div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -387,6 +394,12 @@
       <div class="fg">
         <div class="field"><label>FIRS API Key</label><input name="firs_api_key" value="{{ business.firs_api_key or '' }}" placeholder="Provided by FIRS"/></div>
         <div class="field"><label>FIRS API Secret</label><input name="firs_api_secret" type="password" placeholder="Leave blank to keep current"/></div>
+      </div>
+
+      <div class="form-section" style="margin-top:1.25rem">NRS Portal Login (taxpayer)</div>
+      <div class="fg">
+        <div class="field"><label>NRS Email</label><input name="nrs_email" type="email" value="{{ business.nrs_email or '' }}" placeholder="Login email for the NRS e-invoice portal" autocomplete="off"/></div>
+        <div class="field"><label>NRS Password</label><input name="nrs_password" type="password" placeholder="{{ 'Leave blank to keep current' if business.nrs_password else 'NRS portal password' }}" autocomplete="new-password"/></div>
       </div>
 
       <div class="form-section" style="margin-top:1.25rem">Certificates</div>

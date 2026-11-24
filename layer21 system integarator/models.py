@@ -484,6 +484,10 @@ class Business(db.Model):
     private_key_enc = Column(Text, nullable=True)  # if storing private key (encrypt strongly)
     firs_api_key = db.Column(db.String(255), nullable=True)
     firs_api_secret = db.Column(db.String(255), nullable=True)
+    # Taxpayer's NRS e-invoice portal login, used for the FIRS taxpayer login step when
+    # the invoice itself carries none (ERP channels: Sage Evolution, Odoo)
+    nrs_email = Column(String(255), nullable=True)
+    nrs_password = Column(String(255), nullable=True)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     # Which partner company referred / onboarded this business (nullable — direct clients have None)

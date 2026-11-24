@@ -1823,6 +1823,9 @@ def _migrate_schema():
             cols = {c['name'] for c in insp.get_columns('businesses')}
             if 'tier' not in cols:
                 conn.execute(text("ALTER TABLE businesses ADD COLUMN tier VARCHAR(16) DEFAULT 'starter'"))
+            for col in ('nrs_email', 'nrs_password'):
+                if col not in cols:
+                    conn.execute(text(f'ALTER TABLE businesses ADD COLUMN {col} VARCHAR(255)'))
         if 'partner_companies' in table_names:
             cols = {c['name'] for c in insp.get_columns('partner_companies')}
             if 'tier' not in cols:
@@ -2315,7 +2318,15 @@ def business_detail(business_id):
         firs_secret = request.form.get('firs_api_secret', '').strip()
         if firs_secret:
             business.firs_api_secret = firs_secret   # store / encrypt as needed
- 
+
+        # NRS portal login (FIRS taxpayer login step); a blank password keeps the current one
+        business.nrs_email = request.form.get('nrs_email', '').strip() or None
+        nrs_password = request.form.get('nrs_password', '')
+        if nrs_password.strip():
+            business.nrs_password = nrs_password.strip()
+        if not business.nrs_email:
+            business.nrs_password = None
+
         cert_pem     = request.form.get('certificate_pem', '').strip()
         firs_cert    = request.form.get('firs_certificate', '').strip()
         private_key  = request.form.get('private_key_enc', '').strip()

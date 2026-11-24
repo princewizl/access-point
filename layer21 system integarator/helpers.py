@@ -1918,14 +1918,20 @@ def firs_taxpayer_login(inv, raise_for_status: bool = True) -> Dict[str, Any]:
         headers["x-api-secret"] = api_secret
 
     # --- Build payload from inv ---
+    # Invoices sent to /invoice/receive carry the login (csid = email, signature_value = password).
+    # ERP channels (Sage, Odoo) don't: use the NRS login saved on the business. After signing,
+    # csid holds the FIRS stamp id, so only an email-looking csid counts as a login.
     email = getattr(inv, "csid", None)
     password = getattr(inv, "signature_value", None)
+    if not (email and "@" in str(email) and password):
+        if biz is not None and getattr(biz, "nrs_email", None) and getattr(biz, "nrs_password", None):
+            email, password = biz.nrs_email, biz.nrs_password
 
     # final required checks
     if not email:
-        raise RuntimeError("email is required by FIRS login endpoint (missing on inv.csid).")
+        raise RuntimeError("NRS login email missing: set the NRS portal login on the business page in Layer21.")
     if not password:
-        raise RuntimeError("password is required by FIRS login endpoint (missing on inv.signature_value).")
+        raise RuntimeError("NRS login password missing: set the NRS portal login on the business page in Layer21.")
 
     posting_payload = {
         "email": str(email),
